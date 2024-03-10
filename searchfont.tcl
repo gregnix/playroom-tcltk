@@ -2,8 +2,6 @@
 #version 20240310-1130
 package require struct::set
 
-
-
 #Linux, fc-list 
 #https://linux.die.net/man/1/fc-list
 proc searchFont {list} {
