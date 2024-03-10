@@ -57,6 +57,8 @@ proc findFont {fontName} {
     return "not found"
 }
 
+
+if {[info script] eq $argv0} {
 # Example usage of the function to search for a specific font
 set fontPath [findFont "DejaVuSansCondensed.ttf"]
 if {$fontPath ne "not found"} {
@@ -64,6 +66,6 @@ if {$fontPath ne "not found"} {
 } else {
     puts "Font not found."
 }
-
+}
 
 
