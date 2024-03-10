@@ -1,64 +1,69 @@
 #! /usr/bin/env tclsh
-#version 20240310-1130
-package require struct::set
-
-#Linux, fc-list 
-#https://linux.die.net/man/1/fc-list
-proc searchBestFont {list} {
-  if {$::tcl_platform(platform) == "unix" } {
-    if {[catch {exec which fc-list} result]} {
-      puts "fc-list not install."
-      return
+#version 20240310-2140
+# Recursive function to search for the font file in a directory
+proc searchFont {directory pattern} {
+    # Search for files matching the pattern
+    set files [glob -nocomplain -directory $directory -types {f} *]
+    foreach file $files {
+        if {[string match $pattern [file tail $file]]} {
+            return [file normalize $file]
+        }
     }
-  } else {
-    puts "no unix"
-    return
-  }
-
-  set langs $list
-  foreach lang $langs {
-    set command "fc-list :lang=$lang | grep -i '\.ttf'"
-    if {[catch {exec sh -c $command} result]} {
-      puts "lang: $lang: no Fonts found"
-      set uniqueFonts($lang) [list]
-    } else {
-      set lines [split $result "\n"]
-      set fontsForLang {}
-      foreach line $lines {
-        lappend fontsForLang $line
-      }
-      set uniqueFonts($lang) [list]
-      set uniqueFonts($lang) [lsort -unique $fontsForLang]
-    }
-  }
-  set commonFonts {}
-  set first 1
-  foreach lang $langs {
-    if {$first} {
-      set commonFonts $uniqueFonts($lang)
-      set first 0
-    } else {
-      set commonFonts [::struct::set intersect $commonFonts $uniqueFonts($lang)]
-    }
-  }
-  #proc  to identify the best normal font
-  proc findBestRegularFont {fonts} {
-    foreach font $fonts {
-      if {[string match *":style=Regular"* $font] ||
-        [string match *":style=Normal"* $font] ||
-        [string match *":style=Book"* $font] ||
-      ![string match *":style=Bold"* $font] && ![string match *":style=Italic"* $font]} {
-        return $font
-      }
+    # Recursively search in subdirectories
+    foreach dir [glob -nocomplain -directory $directory -types {d} *] {
+        set result [searchFont $dir $pattern]
+        if {$result ne ""} {
+            return $result
+        }
     }
     return ""
-  }
-  set bestRegularFont [findBestRegularFont $commonFonts]
-  return [list $bestRegularFont  $commonFonts]
 }
 
-set bestFont [lindex [searchBestFont  [list en el pl pt es ru vi]] 0]
-puts $bestFont
-set sFont [searchBestFont  [list zh]]
-puts $sFont
+# Function to find the font across common directories
+proc findFont {fontName} {
+    # List of directories to search based on the OS
+    set searchDirs [list]
+    if {$::tcl_platform(platform) == "windows"} {
+        lappend searchDirs "C:/Windows/Fonts"
+        # Add more Windows-specific directories if needed
+    } elseif {$::tcl_platform(platform) == "unix"} {
+        # Try using fc-list first for a faster search
+        if {![catch {exec which fc-list}]} {
+            set command "fc-list | grep -i $fontName"
+            if {![catch {exec sh -c $command} result]} {
+                foreach line [split $result "\n"] {
+                    if {[string match *$fontName* $line]} {
+                        return [string trim [lindex [split $line ":"] 0]]
+                    }
+                }
+            }
+        }
+        # If fc-list isn't successful, or we're on macOS, use fallback directories
+        lappend searchDirs "/usr/share/fonts" "/usr/local/share/fonts" "~/.fonts"
+    }
+
+    # Iterate through directories and search for the font
+    foreach dir $searchDirs {
+        set directory [file normalize $dir]
+        if {[file exists $directory]} {
+            set fontPath [searchFont $directory $fontName]
+            if {$fontPath ne ""} {
+                return $fontPath
+            }
+        }
+    }
+
+    # Font not found
+    return "not found"
+}
+
+# Example usage of the function to search for a specific font
+set fontPath [findFont "DejaVuSansCondensed.ttf"]
+if {$fontPath ne "not found"} {
+    puts "Font found: $fontPath"
+} else {
+    puts "Font not found."
+}
+
+
 
