@@ -4,7 +4,7 @@ package require struct::set
 
 #Linux, fc-list 
 #https://linux.die.net/man/1/fc-list
-proc searchFont {list} {
+proc searchBestFont {list} {
   if {$::tcl_platform(platform) == "unix" } {
     if {[catch {exec which fc-list} result]} {
       puts "fc-list not install."
@@ -57,8 +57,8 @@ proc searchFont {list} {
   return [list $bestRegularFont  $commonFonts]
 }
 
-set bestFont [lindex [searchFont  [list en el pl pt es ru vi]] 0]
+set bestFont [lindex [searchBestFont  [list en el pl pt es ru vi]] 0]
 puts $bestFont
-set sFont [searchFont  [list zh]]
+set sFont [searchBestFont  [list zh]]
 puts $sFont
 
