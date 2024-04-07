@@ -4,7 +4,10 @@
 #typedList.tcl
 #inspired and partly adopted by
 #https://wiki.tcl-lang.org/page/typedlist
-#https://wiki.tcl-lang.org/page/Tcl%5FObj+proposals?R=0
+#https://wiki.tcl-lang.org/page/Tcl%5FObj+proposals
+#todo:
+# proc del
+# type with default values
 
 namespace eval type {
     variable Usertype
