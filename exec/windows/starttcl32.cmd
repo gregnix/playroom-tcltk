@@ -2,7 +2,7 @@
 setlocal
 
 set Scriptpath=%cd%
-set Tclscript=brqlprintbpac.tcl
+set Tclscript=myscript.tcl
 
 set PATH=C:\Tcl.32\bin;%PATH%
 
