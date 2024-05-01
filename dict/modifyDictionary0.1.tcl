@@ -23,6 +23,7 @@ proc modifyDictionary {dictRef keys {operation {{dictRef key} {return {}}}}} {
   return $dictRef
 }
 
+# man operation
 if {0} {
   # Example operation
   #1
