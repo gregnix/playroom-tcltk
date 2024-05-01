@@ -23,13 +23,14 @@ proc modifyDictionary {dictRef keys {operation {{dictRef key} {return {}}}}} {
   return $dictRef
 }
 
-# man operation
+
 if {0} {
   # Example operation
   #1
   set operation {{dictRef key} {
       return {New Value}
   }}
+  #2 add a value
   set operation {{dictRef key} {
       if {[catch  {dict get $dictRef $key} currentValue]} {
         set currentValue 0
@@ -48,6 +49,13 @@ if {0} {
   set operation {{dictRef key} {
       # Returns a new dictionary to replace the current value at the specified key
       return {subKey1 value1 subKey2 value2}
+  }}
+  #6 add a value
+  set operation {{dictRef key} {
+      if {[catch  {dict get $dictRef $key} currentValue]} {
+        set currentValue ""
+      }
+      return $currentValue
   }}
 }
 
@@ -83,8 +91,7 @@ if {[info script] eq $argv0} {
   set newDict [modifyDictionary $myDict {c z} $operation]
   puts "2a.Updated Dictionary:"
   puts $newDict
-  
-  
+
   #3 replace a value with list and variable
   set [namespace current]::wert 12
   set operation {{dictRef key} {
@@ -104,15 +111,25 @@ if {[info script] eq $argv0} {
   set newDict [modifyDictionary $myDict {a z} $operation]
   puts "5.Updated Dictionary:"
   puts $newDict
+  
+  #6 add a value
+  set operation {{dictRef key} {
+      if {[catch  {dict get $dictRef $key} currentValue]} {
+        set currentValue ""
+      }
+      return $currentValue
+  }}
+  set newDict [modifyDictionary $myDict {a z} $operation]
+  puts "6.Updated Dictionary:"
+  puts $newDict  
 }
-
 
 if {0} {
   output
 Original Dictionary:
 
     a {x 1 y 2 z 3} b {x 6 y 5 z 4}
-  
+ 
 2.Updated Dictionary:
 a {x 1 y 2 z 13} b {x 6 y 5 z 4}
 2a.Updated Dictionary:
@@ -121,5 +138,6 @@ a {x 1 y 2 z 3} b {x 6 y 5 z 4} c {z 10}
 a {x 1 y 2 z 3} b {x 6 y 5 z 4} c {z {1 2 3 4 12}}
 5.Updated Dictionary:
 a {x 1 y 2 z {subKey1 value1 subKey2 value2}} b {x 6 y 5 z 4}
-
+6.Updated Dictionary:
+a {x 1 y 2 z 3} b {x 6 y 5 z 4}
 }
