@@ -1,12 +1,11 @@
 #! /usr/bin/env tclsh
 
 #20240512
-#This Tcl script defines a procedure 
-#::tcl::file::concat that concatenates two file paths and normalizes the result.
 # Idea from
 #https://wiki.tcl-lang.org/page/namespace+ensemble
 #proc ::tcl::dict::get?
 
+#without fileutil::stripPath
 proc ::tcl::file::concat {args} {
   if {[llength $args] != 2} {
         return -code error "This function expects exactly two arguments"
@@ -21,30 +20,83 @@ namespace ensemble configure file -map \
 
 #Example
 if {[info script] eq $argv0} {
+
+puts "   [info patchlevel] $tcl_platform(os)"
+puts " absolute"
 set ndir [pwd]
-puts $ndir
-puts  [file concat /tmp $ndir]
+puts "ndir: $ndir"
+puts "file split: [file split [file nativename $ndir]]"
+puts "file concat  [file concat /tmp $ndir]"
 
-puts "\n"
+puts "\n  relative"
 set ndir ./greg/tmp
-puts $ndir
-puts  [file concat /tmp $ndir]
+puts "ndir: $ndir"
+puts "file split: [file split [file nativename $ndir]]"
+puts "file concat:  [file concat /tmp $ndir]]"
 
+puts "\n unc path in windows"
+set ndir {\\myserver\files\projects\tcl\info.txt}
+puts "ndir: $ndir"
+puts "file split: [file split [file nativename $ndir]]"
+puts "file concat:  [file concat /tmp $ndir]"
+
+puts "\n unc path in windows"
+set ndir //myserver/files/projects/tcl/info.txt
+puts "ndir: $ndir"
+puts "file split: [file split [file nativename $ndir]]"
+puts "file concat:  [file concat /tmp $ndir]"
+
+
+
+#This Tcl script defines a procedure 
+#::tcl::file::concat that concatenates two file paths and normalizes the result.
 }
 
 
 if {0} {
   Windows Output:
-F:/tcltk/project/file
-F:/tmp/tcltk/project/file
+   8.6.13 Windows NT
+ absolute
+ndir: F:/tcltk/project/file
+file split: F:/ tcltk project file
+file concat  F:/tmp/tcltk/project/file
 
-./greg/tmp
-F:/tmp/greg/tmp
+  relative
+ndir: ./greg/tmp
+file split: . greg tmp
+file concat:  F:/tmp/greg/tmp]
+
+ unc path in windows
+ndir: \\myserver\files\projects\tcl\info.txt
+file split: //myserver/files projects tcl info.txt
+file concat:  F:/tmp/projects/tcl/info.txt
+
+ unc path in windows
+ndir: //myserver/files/projects/tcl/info.txt
+file split: //myserver/files projects tcl info.txt
+file concat:  F:/tmp/projects/tcl/info.txt
+
   
   Linux Output:
-/media/lnet/tcltk/project/file
-/tmp/media/lnet/tcltk/project/file
+   8.6.14 Linux
+ absolute
+ndir: /media/lnet/tcltk/project/file
+file split: / media lnet tcltk project file
+file concat  /tmp/media/lnet/tcltk/project/file
 
-./greg/tmp
-/tmp/greg/tmp
+  relative
+ndir: ./greg/tmp
+file split: . greg tmp
+file concat:  /tmp/greg/tmp]
+
+ unc path in windows
+ndir: \\myserver\files\projects\tcl\info.txt
+file split: {\\myserver\files\projects\tcl\info.txt}
+file concat:  /tmp
+
+ unc path in windows
+ndir: //myserver/files/projects/tcl/info.txt
+file split: / myserver files projects tcl info.txt
+file concat:  /tmp/myserver/files/projects/tcl/info.txt
+
 }
