@@ -1,6 +1,8 @@
 #! /usr/bin/env tclsh
 
 #20240512
+#This Tcl script defines a procedure 
+#::tcl::file::concat that concatenates two file paths and normalizes the result.
 # Idea from
 #https://wiki.tcl-lang.org/page/namespace+ensemble
 #proc ::tcl::dict::get?
@@ -28,9 +30,6 @@ set ndir ./greg/tmp
 puts $ndir
 puts  [file concat /tmp $ndir]
 
-
-#This Tcl script defines a procedure 
-#::tcl::file::concat that concatenates two file paths and normalizes the result.
 }
 
 
