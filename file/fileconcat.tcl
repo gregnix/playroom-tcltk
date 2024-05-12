@@ -5,7 +5,6 @@
 #https://wiki.tcl-lang.org/page/namespace+ensemble
 #proc ::tcl::dict::get?
 
-#without fileutil::stripPath
 proc ::tcl::file::concat {args} {
   if {[llength $args] != 2} {
         return -code error "This function expects exactly two arguments"
