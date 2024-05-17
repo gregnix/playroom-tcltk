@@ -56,7 +56,7 @@ proc teststatustbl {tbl args} {
   append result "view [$tbl viewablerowcount]  top $topIndex  bottom  $bottomIndex\n"
   append result "getkeys end k[$tbl getkeys end] :: tbl index end [$tbl index end]  \n"
   append result "tbl get k[$tbl getkeys end] : [$tbl get k[$tbl getkeys end]] :: tbl get [$tbl index end] : [$tbl get [$tbl index end]] \n"
-  append result " tbl sortorder [$tbl sortorder]  :: tbl sortcolumn  [$tbl sortcolumn]\n"
+  append result " tbl sortorder [$tbl sortorder]  :: tbl sortcolumn  [$tbl sortcolumn] :: tbl sortorderlist: [$tbl sortorderlist] :: tbl sortcolumnlist: [$tbl sortcolumnlist]\n"
   tlog $result 
 }
 
