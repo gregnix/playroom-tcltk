@@ -1,7 +1,7 @@
 #! /usr/bin/env tclsh
 
 #20240518
-
+#https://www.tcl-lang.org/man/tcl/TclCmd/Tcl.htm#M9
 set myList {a b c}
 puts $myList
 
