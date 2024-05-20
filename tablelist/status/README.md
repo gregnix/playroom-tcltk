@@ -6,6 +6,7 @@ tablelist-status-test.tcl
 ### Libs:
 + info-text-tablelist.tcl
 + tloglib.tcl
++ tablelist-statutslib.tcl
 
 ## Difference x y and X Y
 + tablelist-cellindex-lowerxy.tcl
