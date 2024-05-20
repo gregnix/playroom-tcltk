@@ -1,4 +1,4 @@
-Status tablelist
+# Status tablelist
 
 ## Example: tablelist-status-test.tcl
 
