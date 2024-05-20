@@ -36,7 +36,14 @@ set x [expr {$X - [winfo rootx $tbl]}]
 set y [expr {$Y - [winfo rooty $tbl]}] 
 ```
 ### Event Handling
++ [listbox Binding](https://www.tcl.tk/man/tcl/TkCmd/listbox.htm#M56)
++ [virtual events](https://www.nemethi.de/tablelist/tablelistWidget.html#virtual_events)
++ [DEFAULT AND INDIVIDUAL BINDINGS FOR THE TABLELIST BODY](https://www.nemethi.de/tablelist/tablelistWidget.html#body_bindings)
++ [DEFAULT AND INDIVIDUAL BINDINGS FOR THE HEADER ITEMS](https://www.nemethi.de/tablelist/tablelistWidget.html#header_bindings)
++ [DEFAULT AND INDIVIDUAL BINDINGS FOR THE HEADER LABELS](https://www.nemethi.de/tablelist/tablelistWidget.html#body_bindings)
++ [DEFAULT BINDINGS FOR INTERACTIVE CELL EDITING]()
 ```
+
 bind $tbl <Double-1> {handleDoubleClick %W %x %y}
 bind $tbl <1> {handleSingleClick %W %x %y}
 ```
@@ -52,9 +59,9 @@ lassign [$tbl yview] top bottom
 ```
 set selectedRows [$tbl curselection]
 
-$tbl selection set $row
+$tbl selection set  $pos1 $pos2
 
-$tbl selection clear
+$tbl selection clear $pos1 $pos2
 ```
 
 ### 
