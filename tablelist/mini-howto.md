@@ -35,5 +35,30 @@ lassign [tablelist::convEventFields $W $x $y] tbl x y
 set x [expr {$X - [winfo rootx $tbl]}]
 set y [expr {$Y - [winfo rooty $tbl]}] 
 ```
+### Event Handling
+```
+bind $tbl <Double-1> {handleDoubleClick %W %x %y}
+bind $tbl <1> {handleSingleClick %W %x %y}
+```
 
+### Navigation and Scrolling
+```
+$tbl see $row
+lassign [$tbl yview] top bottom
+
+```
+
+### Managing Selections
+```
+set selectedRows [$tbl curselection]
+
+$tbl selection set $row
+
+$tbl selection clear
+```
+
+### 
+```
+
+```
 
