@@ -17,18 +17,22 @@ proc infoTbl {tbl args} {
         set X -1
         set Y -1
     }
-    
+    #not use
     lassign [tablelist::convEventFields $W $X $Y] convW convX convY
+    
     #infoTbl $tbl %W %X %Y
+    # corr X Y => x y
     set x [expr {$X - [winfo rootx $tbl]}]
     set y [expr {$Y - [winfo rooty $tbl]}]
-
+    # mouse click or button
     set doubleclick  [winfo exists $W]
+    
     if {[winfo exists $W]} {
         set path [tablelist::getTablelistPath $W]
     } else {
         set path $tbl
     }
+    
     set ci [$tbl cellindex @$x,$y]
     set gia [$tbl getcell @$x,$y]
     set col [$tbl columnindex @$x,$y]
@@ -43,7 +47,6 @@ proc infoTbl {tbl args} {
     set topIndex [$tbl index top]
     set bottomIndex  [$tbl index bottom]
     set selectmode  [$tbl configure -selectmode]
-
 
     append result "\$tbl : $tbl :: path : $path \n"
     append result "\$tbl cget -selectmode : [$tbl cget -selectmode]\n"
@@ -77,4 +80,3 @@ proc infoTbl {tbl args} {
 
     return $result
 }
-
