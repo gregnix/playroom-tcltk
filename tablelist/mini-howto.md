@@ -27,3 +27,13 @@ set end [$tbl getkeys end]
 set last [$tbl getkeys last]
 
 ```
+### x y or X Y
+```
+lassign [tablelist::convEventFields $W $x $y] tbl x y
+```
+```
+set x [expr {$X - [winfo rootx $tbl]}]
+set y [expr {$Y - [winfo rooty $tbl]}] 
+```
+
+
