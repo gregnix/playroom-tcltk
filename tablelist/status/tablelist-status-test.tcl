@@ -207,7 +207,7 @@ proc tblCreate {w} {
 
     set btntest [button $frb.test -text "Test" -command [list tlogtblcallback  infoTbl $tbl]]
     pack $btntest -side right
-    bind [$tbl bodytag] <Double-1>  [list tlogtblcallback infoTbl $tbl %W %X %Y]
+    bind [$tbl bodytag] <Double-1>  [list tlogtblcallback infoTbl $tbl %W %X %Y U]
     return $tbl
 }
 
