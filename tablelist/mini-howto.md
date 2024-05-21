@@ -5,6 +5,7 @@ set row [$tbl getkeys active]
 set col [$tbl columnindex @$x,$y] 
 set ci [$tbl cellindex @$x,$y]
 ```
+
 ### index
 ```
 set anchor [$tbl index anchor]
@@ -58,9 +59,8 @@ lassign [$tbl yview] top bottom
 ### Managing Selections
 ```
 set selectedRows [$tbl curselection]
-
+$tbl selection activate $pos
 $tbl selection set  $pos1 $pos2
-
 $tbl selection clear $pos1 $pos2
 ```
 
