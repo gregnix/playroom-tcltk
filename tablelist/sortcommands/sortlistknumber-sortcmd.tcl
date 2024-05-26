@@ -47,9 +47,6 @@ if {[info script] eq $argv0} {
 
     proc OnComboSelected {w tbl type} {
         switch $type {
-            selectmode {
-                $tbl configure -selectmode [$w get]
-            }
             sortcmdzero {
                 set sortcmd [$w get]
                 switch $sortcmd {
@@ -74,13 +71,14 @@ if {[info script] eq $argv0} {
     # Create table (example)
     set tbl [tablelist::tablelist .tbl -columns {10 "ID" right 0 "Name" left 0 "Class" center} \
     -labelcommand tablelist::sortByColumn -width 50 -stretch all]
-    # tbl header
+    # tbl header, for dispay sortcommand and sortmode
     $tbl header insert 0 [list]
     $tbl header insert 1 [list]
     foreach v [list 0 1 2] {
         $tbl header cellconfigure 0,$v -text [$tbl columncget $v -sortcommand ]
         $tbl header cellconfigure 1,$v -text [$tbl columncget $v -sortmode ]
     }
+    
     pack $tbl -fill both -expand true
 
     # Configure the column for sorting
@@ -92,9 +90,8 @@ if {[info script] eq $argv0} {
     set cbselection [ttk::combobox .cbselection -values [list dictionary command ] -exportselection 0 ]
     $cbselection current 1
     bind $cbselection <<ComboboxSelected>> [namespace code [list OnComboSelected %W $tbl sortcmdzero]]
-    pack $cbselection -side left
     event generate $cbselection <<ComboboxSelected>>
-
+    pack $cbselection -side left
     
     # Example data
     set data {{1 "Herbert" "3a"} {5 "Anna" "7d"} {3 "Tim" "9t"}}
