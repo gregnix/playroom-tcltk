@@ -28,14 +28,36 @@ set end [$tbl getkeys end]
 set last [$tbl getkeys last]
 
 ```
+## knumber
+```
+set knumber [$tbl getfullkeys $row $row]
+set knumber k[$tbl getkeys $row $row]
+set knumbers set knr [$tbl getfullkeys 0 end]
+
+proc sortKnumber {tbl} {
+  set KeyList [$tbl getfullkeys 0 end]
+  set OrigKeyList [lsort -dictionary $KeyList]
+  set OrigItemList [$tbl get $OrigKeyList]
+  $tbl delete 0 end
+  $tbl insertlist end $OrigItemList
+}
+```
 ### x y or X Y
 ```
+foreach {tbl x y} [tablelist::convEventFields $w $x $y] {}
 lassign [tablelist::convEventFields $W $x $y] tbl x y
 ```
 ```
 set x [expr {$X - [winfo rootx $tbl]}]
 set y [expr {$Y - [winfo rooty $tbl]}] 
 ```
+### containing
+```
+foreach {tbl x y} [tablelist::convEventFields $w $x $y] {}
+set row [$tbl containing  $y]
+set cell  [$tbl containingcell $x $y]
+```
+
 ### Event Handling
 + [listbox Binding](https://www.tcl.tk/man/tcl/TkCmd/listbox.htm#M56)
 + [virtual events](https://www.nemethi.de/tablelist/tablelistWidget.html#virtual_events)
@@ -58,7 +80,7 @@ lassign [$tbl yview] top bottom
 
 ### Managing Selections
 ```
-set selectedRows [$tbl curselection]
+set rows [$tbl curselection]
 $tbl activate $pos
 $tbl selection set  $pos1 $pos2
 $tbl selection clear $pos1 $pos2
