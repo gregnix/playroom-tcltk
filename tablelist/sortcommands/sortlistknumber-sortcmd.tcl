@@ -46,8 +46,6 @@ if {[info script] eq $argv0} {
     package require tablelist
 
     proc OnComboSelected {w tbl type} {
-        #variable tblDict
-        puts $type
         switch $type {
             selectmode {
                 $tbl configure -selectmode [$w get]
