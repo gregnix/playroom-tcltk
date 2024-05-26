@@ -56,7 +56,7 @@ if {[info script] eq $argv0} {
                 set sortcmd [$w get]
                 switch $sortcmd {
                     command {
-                        $tbl columnconfigure 0 -sortmode command -sortcommand [list $sortcmd .tbl 0]
+                        $tbl columnconfigure 0 -sortmode command -sortcommand [list createSortCommand $tbl 0]
                     }
                     dictionary {
                         $tbl columnconfigure 0 -sortmode dictionary
