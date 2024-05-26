@@ -45,59 +45,87 @@ proc sortCmd {a b} {
 if {[info script] eq $argv0} {
     package require tablelist
 
-    proc OnComboSelected {w tbl type} {
+    proc OnComboSelected {w tbl types} {
+        set type [lindex $types 0]
+        puts $type
         switch $type {
-            sortcmdzero {
+            sortcmd {
                 set sortcmd [$w get]
+                set col [{*}[lindex $types 1] get]
+                set origcol $col
                 switch $sortcmd {
-                    command {
-                        $tbl columnconfigure 0 -sortmode command -sortcommand [list createSortCommand $tbl 0]
+                    cmdone {
+                        $tbl columnconfigure $col -sortmode command -sortcommand [list createSortCommand $tbl $col]
                     }
+                    cmdtwo {
+                        $tbl columnconfigure $col -sortmode command -sortcommand sortCmd
+                    }
+                    ascii -
+                    asciinocase -
+                    integer -
+                    real -
                     dictionary {
-                        $tbl columnconfigure 0 -sortmode dictionary
+                        $tbl columnconfigure $col -sortmode $sortcmd
+                    }
+                    configure {
+                        for {set col 0 } { $col <  [$tbl columncount]}  {incr col} {
+                            puts "col: $col :: [$tbl columnconfigure $col -sortmode] :: [$tbl columnconfigure $col -sortcommand]"
+                        }
+                        for {set col 0 } { $col <  [$tbl columncount]}  {incr col} {
+                            puts "col: $col :: [$tbl columncget $col -sortmode] :: [$tbl columncget $col -sortcommand]"
+                        }
                     }
                 }
 
-                for {set v 0 } { $v <  [$tbl columncount]}  {incr v} {
-                    $tbl header cellconfigure 0,$v -text [$tbl columncget $v -sortcommand ]
-                    $tbl header cellconfigure 1,$v -text [$tbl columncget $v -sortmode ]
+                for {set col 0 } { $col <  [$tbl columncount]}  {incr col} {
+                    $tbl header cellconfigure 0,$col -text [$tbl columncget $col -sortcommand ]
+                    $tbl header cellconfigure 1,$col -text [$tbl columncget $col -sortmode ]
                 }
-                $tbl header cellconfigure 0,0 -text $sortcmd
+                set col $origcol
+                $tbl header cellconfigure 0,$col -text [$tbl columncget $col -sortcommand ]
             }
         }
     }
- 
+
 
     # Create table (example)
-    set tbl [tablelist::tablelist .tbl -columns {10 "ID" right 0 "Name" left 0 "Class" center} \
-    -labelcommand tablelist::sortByColumn -width 50 -stretch all]
-    # tbl header, for dispay sortcommand and sortmode
+    set tbl [tablelist::tablelist .tbl -columns {20 "ID" right 0 "Name" left 0 "Class" center} \
+    -labelcommand tablelist::sortByColumn -width 60 -stretch all]
+
+    # tbl header, for display sortcommand and sortmode
     $tbl header insert 0 [list]
     $tbl header insert 1 [list]
     foreach v [list 0 1 2] {
         $tbl header cellconfigure 0,$v -text [$tbl columncget $v -sortcommand ]
         $tbl header cellconfigure 1,$v -text [$tbl columncget $v -sortmode ]
     }
-    
+
     pack $tbl -fill both -expand true
 
     # Configure the column for sorting
     $tbl columnconfigure 0 -sortmode command -sortcommand [list createSortCommand .tbl 0]
     $tbl columnconfigure 1 -sortmode command -sortcommand sortCmd
     $tbl columnconfigure 2 -sortmode dictionary
-    
+
     # combobox
-    set cbselection [ttk::combobox .cbselection -values [list dictionary command ] -exportselection 0 ]
-    $cbselection current 1
-    bind $cbselection <<ComboboxSelected>> [namespace code [list OnComboSelected %W $tbl sortcmdzero]]
-    event generate $cbselection <<ComboboxSelected>>
-    pack $cbselection -side left
-    
+    set cbsortcol [ttk::combobox .cbsortcol -values [list 0 1 2] -exportselection 0 ]
+    $cbsortcol current 0
+    #bind $cbsortcol <<ComboboxSelected>> [namespace code [list OnComboSelected %W $tbl sortcol]]
+    #event generate $cbsortcol <<ComboboxSelected>>
+    pack $cbsortcol -side left
+
+    set cbsortmode [ttk::combobox .cbsortmode -values [list ascii asciinocase integer real dictionary cmdone cmdtwo configure] -exportselection 0 ]
+    $cbsortmode current 7
+    bind $cbsortmode <<ComboboxSelected>> [namespace code [list OnComboSelected %W $tbl "sortcmd $cbsortcol"]]
+    event generate $cbsortmode <<ComboboxSelected>>
+    pack $cbsortmode -side left
+
+
+
     # Example data
-    set data {{1 "Herbert" "3a"} {5 "Anna" "7d"} {3 "Tim" "9t"}}
+    set data {{1 "Herbert" "3a"} {5 "Anna" "7d"} {3 "Tim" "9t"}  {15 "Petra" "12e"}}
     # Insert data into table
     foreach item $data {
         $tbl insert end $item
-    }    
-    
+    }
 }
