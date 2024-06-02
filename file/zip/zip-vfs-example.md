@@ -20,7 +20,7 @@ set options [list -directory [file join $sourcedir]]
 ::zipfile::mkzip::mkzip $zipfile {*}$options
 ```
 ```
-# a single file
+# a single file, 
 set zipfile [file join $sourcedir "testfile01.zip"]
 set file_to_zip [file join $sourcedir testfile01.txt]
 set tempdir [fileutil::maketempdir]
@@ -29,6 +29,17 @@ file copy -force $file_to_zip $temp_file
 set options [list -directory [file join $tempdir]  testfile01.txt]
 :zipfile::mkzip::mkzip $zipfile {*}$options
 file delete -force $tempdir
+```
+```
+# a single file
+```
+# a single file
+set savedir [pwd]
+cd [file join $sourcedir tmpzip]
+set options [list testfile01.txt]
+::zipfile::mkzip::mkzip $zipfile {*}$options
+cd $savedir
+```
 ```
 
 ## zipfile
