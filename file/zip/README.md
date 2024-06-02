@@ -23,7 +23,8 @@ set options [list -directory [file join $sourcedir]]
 set zipfile [file join $sourcedir "testfile01.zip"]
 set file_to_zip [file join $sourcedir testfile01.txt]
 # word mkzip or any other because of read rights in tempdir
-set tempdir [fileutil::tempdir mkzip]
+set tempdir [file join [fileutil::tempdir] mkdir]
+file mkdir $tempdir
 set temp_file [file join $tempdir testfile01.txt]
 file copy -force $file_to_zip $temp_file
 set options [list -directory [file join $tempdir]  testfile01.txt]
