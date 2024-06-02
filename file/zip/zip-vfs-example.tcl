@@ -67,11 +67,8 @@ proc filetoMkZip {sourcedir} {
     file delete -force  [file join $sourcedir testfile01.zip]
     set zipfile [file join $sourcedir "testfile01.zip"]
     set file_to_zip [file join $sourcedir tmpzip testfile01.txt]
-    set tempdir [file join [fileutil::tempdir] mkdir]
-    file mkdir $tempdir
-    puts "t: $tempdir"
+    set tempdir [fileutil::maketempdir]
     set temp_file [file join $tempdir testfile01.txt]
-    puts $temp_file
     file copy -force $file_to_zip $temp_file
     set options [list -directory [file join $tempdir]  testfile01.txt]
     #set options [list  -directory [file join $sourcedir tmpzip] -exclude {*} [file join $sourcedir tmpzip testfile01.txt]]
