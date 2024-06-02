@@ -256,6 +256,7 @@ pack $frt.hset -side bottom -fill x
 pack $frt.vset -side right -fill y
 pack $tlog -side left -fill both -expand true
 
+set lbVfsselect [ttk::label $frbtn.lb -text "vfs::zip Mount handling: "]
 set cbVfsSelect [ttk::combobox $frbtn.cb -value [list 1 2 3 4] -width 3]
 $cbVfsSelect current 0
 
@@ -264,8 +265,12 @@ ttk::button $frbtn.btnmakeExternZip -text "Make Extern zip" -command  [list call
 ttk::button $frbtn.btnzibfile -text "zipfile::decode" -command  [list callbZipfile  $tlog  $dirname $opendir $sourcedir $targetdir]
 ttk::button $frbtn.btnmakezipfile -text "Make zipfile" -command  [list callbMakezipfile  $tlog  $sourcedir]
 ttk::button $frbtn.btnmakemkzip -text "Make mkzip" -command  [list callbMakemkzip  $tlog  $sourcedir]
+ttk::button $frbtn.btntreset -text "tlog clean" -command [list $tlog delete 1.0 end]
 pack $frbtn -side top -expand 0 -fill x
-pack $cbVfsSelect $frbtn.btnvfszip $frbtn.btnzibfile $frbtn.btnmakeExternZip $frbtn.btnmakezipfile  $frbtn.btnmakemkzip -side left -expand 0
+pack  $lbVfsselect $cbVfsSelect $frbtn.btnvfszip $frbtn.btnzibfile $frbtn.btnmakeExternZip $frbtn.btnmakezipfile  $frbtn.btnmakemkzip $frbtn.btntreset -side left -expand 0
 pack $frt -expand 1 -fill both -side bottom
-
-
+$tlog insert end " dirname: $dirname\n"
+$tlog insert end " opendir: $opendir\n"
+$tlog insert end " sourcedir: $sourcedir\n"
+$tlog insert end " targetdir: $targetdir\n"
+$tlog insert end "  \n"
