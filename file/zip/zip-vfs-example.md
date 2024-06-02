@@ -15,13 +15,13 @@ A simple GUI using Tk to select and display results.
 ## mkzip
 ```
 # a directory
-set zipfile [file join $sourcedir "testall.zip"]
+set zipfile [file join $zipdir "testfile01.zip"]
 set options [list -directory [file join $sourcedir]]
 ::zipfile::mkzip::mkzip $zipfile {*}$options
 ```
 ```
 # a single file, 
-set zipfile [file join $sourcedir "testfile01.zip"]
+set zipfile [file join $zipdir "testfile01.zip"]
 set file_to_zip [file join $sourcedir testfile01.txt]
 set tempdir [fileutil::maketempdir]
 set temp_file [file join $tempdir testfile01.txt]
@@ -32,13 +32,14 @@ file delete -force $tempdir
 ```
 ```
 # a single file
-```
-# a single file
-set savedir [pwd]
-cd [file join $sourcedir tmpzip]
+set zipfile [file join $zipdir "testfile01.zip"]
+set pwd [pwd]
+cd [file join $sourcedir]
 set options [list testfile01.txt]
 ::zipfile::mkzip::mkzip $zipfile {*}$options
-cd $savedir
+cd $pwd
+```
+
 ```
 ```
 
@@ -50,12 +51,11 @@ cd $savedir
 #  <encoder> file: dst owned src ?noCompress?
 #  <encoder> write archive
 set zip [zipfile::encode create myZipEncoder]
-$zip file: "testfile01.txt" 0 "[file join $sourcedir tmpzip testfile01.txt]"
-$zip file: "testfile02.txt" 0 "[file join $sourcedir tmpzip testfile02.txt]"
-$zip file: "data1/testfile11.txt" 0 "[file join $sourcedir tmpzip data1 testfile11.txt]"
-$zip file: "data1/testfile12.txt" 0 "[file join $sourcedir tmpzip data1 testfile12.txt]"
-$zip file: "data2/" 0 "[file join $sourcedir tmpzip data2/ ]"
-$zip write "[file join $sourcedir testall.zip]"
+$zip file: "testfile01.txt" 0 "[file join $sourcedir testfile01.txt]"
+$zip file: "testfile02.txt" 0 "[file join $sourcedir testfile02.txt]"
+$zip file: "data1/testfile11.txt" 0 "[file join $sourcedir  data1 testfile11.txt]"
+$zip file: "data1/testfile12.txt" 0 "[file join $sourcedir  data1 testfile12.txt]"
+$zip write "[file join $zipdir testall.zip]"
 $zip destroy
 ```
 
