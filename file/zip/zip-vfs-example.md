@@ -5,6 +5,7 @@ It uses three methods to create ZIP archives:
 + External ZIP command (Linux: zip, Windows: ?, MacOs:?)
 + mkzip from zipfile::mkzip
 + zipfile::encode
+
 It provides options to extract ZIP archives:
 + vfs::zip
 + zipfile::decode
