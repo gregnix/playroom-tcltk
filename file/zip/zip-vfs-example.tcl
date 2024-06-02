@@ -1,20 +1,13 @@
 #! /usr/bin/env tclsh
 
-
-#20240601
-
+#20240602
 package require Tk
 package require vfs::zip
 package require fileutil
 package require md5
 package require zipfile::decode
-
-#https://core.tcl-lang.org/tcllib/doc/trunk/embedded/md/tcllib/files/modules/zip/decode.md
-#https://core.tcl-lang.org/tcllib/doc/trunk/embedded/md/tcllib/files/modules/zip/encode.md
-#https://core.tcl-lang.org/tcllib/doc/trunk/embedded/md/tcllib/files/modules/fileutil/fileutil.md
-#https://wiki.tcl-lang.org/page/vfs%3A%3Azip
-#https://wiki.tcl-lang.org/page/tclVFS+examples
-
+package require zipfile::encode
+package require zipfile::mkzip
 
 # for debug
 proc filetimes {path item} {
@@ -26,45 +19,106 @@ proc filetimes {path item} {
     return [join [list $item $path atime_ctime_mtime $atime $ctime $mtime $md5] \n]
 }
 # making testfiles and directories
-# extern: zip
-proc makeTestfiles {sourcedir} {
-    #make testfiles and zip
+proc makeTestfile {sourcedir} {
+    #make testfile
+    lappend res " \n"
+    lappend res "Maketestfile\n"
     file mkdir [file join $sourcedir tmpzip data1]
     file mkdir [file join $sourcedir tmpzip data2]
     ::fileutil::touch  [file join $sourcedir tmpzip testfile01.txt]
     ::fileutil::touch  [file join $sourcedir tmpzip testfile02.txt]
     ::fileutil::touch  [file join $sourcedir tmpzip data1 testfile11.txt]
     ::fileutil::touch  [file join $sourcedir tmpzip data1 testfile12.txt]
-
+    lappend res [join [glob -nocomplain -directory [file join $sourcedir tmpzip] {*}] \n]
+    lappend res [join [glob -nocomplain -directory [file join $sourcedir tmpzip data1] {*}] \n]
+    lappend res [join [glob -nocomplain -directory [file join $sourcedir tmpzip data2] {*}] \n]
+    return [join $res \n]
+}
+# extern: zip
+proc filetoExternZip {sourcedir} {
+    lappend res [makeTestfile $sourcedir]
+    lappend res " \n"
+    lappend res "extern zip \n"
     # extern zip from Linux
     set pwd [pwd]
     cd [file join $sourcedir tmpzip]
     file delete -force ../testall.zip
     file delete -force ../testfile01.zip
     set cmd  [list zip -v -r ../testall.zip . -i *]
-    lappend cmdres cmd1 [exec {*}$cmd]
+    lappend res cmd1 [exec {*}$cmd]
     set cmd  [list zip -v -r -D ../testfile01.zip . -i testfile01.txt]
-    lappend cmdres \n
-    lappend cmdres cmd2 [exec {*}$cmd]
-    lappend cmdres \n
+    lappend res \n
+    lappend res cmd2 [exec {*}$cmd]
+    lappend res \n
     cd $pwd
-    return $cmdres
+
+    return $res
+}
+proc filetoMkZip {sourcedir} {
+    lappend res [makeTestfile $sourcedir]
+    lappend res " \n"
+    lappend res "mkzip \n"
+
+    file delete -force  [file join $sourcedir testall.zip]
+    set zipfile [file join $sourcedir "testall.zip"]
+    set options [list -directory [file join $sourcedir tmpzip]]
+    lappend res [::zipfile::mkzip::mkzip $zipfile {*}$options]
+
+    file delete -force  [file join $sourcedir testfile01.zip]
+    set zipfile [file join $sourcedir "testfile01.zip"]
+    set file_to_zip [file join $sourcedir tmpzip testfile01.txt]
+    set tempdir [fileutil::tempdir mkzip]
+    set temp_file [file join $tempdir testfile01.txt]
+    file copy -force $file_to_zip $temp_file
+    set options [list -directory [file join $tempdir]  testfile01.txt]
+    #set options [list  -directory [file join $sourcedir tmpzip] -exclude {*} [file join $sourcedir tmpzip testfile01.txt]]
+    #set options [list -directory [file join $sourcedir tmpzip] -exclude {d* *02.txt}]
+    #set options [list  [file join $sourcedir tmpzip testfile01.txt]]
+    ::zipfile::mkzip::mkzip $zipfile {*}$options
+    file delete -force $tempdir
+
+    return $res
+}
+proc filetoZipFile {sourcedir} {
+    lappend res [makeTestfile $sourcedir]
+    lappend res " \n"
+    lappend res "fileToZipFile $sourcedir \n"
+
+    file delete -force  [file join $sourcedir testall.zip]
+    set zip [zipfile::encode create myZipEncoder]
+    lappend res "\nzip: $zip "
+    $zip file: "testfile01.txt" 0 "[file join $sourcedir tmpzip testfile01.txt]"
+    $zip file: "testfile02.txt" 0 "[file join $sourcedir tmpzip testfile02.txt]"
+    $zip file: "data1/testfile11.txt" 0 "[file join $sourcedir tmpzip data1 testfile11.txt]"
+    $zip file: "data1/testfile12.txt" 0 "[file join $sourcedir tmpzip data1 testfile12.txt]"
+    #$zip file: "data2/" 0 "[file join $sourcedir tmpzip data2/ ]"
+    $zip write "[file join $sourcedir testall.zip]"
+    lappend res [$zip destroy]
+
+    file delete -force  [file join $sourcedir testfile01.zip]
+    set zip [zipfile::encode create myZipEncoder]
+    lappend res "\nzip: $zip "
+    $zip file: "testfile01.txt" 0 "[file join $sourcedir tmpzip testfile01.txt]"
+    $zip write "[file join $sourcedir testfile01.zip]"
+    lappend res [$zip destroy]
+    return $res
 }
 
-proc vfstozip {openfilename targetdir dirname  {select 3}} {
+proc vfsziptofiles {openfilename targetdir dirname  {select 3}} {
     # manual options 1 - 4
     # 1 change in mounted dir, file.zip == mount
     # 2 change in mounted dir, file.zip != mount
     # 3 file.zip == mount
     # 4 file.zip != mount
-    set output "\n Seletcetion_${select}_$openfilename"
+    lappend res " \n"
+    lappend res "\n Seletcetion_${select}_$openfilename"
     switch $select {
         1 {
             set mnt_file [vfs::zip::Mount $openfilename $openfilename]
             cd $openfilename
             set zfiles [glob *]
-            lappend output  "zfiles: $zfiles :: pwd : [pwd]"
-            lappend output  [join [glob -directory $dirname {*}] \n]
+            lappend res  "zfiles: $zfiles :: pwd : [pwd]"
+            lappend res  [join [glob -directory $dirname {*}] \n]
             foreach zfile $zfiles {
                 file copy -force $zfile [file join $targetdir $zfile]
             }
@@ -75,8 +129,8 @@ proc vfstozip {openfilename targetdir dirname  {select 3}} {
             set mnt_file [vfs::zip::Mount $openfilename /_zipfile]
             cd /_zipfile
             set zfiles [glob *]
-            lappend output  "zfiles: $zfiles :: pwd : [pwd]"
-            lappend output  [join [glob -directory $dirname {*}] \n]
+            lappend res  "zfiles: $zfiles :: pwd : [pwd]"
+            lappend res  [join [glob -directory $dirname {*}] \n]
             foreach zfile $zfiles {
                 file copy -force $zfile [file join $targetdir $zfile]
             }
@@ -86,8 +140,8 @@ proc vfstozip {openfilename targetdir dirname  {select 3}} {
         3 {
             set mnt_file [vfs::zip::Mount $openfilename $openfilename]
             set zfiles [glob $openfilename/*]
-            lappend output  "zfiles: $zfiles :: pwd : [pwd]"
-            lappend output   [join [glob -directory $dirname {*}] \n]
+            lappend res  "zfiles: $zfiles :: pwd : [pwd]"
+            lappend res   [join [glob -directory $dirname {*}] \n]
             foreach zfile $zfiles {
                 file copy -force $zfile [file join $targetdir [file tail $zfile]]
             }
@@ -96,82 +150,122 @@ proc vfstozip {openfilename targetdir dirname  {select 3}} {
         4 {
             set mnt_file [vfs::zip::Mount $openfilename /_zipfile]
             set zfiles [glob /_zipfile/*]
-            lappend output  "zfiles: $zfiles :: pwd : [pwd]"
-            lappend output  [join [glob -directory $dirname {*}] \n]
+            lappend res  "zfiles: $zfiles :: pwd : [pwd]"
+            lappend res  [join [glob -directory $dirname {*}] \n]
             foreach zfile $zfiles {
                 file copy -force $zfile [file join $targetdir [file tail $zfile]]
             }
             vfs::zip::Unmount $mnt_file /_zipfile
         }
     }
-    return $output
+    return $res
 }
-proc zipfiletozip {openfilename targetdir} {
-    set res \n
-    set res "\n zipfiletozip"
+proc zipfiletofiles {openfilename targetdir} {
+    lappend res " \n"
+    lappend res "\n zipfiletofiles"
     lappend res [::zipfile::decode::open $openfilename]
     set dArchive [::zipfile::decode::archive]
     lappend res [::zipfile::decode::files $dArchive]
     lappend res [::zipfile::decode::unzip $dArchive $targetdir]
     lappend res [::zipfile::decode::close]
     return $res
-    
-}
 
-proc callbackvfs {w t dirname opendir sourcedir targetdir} {
+}
+# callback s
+proc callbVfs {w t dirname opendir sourcedir targetdir} {
     set select [$w get]
     set openfilename [tk_getOpenFile -initialdir $opendir]
     if {$openfilename eq ""} {
-        puts "Keine Datei ausgewählt."
+        puts "No File select."
         return
     }
     set openfiledirname [file dirname $openfilename]
     set openfile [file tail $openfilename]
-    set output [vfstozip $openfilename $targetdir $dirname  1]
-    $t insert end "[join $output \n]"
+    set res [vfsziptofiles $openfilename $targetdir $dirname  1]
+
+    $t insert end "[join $res \n]"
     $t insert end "\n \n"
     $t insert end  [filetimes [file join $targetdir] testfile01.txt]
+
     return
 }
-proc callbackmake { t sourcedir} {
-    set output [makeTestfiles $sourcedir]
+proc callbMakeExternZip { t sourcedir} {
+    set res [filetoExternZip $sourcedir]
+
     $t insert end \n
-    $t insert end  $output\n
+    $t insert end  $res\n
     $t insert end  [filetimes [file join $sourcedir tmpzip] testfile01.txt]\n\n
+
     return
 }
-proc callbackzipfile { t dirname opendir sourcedir targetdir} {
+proc callbZipfile { t dirname opendir sourcedir targetdir} {
     set openfilename [tk_getOpenFile -initialdir $opendir]
     if {$openfilename eq ""} {
-        puts "Keine Datei ausgewählt."
+        puts "No file select."
         return
     }
     set openfiledirname [file dirname $openfilename]
     set openfile [file tail $openfilename]
-    set output [zipfiletozip $openfilename $targetdir]
-    $t insert end "[join $output \n]"
+    set res [zipfiletofiles $openfilename $targetdir]
+
+    $t insert end "[join $res \n]"
     $t insert end "\n \n"
     $t insert end  [filetimes [file join $targetdir] testfile01.txt]
+
+    return
+}
+proc callbMakezipfile { t sourcedir} {
+    set res [filetoZipFile $sourcedir]
+
+    $t insert end \n
+    $t insert end  $res\n
+    $t insert end  [filetimes [file join $sourcedir tmpzip] testfile01.txt]\n\n
+
     return
 }
 
+proc callbMakemkzip { t sourcedir} {
+    set res [filetoMkZip $sourcedir]
+
+    $t insert end \n
+    $t insert end  $res\n
+    $t insert end  [filetimes [file join $sourcedir tmpzip] testfile01.txt]\n\n
+
+    return
+}
+
+###################################
+#Main
+
+#init
 set dirname [file dirname [info script]]
 set opendir [file join $dirname source]
 set sourcedir [file join $dirname source]
 set targetdir [file join $dirname target]
 
-ttk::frame .fr
-text .t
-ttk::combobox .fr.cb -value [list 1 2 3 4]
-.fr.cb current 0
-ttk::button .fr.btn -text Zip-File -command [list callbackvfs .fr.cb .t $dirname $opendir $sourcedir $targetdir]
-ttk::button .fr.btnmake -text "Make zips" -command  [list callbackmake  .t  $sourcedir]
-ttk::button .fr.btnzibfile -text Zipfile -command  [list callbackzipfile  .t  $dirname $opendir $sourcedir $targetdir]
-pack .fr -side top -expand 0 -fill x
-pack .fr.cb .fr.btn .fr.btnmake .fr.btnzibfile -side left -expand 0
-pack .t -expand 1 -fill both -side bottom
+#Gui
+set frbtn [ttk::frame .frbtn]
+set frt [ttk::frame .frt]
+
+#tlog
+set tlog [text $frt.t -setgrid true -wrap none -width 120 \
+-yscrollcommand "$frt.vset set" -xscrollcommand "$frt.hset set"]
+scrollbar $frt.vset -orient vert -command "$tlog yview"
+scrollbar $frt.hset -orient hori -command "$tlog xview"
+pack $frt.hset -side bottom -fill x
+pack $frt.vset -side right -fill y
+pack $tlog -side left -fill both -expand true
+
+set cbVfsSelect [ttk::combobox $frbtn.cb -value [list 1 2 3 4] -width 3]
+$cbVfsSelect current 0
+
+ttk::button $frbtn.btnvfszip -text "vfs::zip" -command [list callbVfs $cbVfsSelect $tlog $dirname $opendir $sourcedir $targetdir]
+ttk::button $frbtn.btnmakeExternZip -text "Make Extern zip" -command  [list callbMakeExternZip  $tlog  $sourcedir]
+ttk::button $frbtn.btnzibfile -text "zipfile::decode" -command  [list callbZipfile  $tlog  $dirname $opendir $sourcedir $targetdir]
+ttk::button $frbtn.btnmakezipfile -text "Make zipfile" -command  [list callbMakezipfile  $tlog  $sourcedir]
+ttk::button $frbtn.btnmakemkzip -text "Make mkzip" -command  [list callbMakemkzip  $tlog  $sourcedir]
+pack $frbtn -side top -expand 0 -fill x
+pack $cbVfsSelect $frbtn.btnvfszip $frbtn.btnzibfile $frbtn.btnmakeExternZip $frbtn.btnmakezipfile  $frbtn.btnmakemkzip -side left -expand 0
+pack $frt -expand 1 -fill both -side bottom
 
 
-if {0} {
-
-}
