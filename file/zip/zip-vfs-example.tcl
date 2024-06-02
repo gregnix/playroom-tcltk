@@ -67,8 +67,11 @@ proc filetoMkZip {sourcedir} {
     file delete -force  [file join $sourcedir testfile01.zip]
     set zipfile [file join $sourcedir "testfile01.zip"]
     set file_to_zip [file join $sourcedir tmpzip testfile01.txt]
-    set tempdir [fileutil::tempdir mkzip]
+    set tempdir [file join [fileutil::tempdir] mkdir]
+    file mkdir $tempdir
+    puts "t: $tempdir"
     set temp_file [file join $tempdir testfile01.txt]
+    puts $temp_file
     file copy -force $file_to_zip $temp_file
     set options [list -directory [file join $tempdir]  testfile01.txt]
     #set options [list  -directory [file join $sourcedir tmpzip] -exclude {*} [file join $sourcedir tmpzip testfile01.txt]]
@@ -267,8 +270,9 @@ ttk::button $frbtn.btnmakezipfile -text "Make zipfile" -command  [list callbMake
 ttk::button $frbtn.btnmakemkzip -text "Make mkzip" -command  [list callbMakemkzip  $tlog  $sourcedir]
 ttk::button $frbtn.btntreset -text "tlog clean" -command [list $tlog delete 1.0 end]
 pack $frbtn -side top -expand 0 -fill x
-pack  $lbVfsselect $cbVfsSelect $frbtn.btnvfszip $frbtn.btnzibfile $frbtn.btnmakeExternZip $frbtn.btnmakezipfile  $frbtn.btnmakemkzip $frbtn.btntreset -side left -expand 0
+pack $lbVfsselect $cbVfsSelect $frbtn.btnvfszip $frbtn.btnzibfile $frbtn.btnmakeExternZip $frbtn.btnmakezipfile  $frbtn.btnmakemkzip $frbtn.btntreset -side left -expand 0
 pack $frt -expand 1 -fill both -side bottom
+
 $tlog insert end " dirname: $dirname\n"
 $tlog insert end " opendir: $opendir\n"
 $tlog insert end " sourcedir: $sourcedir\n"
