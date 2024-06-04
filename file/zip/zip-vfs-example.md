@@ -12,6 +12,13 @@ It provides options to extract ZIP archives:
 
 A simple GUI using Tk to select and display results.
 
+## Problem
++ files from network
++ vfs::zip and Windows
++ no extern zip on windows
++ code in zip-vfs-example.md is not up to date
+
+
 ## mkzip
 ```
 # a directory
