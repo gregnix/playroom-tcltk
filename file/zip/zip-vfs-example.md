@@ -32,7 +32,7 @@ file delete -force $tempdir
 ```
 ```
 # a single file
-set zipfile [file join $zipdir "testfile01.zip"]
+set zipfile [file join $zipdir testfile01.zip]
 set pwd [pwd]
 cd [file join $sourcedir]
 set options [list testfile01.txt]
@@ -51,11 +51,21 @@ cd $pwd
 #  <encoder> file: dst owned src ?noCompress?
 #  <encoder> write archive
 set zip [zipfile::encode create myZipEncoder]
-$zip file: "testfile01.txt" 0 "[file join $sourcedir testfile01.txt]"
-$zip file: "testfile02.txt" 0 "[file join $sourcedir testfile02.txt]"
-$zip file: "data1/testfile11.txt" 0 "[file join $sourcedir  data1 testfile11.txt]"
-$zip file: "data1/testfile12.txt" 0 "[file join $sourcedir  data1 testfile12.txt]"
-$zip write "[file join $zipdir testall.zip]"
+# Use fileutil::find to get a list of all files in the source directory
+set files [fileutil::find $sourcedir]
+# Iterate over the list of files and add them to the ZIP file
+  foreach file $files {
+    if {[file isdirectory $file]} {
+      set relpath [file tail $file]
+      $zip file: $relpath 0 {} 0
+      continue
+   } else {
+     set relpath [fileutil::stripPath $sourcedir $file]
+    $zip file: $relpath 0 $file
+  }
+}
+# Write the ZIP file
+$zip write [file join $zipdir testall.zip]
 $zip destroy
 ```
 
