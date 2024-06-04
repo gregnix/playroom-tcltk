@@ -11,3 +11,6 @@ groff -Tpdf -man vfs.n > vfs.pdf
 groff -Tps -man vfs.n > vfs.ps 
 ps2pdf vfs.ps vfs.pdf
 ```
+
++ https://wiki.tcl-lang.org/page/troff
++ 
