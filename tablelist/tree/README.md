@@ -24,9 +24,13 @@
 + https://www.nemethi.de/tablelist/tablelistWidget.html#tree_widget
  
 ### collapsecommand, expandcommand
++ https://www.nemethi.de/tablelist/tablelistWidget.html#populatecommand
 + https://www.nemethi.de/tablelist/tablelistWidget.html#collapsecommand
 + https://www.nemethi.de/tablelist/tablelistWidget.html#expandcommand
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#populatecommand
++ https://www.nemethi.de/tablelist/tablelistWidget.html#collapse
++ https://www.nemethi.de/tablelist/tablelistWidget.html#collapseall
++ https://www.nemethi.de/tablelist/tablelistWidget.html#expand
++ https://www.nemethi.de/tablelist/tablelistWidget.html#expandall
 + https://www.nemethi.de/tablelist/tablelistWidget.html#treecolumn
 + https://www.nemethi.de/tablelist/tablelistWidget.html#treestyle
  
@@ -35,22 +39,23 @@
 + https://www.nemethi.de/tablelist/tablelistWidget.html#childcount
 + https://www.nemethi.de/tablelist/tablelistWidget.html#childindex
 + https://www.nemethi.de/tablelist/tablelistWidget.html#childkeys
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#collapse
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#collapseall
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#descendantcount
 + https://www.nemethi.de/tablelist/tablelistWidget.html#depth
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#expand
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#expandall
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#expandedkeys
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildlist
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildren
++ https://www.nemethi.de/tablelist/tablelistWidget.html#descendantcount
 + https://www.nemethi.de/tablelist/tablelistWidget.html#noderow
 + https://www.nemethi.de/tablelist/tablelistWidget.html#parentkey
- 
-### load and dump, dict
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#dicttoitem
-+ https://www.nemethi.de/tablelist/tablelistWidget.html#itemtodict
++ https://www.nemethi.de/tablelist/tablelistWidget.html#expandedkeys
+
+### insert
++ https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildlist
++ https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildren
+
+
+### load and dump
 + https://www.nemethi.de/tablelist/tablelistWidget.html#dumptofile
 + https://www.nemethi.de/tablelist/tablelistWidget.html#loadfromfile
 + https://www.nemethi.de/tablelist/tablelistWidget.html#dumptostring
 + https://www.nemethi.de/tablelist/tablelistWidget.html#loadfromstring
+  
+### dict
++ https://www.nemethi.de/tablelist/tablelistWidget.html#dicttoitem
++ https://www.nemethi.de/tablelist/tablelistWidget.html#itemtodict
