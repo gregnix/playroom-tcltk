@@ -61,7 +61,11 @@
 + https://www.nemethi.de/tablelist/tablelistWidget.html#loadfromfile
 + https://www.nemethi.de/tablelist/tablelistWidget.html#dumptostring
 + https://www.nemethi.de/tablelist/tablelistWidget.html#loadfromstring
-  
+
+### sorting
++ [resetsortinfo](https://www.nemethi.de/tablelist/tablelistWidget.html#resetsortinfo)
++ [refreshsorting](https://www.nemethi.de/tablelist/tablelistWidget.html#refreshsorting)
+
 ### dict
 + https://www.nemethi.de/tablelist/tablelistWidget.html#dicttoitem
 + https://www.nemethi.de/tablelist/tablelistWidget.html#itemtodict
