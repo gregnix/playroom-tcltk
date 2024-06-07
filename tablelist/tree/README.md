@@ -17,9 +17,6 @@
 ```
 
 
-
-+ https://wiki.tcl-lang.org/page/Tablelist+as+treeview%3A+A+speed-up
- 
 ### tree widget
 + https://www.nemethi.de/tablelist/tablelistWidget.html#tree_widget
 
@@ -51,9 +48,13 @@
 + https://www.nemethi.de/tablelist/tablelistWidget.html#parentkey
 + https://www.nemethi.de/tablelist/tablelistWidget.html#expandedkeys
 
-### insert
+### find
++ https://www.nemethi.de/tablelist/tablelistWidget.html#findrowname
+
+### insert, move
 + https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildlist
 + https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildren
++ https://www.nemethi.de/tablelist/tablelistWidget.html#move
 
 
 ### load and dump
@@ -65,7 +66,26 @@
 ### sorting
 + [resetsortinfo](https://www.nemethi.de/tablelist/tablelistWidget.html#resetsortinfo)
 + [refreshsorting](https://www.nemethi.de/tablelist/tablelistWidget.html#refreshsorting)
++ [aaplsorting](https://www.nemethi.de/tablelist/tablelistWidget.html#applysorting)
+
+### attrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#attrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#cellattrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#columnattrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#rowattrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#hasattrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#hascellattrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#hascolumnattrib
++ https://www.nemethi.de/tablelist/tablelistWidget.html#hasrowattrib
+  
+### DRAG & DROP
++ https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
++ https://www.nemethi.de/tablelist/tablelistWidget.html#acceptchildcommand
 
 ### dict
 + https://www.nemethi.de/tablelist/tablelistWidget.html#dicttoitem
 + https://www.nemethi.de/tablelist/tablelistWidget.html#itemtodict
+
+### speed
+
++ https://wiki.tcl-lang.org/page/Tablelist+as+treeview%3A+A+speed-up
