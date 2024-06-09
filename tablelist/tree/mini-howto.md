@@ -14,6 +14,14 @@ proc callbDouble1 {W x y } {
     set descendantcount [$tbl  descendantcount $row]
     set childkeys  [$tbl childkeys $row]
     set depth [$tbl depth $row]
+    set childcountpk [$tbl childcount $parentkey]
+    if {$parentkey eq "root"} {
+        set childindexpk [$tbl childindex k0]
+    } else {
+        set childindexpk [$tbl childindex $parentkey]
+    }
+
+
     set childkeyspk  [$tbl childkeys $parentkey]
     set depthpk [$tbl depth $parentkey]
     set noderow [$tbl noderow $parentkey $childindex]
@@ -23,6 +31,7 @@ proc callbDouble1 {W x y } {
     puts \n
     puts "tbl: $tbl :: W: $W :: row: $row :: rows : $rows :: noderow: $noderow ::"
     puts "parentsRoot: $parentsRoot ::  parentkey: $parentkey ::  descendantcount: $descendantcount"
+    puts "childcountpk : $childcountpk :: childindexpk: $childindexpk :: childkeyspk: $childkeyspk :: depthpk : $depthpk"
     puts "childcount : $childcount :: childindex: $childindex :: childkeys: $childkeys :: depth : $depth"
 }
 
@@ -44,24 +53,25 @@ proc populateTree {tbl} {
 
 ### Output:
 ```
-tbl: .main.tbl :: W: .main.tbl.body :: row: 0 :: rows : 0 :: noderow: 0 ::
-parentsRoot: root k0 ::  parentkey: root ::  descendantcount: 6
-childcount : 2 :: childindex: 0 :: childkeys: k0 :: depth : 0
+    root: k0 :: folder1: k1 :: folder2: k4
 
 
-tbl: .main.tbl :: W: .main.tbl.body :: row: 1 :: rows : 1 :: noderow: 1 ::
-parentsRoot: root k0 ::  parentkey: k0 ::  descendantcount: 2
-childcount : 2 :: childindex: 0 :: childkeys: k1 k4 :: depth : 1
+    tbl: .main.tbl :: W: .main.tbl.body :: row: 0 :: rows : 0 :: noderow: 0 ::
+    parentsRoot: root k0 ::  parentkey: root ::  descendantcount: 6
+    childcountpk : 1 :: childindexpk: 0 :: childkeyspk: k0 :: depthpk : 0
+    childcount : 2 :: childindex: 0 :: childkeys: k1 k4 :: depth : 1
 
 
-tbl: .main.tbl :: W: .main.tbl.body :: row: 2 :: rows : 2 :: noderow: 2 ::
-parentsRoot: root k0 ::  parentkey: k1 ::  descendantcount: 0
-childcount : 0 :: childindex: 0 :: childkeys: k2 k3 :: depth : 2
+    tbl: .main.tbl :: W: .main.tbl.body :: row: 1 :: rows : 1 :: noderow: 1 ::
+    parentsRoot: root k0 ::  parentkey: k0 ::  descendantcount: 2
+    childcountpk : 2 :: childindexpk: 0 :: childkeyspk: k1 k4 :: depthpk : 1
+    childcount : 2 :: childindex: 0 :: childkeys: k2 k3 :: depth : 2
 
 
-tbl: .main.tbl :: W: .main.tbl.body :: row: 3 :: rows : 3 :: noderow: 3 ::
-parentsRoot: root k0 ::  parentkey: k1 ::  descendantcount: 0
-childcount : 0 :: childindex: 1 :: childkeys: k2 k3 :: depth : 2
+    tbl: .main.tbl :: W: .main.tbl.body :: row: 2 :: rows : 2 :: noderow: 2 ::
+    parentsRoot: root k0 ::  parentkey: k1 ::  descendantcount: 0
+    childcountpk : 2 :: childindexpk: 0 :: childkeyspk: k2 k3 :: depthpk : 2
+    childcount : 0 :: childindex: 0 :: childkeys:  :: depth : 3
 
 ```
 
