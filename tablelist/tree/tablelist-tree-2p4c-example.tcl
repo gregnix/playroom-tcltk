@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240609
+#20240610
 
 # 
 package require Tk
@@ -16,8 +16,8 @@ proc generateTreeData1 {{dataList {1 2 3}} {parentList {a b c}} {shuffle 1} } {
     foreach  parent  $parentList {
         foreach data $dataList {
             set item ""
-            for {set i 1} {$i <= $length } {incr i} {
-                lappend item [lsearch $parentList $parent]${i}[lindex $data $i-1]
+            for {set i 0} {$i < $length } {incr i} {
+                lappend item [lsearch $parentList $parent]${i}[lindex $data $i]
             }
             lappend resultList [list $parent {*}$item]
 
