@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240610
+#20240612
 package require Tk
 package require tablelist_tile
 
@@ -77,7 +77,7 @@ proc treetblcreate {w} {
         0 "eight" right
         0 "nine" right
         0 "ten" right
-    } -stretch all -width 70 -height 30 -treecolumn 0]
+    } -stretch all -width 100 -height 30 -treecolumn 0]
 
     # Enable expansion and collapse of nodes, sorting
     $frt.tbl configure -expandcommand "expandNode" -collapsecommand "collapseNode" \
@@ -94,6 +94,7 @@ proc treetblcreate {w} {
 
     set frcb [ttk::frame $w.frcb]
     set cbGenerator [ttk::combobox $frcb.cbGenerator -values [list \
+    {generateSimpleLists {a b} {1 2} 0} \
     {generateSimpleLists {a b} {1 2} 1} \
     {generateSimpleLists {a b} {1 2 3} 1} \
     {generateSimpleLists {a b} {1 2 3 4} 1} \
@@ -102,7 +103,7 @@ proc treetblcreate {w} {
     {generateLists {a b} {1 2 3} {1 2 3} {1 2 3} {1 2 3 4} 1 1}\
     {generateLists {a b} {1 2 3} {1 2 3} {1 2 3} {1 2 3 4 5} 1 1}\
     ] -width 50]
-    $cbGenerator current 3
+    $cbGenerator current 0
     set frb [ttk::frame $w.frb]
     set btnOutput  [ttk::button $frb.btnOutput -text Output -command [list callbOutput $tbl]]
     set btnPopulate  [ttk::button $frb.btnPopulate -text "Populate" -command [list populateTree $tbl $cbGenerator ]]
@@ -132,17 +133,22 @@ proc collapseNode {tbl row} {
 }
 
 proc fillColumns {tbl row} {
-    set currentid $row
-    $tbl cellconfigure $currentid,1 -text "$currentid"
-    $tbl cellconfigure $currentid,2 -text "[$tbl parentkey $currentid]"
-    $tbl cellconfigure $currentid,3 -text "[$tbl noderow [$tbl parentkey $currentid] [$tbl getkey $currentid]]"
-    $tbl cellconfigure $currentid,4 -text "[$tbl getkey $currentid]"
-    $tbl cellconfigure $currentid,5 -text "[$tbl index $currentid]"
-    $tbl cellconfigure $currentid,6 -text "[$tbl depth $currentid]"
-    $tbl cellconfigure $currentid,7 -text "[$tbl descendantcount $currentid]"
-    $tbl cellconfigure $currentid,8 -text "[$tbl childkeys $currentid]"
-    $tbl cellconfigure $currentid,9 -text "[$tbl childindex $currentid]"
+    $tbl cellconfigure $row,1 -text "$row"
+    $tbl cellconfigure $row,2 -text "[$tbl parentkey $row]"
+    $tbl cellconfigure $row,3 -text "[$tbl noderow [$tbl parentkey $row] [$tbl getkey $row]]"
+    $tbl cellconfigure $row,4 -text "[$tbl getkey $row]"
+    $tbl cellconfigure $row,5 -text "[$tbl index $row]"
+    $tbl cellconfigure $row,6 -text "[$tbl depth $row]"
+    $tbl cellconfigure $row,7 -text "[$tbl descendantcount $row]"
+    $tbl cellconfigure $row,8 -text "[$tbl childkeys $row]"
+    $tbl cellconfigure $row,9 -text "[$tbl childindex $row]"
+}
 
+proc fillTblColumns {tbl} {
+    set end [$tbl index end]
+    for {set i 0}  {$i < $end} { incr i } {
+        fillColumns $tbl $i
+    }
 }
 
 # Function  Init
@@ -152,30 +158,37 @@ proc populateTree {tbl cbGenerator} {
     if {[lindex [$cbGenerator get] 0] ni {generateLists generateSimpleLists} } {return}
     set data [{*}[$cbGenerator get]]
 
+    set root root
+    set root [$tbl insertchild $root end [list $root]]
+
+    #problem with insertchildlist , no subs 
+    if {0} {
+        puts $data
+        #set data {{{a \n 1} 001 012} {{a 2} 002 011} {{b 1} 101 112} {{b 2} 102 111}}
+        set data {{a 001 012 } {a 002 011} {b 101 112} {b 102 111}}
+        puts $data
+        $tbl  insertchildlist  $root end $data
+    } else {
+        insertNode $tbl $data $root
+    }
+    # Sort based on the columns
+    #$tbl collapseall
+    #$tbl expandall
+    for {set col [expr {[llength [lindex $data 0] ] - 1}]} {$col >= 0} {incr col -1} {
+        $tbl sortbycolumn $col -increasing
+    }
+    fillTblColumns $tbl
+    #callbOutput $tbl
+}
+
+proc insertNode {tbl data root} {
     foreach item $data {
-        set currentid "root"
+        set currentid $root
         set length [llength $item]
-        if {![llength [$tbl childkeys $currentid]]} {
-            set currentid [$tbl insertchild root end [list [lindex $item 0] [$tbl getkey end] [$tbl index end] root]]
-            fillColumns $tbl $currentid
-        } else {
-            set found 0
-            foreach ck [$tbl childkeys $currentid] {
-                if {[lindex [$tbl rowcget $ck -text] 0] eq [lindex $item 0] } {
-                    set found 1
-                    break
-                }
-            }
-            if {$found} {
-                set currentid $ck
-            } else {
-                set currentid [$tbl insertchild root end [list [lindex $item 0] [$tbl getkey end] [$tbl index end] "root"]]
-                fillColumns $tbl $currentid
-            }
-        }
-        for {set i 1} {$i < $length} {incr i} {
+
+        for {set i 0} {$i < $length} {incr i} {
             if {![llength [$tbl childkeys $currentid]]} {
-                set currentid [$tbl insertchild $currentid end [list [lindex $item $i] [$tbl getkey end] [$tbl index end] $currentid]]
+                set currentid [$tbl insertchild $currentid end [list [lindex $item $i]]]
                 fillColumns $tbl $currentid
             } else {
                 set found 0
@@ -188,27 +201,14 @@ proc populateTree {tbl cbGenerator} {
                 if {$found} {
                     set currentid $ck
                 } else {
-                    set currentid [$tbl insertchild $currentid end [list [lindex $item $i] [$tbl getkey end] [$tbl index end]  $currentid ]]
-                    fillColumns $tbl $currentid
+                    set currentid [$tbl insertchild $currentid end [list [lindex $item $i]]]
+                    #fillColumns $tbl $currentid
                 }
             }
         }
     }
-    #callbOutput $tbl
-    # Sort based on the columns
-    #
-    $tbl collapseall
-    $tbl expandall
-    for {set col [expr {[llength $item] - 1}]} {$col >= 0} {incr col -1} {
-        $tbl sortbycolumn $col -increasing
-    }
 }
-
 # for debug
-
-proc insertNode {tbl data currentid {pos 0}} {
-
-}
 proc callbOutput {tbl} {
     variable data
     set row [lindex [$tbl childkeys root] 0]
