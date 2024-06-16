@@ -36,51 +36,6 @@ proc addToTree {tree path value} {
     }
 }
 
-proc getFromTree {tree path} {
-    upvar 1 $tree dictTree
-    set key [lindex $path 0]
-    if {[llength $path] == 1} {
-        set node [dict get $dictTree key $key]
-        if {[dict exists $node val]} {
-            return [dict get $node val]
-        } else {
-            return {}
-        }
-    } else {
-        set restPath [lrange $path 1 end]
-        set subDict [dict get $dictTree key $key]
-        return [getFromTree subDict $restPath]
-    }
-}
-
-proc printTree {tree {indent ""}} {
-    upvar 1 $tree dictTree
-    dict for {key value} $dictTree {
-        if {[is-dict $value]} {
-            puts "$indent$key:"
-            printTree value "$indent  "
-        } else {
-            puts "$indent$key: $value"
-        }
-    }
-}
-
-proc walkTree {tree path action} {
-    upvar 1 $tree dictTree
-    dict for {key value} $dictTree {
-        set currentPath [concat $path $key]
-        if {[is-dict $value]} {
-            walkTree value $currentPath $action
-        } else {
-            uplevel 1 [list $action $currentPath $value]
-        }
-    }
-}
-
-proc printNode {path value} {
-    puts "Path: $path, Value: $value"
-}
-
 proc deleteNode {tree path} {
     upvar 1 $tree dictTree
     set key [lindex $path 0]
@@ -96,9 +51,11 @@ proc deleteNode {tree path} {
     }
 }
 
-proc clearTree {tree} {
+proc moveNode {tree fromPath toPath} {
     upvar 1 $tree dictTree
-    set dictTree [dict create]
+    set value [getFromTree dictTree $fromPath]
+    deleteNode dictTree $fromPath
+    addToTree dictTree $toPath $value
 }
 
 proc replaceNode {tree path value} {
@@ -107,11 +64,16 @@ proc replaceNode {tree path value} {
     addToTree dictTree $path $value
 }
 
+proc clearTree {tree} {
+    upvar 1 $tree dictTree
+    set dictTree [dict create]
+}
+
 proc getChildren {tree path} {
     upvar 1 $tree dictTree
-    set path [lmap ipath $path {list key $ipath}]
-    set path [concat {*}$path]
-    set subDict [dict get $dictTree {*}$path]
+    set keyPath [lmap ipath $path {list key $ipath}]
+    set keyPath [concat {*}$keyPath]
+    set subDict [dict get $dictTree {*}$keyPath]
     return [dict keys [dict get $subDict key]]
 }
 
@@ -150,13 +112,30 @@ proc getAllNodes {tree path} {
     return $result
 }
 
+proc getFromTree {tree path} {
+    upvar 1 $tree dictTree
+    set key [lindex $path 0]
+    if {[llength $path] == 1} {
+        set node [dict get $dictTree key $key]
+        if {[dict exists $node val]} {
+            return [dict get $node val]
+        } else {
+            return {}
+        }
+    } else {
+        set restPath [lrange $path 1 end]
+        set subDict [dict get $dictTree key $key]
+        return [getFromTree subDict $restPath]
+    }
+}
+
 proc getNodeValue {tree path} {
     upvar 1 $tree dictTree
     set key [lindex $path end]
     set parentPath [lrange $path 0 end-1]
-    set parentPath [lmap ipath $parentPath {list key $ipath}]
-    set parentPath [concat {*}$parentPath]
-    set parentDict [dict get $dictTree {*}$parentPath]
+    set keyPath [lmap ipath $parentPath {list key $ipath}]
+    set keyPath [concat {*}$keyPath]
+    set parentDict [dict get $dictTree {*}$keyPath]
     if {![dict exists $parentDict key $key]} {
         error "Key \"$key\" not found in dictionary"
     }
@@ -174,26 +153,60 @@ proc setNodeValue {tree path newValue} {
     set key [lindex $path end]
     set parentPath [lrange $path 0 end-1]
 
-    set parentPath [lmap ipath $parentPath {list key $ipath}]
-    set parentPath [concat {*}$parentPath]
+    set keyPath [lmap ipath $parentPath {list key $ipath}]
+    set keyPath [concat {*}$keyPath]
 
-    set parentDict [dict get $dictTree {*}$parentPath]
+    set parentDict [dict get $dictTree {*}$keyPath]
     if {![dict exists $parentDict key $key]} {
-        puts fehler
         error "Key \"$key\" not found in dictionary"
     }
     set node [dict get $parentDict key $key]
     dict set node val $newValue
     dict set parentDict key $key $node
-    dict set dictTree {*}$parentPath $parentDict
+    dict set dictTree {*}$keyPath $parentDict
 }
 
-proc moveNode {tree fromPath toPath} {
+
+proc walkTree {tree path action} {
     upvar 1 $tree dictTree
-    set value [getFromTree dictTree $fromPath]
-    deleteNode dictTree $fromPath
-    addToTree dictTree $toPath $value
+    dict for {key value} $dictTree {
+        if {$key eq "key"} {
+            dict for {subkey subvalue} $value {
+                set currentPath [concat $path $subkey]
+                if {[is-dict $subvalue]} {
+                    walkTree subvalue $currentPath $action
+                } else {
+                    uplevel 1 [list $action $currentPath $subvalue]
+                }
+            }
+        } elseif {$key eq "val"} {
+            uplevel 1 [list $action $path $value]
+        }
+    }
 }
+
+proc printTree {tree {indent ""}} {
+    upvar 1 $tree dictTree
+    dict for {key value} $dictTree {
+        if {$key eq "key"} {
+            dict for {subkey subvalue} $value {
+                if {[is-dict $subvalue]} {
+                    puts "$indent$subkey:"
+                    printTree subvalue "$indent  "
+                } else {
+                    puts "$indent$subkey: $subvalue"
+                }
+            }
+        } elseif {$key eq "val"} {
+            puts "$indent$value"
+        }
+    }
+}
+
+proc printNode {path value} {
+    puts "Path: [format %-30s $path] Value: $value"
+}
+
 
 proc size {tree} {
     upvar 1 $tree dictTree
@@ -233,7 +246,7 @@ if {[info script] eq $argv0} {
     addToTree tree {a 002 011} "value011"
     addToTree tree {b 101 112} "value112"
     addToTree tree {b 103 111} "value111"
-    setNodeValue tree {b 101} "Nodevalue 101 3 "
+    setNodeValue tree {b 101} "Nodevalue 101 3"
     setNodeValue tree {b 103} "Nodevalue 103 "
     setNodeValue tree {b 101 112} "Nodevalue 112"
     addToTree tree {b 002} "addto value"
@@ -336,180 +349,160 @@ if {[info script] eq $argv0} {
     puts [getNodeValue  tree {a 002}]
     puts [getNodeValue  tree {b 101}]
     puts [getNodeValue  tree {b 103}]
+    
+    puts "walkTree tree {a 001 012} printNode"
+    walkTree tree {a 001 012} printNode
 }
 
 #Output
 if {0} {
-    /usr/bin/tclsh /home/greg/Project/2024/tcl/example/tcl/dict/tree/dict-tree-lib.tcl
-
-
-    Tree struct:
-    key:
-    a:
-    key:
-    001:
-    key:
+    
+Tree struct:
+a:
+  001:
     012:
-    val: value012
+      value012
     013:
-    val: value013
-    002:
-    key:
+      value013
+  002:
     011:
-    val: value011
-    b:
-    key:
-    101:
-    key:
+      value011
+b:
+  101:
     112:
-    val:
-    Nodevalue: 112
-    val: Nodevalue 101 3
-    103:
-    key:
-    111:
-    val: value111
-    val:
-    Nodevalue: 103
-    002:
-    val:
-    addto: value
-    Wert an {a 001 012}: value012
-    Wert an {a 001 013}: value013
-    Neuer Wert an {a 001 012}: new_value1
-    löschen eines Knoten 012
-
-    Kindknoten von {a 001}:
-    012 013
-    013
-
-    Baumstruktur nach dem Verschieben von {a 001 012} nach {b 102 012}:
-
-    Größe des Baums:
-    34
-
-    Tiefe des Baums:
-    8
-
-    Kindknoten von {a 001}:
-    013 012
-
-    Kindknoten von {a}:
-    001 002
-
-    Elternknoten von {a 002 011 023}:
-    a 002 011
-
-    Alle Knoten von {a}:
-    001 {001 013} {001 012} 002 {002 011}
-
-    Alle Knoten von {a 001}:
-    013 012
-    ende getAllNodes
-
-
-    tree raw:
-    key {a {key {001 {key {013 {val value013} 012 {val value012nm}}} 002 {key {011 {val value011}}}}} b {key {101 {key {112 {val {Nodevalue 112}}} val {Nodevalue 101 3 }} 103 {key {111 {val value111}} val {Nodevalue 103 }} 002 {val {addto value}} 102 {key {012 {val value012n}}}}}}
-
-    [dict keys [dict get $tree key a key]]
-    001 002
-
-    [dict get $tree key a key 001 key 013]
-    val value013
-
-    [dict get $tree key a key 001 key 012 val]
-    value012nm
-
-    [dict get $tree key a key 002]
-    key {011 {val value011}}
-    Baumstruktur:
-    key:
-    a:
-    key:
-    001:
-    key:
-    013:
-    val: value013
-    012:
-    val: value012nm
-    002:
-    key:
-    011:
-    val: value011
-    b:
-    key:
-    101:
-    key:
-    112:
-    val:
-    Nodevalue: 112
-    val: Nodevalue 101 3
-    103:
-    key:
-    111:
-    val: value111
-    val:
-    Nodevalue: 103
-    002:
-    val:
-    addto: value
-    102:
-    key:
-    012:
-    val: value012n
-    Baumstruktur after addToTree tree {a 002 011 023} "value3a":
-    key:
-    a:
-    key:
-    001:
-    key:
-    013:
-    val: value013
-    012:
-    val: value012nm
-    val:
-    value3aa: id
-    002:
-    key:
-    011:
-    val: value011
-    b:
-    key:
-    101:
-    key:
-    112:
-    val:
-    Nodevalue: 112
-    val: Nodevalue 101 3
-    103:
-    key:
-    111:
-    val: value111
-    val:
-    Nodevalue: 103
-    002:
-    val:
-    addto: value
-    102:
-    key:
-    012:
-    val: value012n
-    children
-    013 012
-    parents
-    a 001
-    getfromtree
-    value012nm
-    value3aa id
-    getnodetree
-
-    neu
-    neu2
-    neu2 neu3
+      Nodevalue 112
     Nodevalue 101 3
-    Nodevalue 103
+  103:
+    111:
+      value111
+    Nodevalue 103 
+  002:
+    addto value
+Wert an {a 001 012}: value012
+Wert an {a 001 013}: value013
+Neuer Wert an {a 001 012}: new_value1
+löschen eines Knoten 012
 
-    Press return to continue
+Kindknoten von {a 001}:
+012 013
+013
+
+Baumstruktur nach dem Verschieben von {a 001 012} nach {b 102 012}:
+
+Größe des Baums:
+34
+
+Tiefe des Baums:
+8
+
+Kindknoten von {a 001}:
+013 012
+
+Kindknoten von {a}:
+001 002
+
+Elternknoten von {a 002 011 023}:
+a 002 011
+
+Alle Knoten von {a}:
+001 {001 013} {001 012} 002 {002 011}
+
+Alle Knoten von {a 001}:
+013 012
+ende getAllNodes
+
+
+tree raw:
+key {a {key {001 {key {013 {val value013} 012 {val value012nm}}} 002 {key {011 {val value011}}}}} b {key {101 {key {112 {val {Nodevalue 112}}} val {Nodevalue 101 3}} 103 {key {111 {val value111}} val {Nodevalue 103 }} 002 {val {addto value}} 102 {key {012 {val value012n}}}}}}
+
+[dict keys [dict get $tree key a key]]
+001 002
+
+[dict get $tree key a key 001 key 013]
+val value013
+
+[dict get $tree key a key 001 key 012 val]
+value012nm
+
+[dict get $tree key a key 002]
+key {011 {val value011}}
+Baumstruktur:
+a:
+  001:
+    013:
+      value013
+    012:
+      value012nm
+  002:
+    011:
+      value011
+b:
+  101:
+    112:
+      Nodevalue 112
+    Nodevalue 101 3
+  103:
+    111:
+      value111
+    Nodevalue 103 
+  002:
+    addto value
+  102:
+    012:
+      value012n
+Baumstruktur after addToTree tree {a 002 011 023} "value3a":
+a:
+  001:
+    013:
+      value013
+    012:
+      value012nm
+    value3aa id
+  002:
+    011:
+      value011
+b:
+  101:
+    112:
+      Nodevalue 112
+    Nodevalue 101 3
+  103:
+    111:
+      value111
+    Nodevalue 103 
+  002:
+    addto value
+  102:
+    012:
+      value012n
+children
+013 012
+parents
+a 001
+getfromtree
+value012nm
+value3aa id
+getnodetree
+
+neu
+neu2
+neu2 neu3
+Nodevalue 101 3
+Nodevalue 103 
+walkTree tree {a 001 012} printNode
+Path: a 001 012 a 001 013            Value: value013
+Path: a 001 012 a 001 012            Value: value012nm
+Path: a 001 012 a 001                Value: value3aa id
+Path: a 001 012 a 002 011            Value: value011
+Path: a 001 012 a 002                Value: neu2 neu3
+Path: a 001 012 b 101 112            Value: Nodevalue 112
+Path: a 001 012 b 101                Value: Nodevalue 101 3
+Path: a 001 012 b 103 111            Value: value111
+Path: a 001 012 b 103                Value: Nodevalue 103 
+Path: a 001 012 b 002                Value: addto value
+Path: a 001 012 b 102 012            Value: value012n
+
+
 
 
 }
