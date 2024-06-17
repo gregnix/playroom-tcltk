@@ -3,8 +3,12 @@
 #20240612
 package require Tk
 package require tablelist_tile
-
+package require struct::set
 package require struct::list
+
+# dict - nested
+source [file join [file dirname [info script]] lib  dict-tree-tablelist-load.tcl]
+
 # help procs
 # This function generates flat hierarchical test data
 proc generateSimpleLists {{parentList {a b }} {dataList {1 2 3 }}  {shuffle 1} } {
@@ -67,17 +71,18 @@ proc treetblcreate {w} {
     # Tree-Widget
     set tbl [tablelist::tablelist $frt.tbl -columns {
         0 "id" left
-        0 "one" right
-        0 "two" right
-        0 "three" right
-        0 "four" right
-        0 "five" right
-        0 "six" right
-        0 "seven" right
-        0 "eight" right
-        0 "nine" right
-        0 "ten" right
-    } -stretch all -width 100 -height 30 -treecolumn 0]
+        0 "row" right
+        0 "getkey" right
+        0 "index" right
+        0 "parent" right
+        0 "depth" right
+        0 "noderow" right
+        0 "descendantcount" right
+        0 "childcount" right
+        0 "childkeys" right
+        0 "childindex" right
+        0 "elven" right
+    } -stretch all -width 120 -height 30 -treecolumn 0]
 
     # Enable expansion and collapse of nodes, sorting
     $frt.tbl configure -expandcommand "expandNode" -collapsecommand "collapseNode" \
@@ -94,6 +99,7 @@ proc treetblcreate {w} {
 
     set frcb [ttk::frame $w.frcb]
     set cbGenerator [ttk::combobox $frcb.cbGenerator -values [list \
+    {generateSimpleLists {a b} {1} 0} \
     {generateSimpleLists {a b} {1 2} 0} \
     {generateSimpleLists {a b} {1 2} 1} \
     {generateSimpleLists {a b} {1 2 3} 1} \
@@ -103,11 +109,14 @@ proc treetblcreate {w} {
     {generateLists {a b} {1 2 3} {1 2 3} {1 2 3} {1 2 3 4} 1 1}\
     {generateLists {a b} {1 2 3} {1 2 3} {1 2 3} {1 2 3 4 5} 1 1}\
     ] -width 50]
-    $cbGenerator current 0
+    $cbGenerator current 1
     set frb [ttk::frame $w.frb]
     set btnOutput  [ttk::button $frb.btnOutput -text Output -command [list callbOutput $tbl]]
     set btnPopulate  [ttk::button $frb.btnPopulate -text "Populate" -command [list populateTree $tbl $cbGenerator ]]
-    pack $btnOutput $cbGenerator  $btnPopulate -side left
+    set btnOpen  [ttk::button $frb.btnOpen -text "Open File" -command [list openFile $tbl]]
+    set btnSave  [ttk::button $frb.btnSave -text "Save as File" -command [list saveFile $tbl]]
+    set btnTblFill  [ttk::button $frb.btnTblFill -text "Tbl fill" -command [list fillTblColumns $tbl]]
+    pack $btnOutput $cbGenerator $btnPopulate $btnOpen $btnSave $btnTblFill -side left
     pack $frb $frcb -expand 0 -fill x
     pack $frt -expand yes -fill both
 
@@ -134,25 +143,35 @@ proc collapseNode {tbl row} {
 
 proc fillColumns {tbl row} {
     $tbl cellconfigure $row,1 -text "$row"
-    $tbl cellconfigure $row,2 -text "[$tbl parentkey $row]"
-    $tbl cellconfigure $row,3 -text "[$tbl noderow [$tbl parentkey $row] [$tbl getkey $row]]"
-    $tbl cellconfigure $row,4 -text "[$tbl getkey $row]"
-    $tbl cellconfigure $row,5 -text "[$tbl index $row]"
-    $tbl cellconfigure $row,6 -text "[$tbl depth $row]"
+    $tbl cellconfigure $row,2 -text "[$tbl getkey $row]"
+    $tbl cellconfigure $row,3 -text "[$tbl index $row]"
+    $tbl cellconfigure $row,4 -text "[$tbl parentkey $row]"
+    $tbl cellconfigure $row,5 -text "[$tbl depth $row]"
+    $tbl cellconfigure $row,6 -text "[$tbl noderow [$tbl parentkey $row] [$tbl getkey $row]]"
     $tbl cellconfigure $row,7 -text "[$tbl descendantcount $row]"
-    $tbl cellconfigure $row,8 -text "[$tbl childkeys $row]"
-    $tbl cellconfigure $row,9 -text "[$tbl childindex $row]"
+    $tbl cellconfigure $row,8 -text "[$tbl childcount $row]"
+    $tbl cellconfigure $row,9 -text "[$tbl childkeys $row]"
+    $tbl cellconfigure $row,10 -text "[$tbl childindex $row]"
 }
 
 proc fillTblColumns {tbl} {
-    set end [$tbl index end]
-    for {set i 0}  {$i < $end} { incr i } {
+    set liststart [$tbl expandedkeys]
+    $tbl expandall
+    set end [$tbl descendantcount 0]
+    for {set i 0}  {$i <= $end} { incr i } {
         fillColumns $tbl $i
     }
+    $tbl collapseall
+    $tbl expand $liststart
+    set listend [$tbl expandedkeys]
+    $tbl collapse [::struct::set difference $listend $liststart]
+
 }
 
 # Function  Init
 proc populateTree {tbl cbGenerator} {
+    $tbl setbusycursor
+    puts "time: [time {
     variable data
     $tbl delete 0 end
     if {[lindex [$cbGenerator get] 0] ni {generateLists generateSimpleLists} } {return}
@@ -161,25 +180,17 @@ proc populateTree {tbl cbGenerator} {
     set root root
     set root [$tbl insertchild $root end [list $root]]
 
-    #problem with insertchildlist , no subs 
-    if {0} {
-        puts $data
-        #set data {{{a \n 1} 001 012} {{a 2} 002 011} {{b 1} 101 112} {{b 2} 102 111}}
-        set data {{a 001 012 } {a 002 011} {b 101 112} {b 102 111}}
-        puts $data
-        $tbl  insertchildlist  $root end $data
-    } else {
-        insertNode $tbl $data $root
-    }
+    insertNode $tbl $data $root
     # Sort based on the columns
     #$tbl collapseall
     #$tbl expandall
-    for {set col [expr {[llength [lindex $data 0] ] - 1}]} {$col >= 0} {incr col -1} {
-        $tbl sortbycolumn $col -increasing
-    }
+    $tbl sortbycolumn 0 -increasing
     fillTblColumns $tbl
-    #callbOutput $tbl
+    callbOutput $tbl
+    }]"
+    $tbl  restorecursor
 }
+
 
 proc insertNode {tbl data root} {
     foreach item $data {
@@ -187,13 +198,14 @@ proc insertNode {tbl data root} {
         set length [llength $item]
 
         for {set i 0} {$i < $length} {incr i} {
+            set itemi [lindex $item $i]
             if {![llength [$tbl childkeys $currentid]]} {
-                set currentid [$tbl insertchild $currentid end [list [lindex $item $i]]]
-                fillColumns $tbl $currentid
+                set currentid [$tbl insertchild $currentid end $itemi]
+                #fillColumns $tbl $currentid
             } else {
                 set found 0
                 foreach ck [$tbl childkeys $currentid] {
-                    if {[lindex [$tbl rowcget $ck -text] 0] eq [lindex $item $i] } {
+                    if {[lindex [$tbl rowcget $ck -text] 0] eq $itemi } {
                         set found 1
                         break
                     }
@@ -201,13 +213,30 @@ proc insertNode {tbl data root} {
                 if {$found} {
                     set currentid $ck
                 } else {
-                    set currentid [$tbl insertchild $currentid end [list [lindex $item $i]]]
+                    set currentid [$tbl insertchild $currentid end $itemi]
                     #fillColumns $tbl $currentid
                 }
             }
         }
     }
 }
+
+proc openFile {tbl} {
+    set pwd  [pwd]
+    set openfile [file join $pwd test.txt]
+    set filename [tk_getOpenFile -initialfile $openfile ]
+    set result [$tbl loadfromfile $filename]
+    fillTblColumns $tbl
+}
+proc saveFile {tbl} {
+    set pwd [pwd]
+    set savefile [file join $pwd test.txt]
+    set filename  [tk_getSaveFile -initialfile $savefile]
+    set result [$tbl dumptofile $filename]
+    puts $result
+}
+
+
 # for debug
 proc callbOutput {tbl} {
     variable data
@@ -260,8 +289,14 @@ proc callbOutput {tbl} {
         pack $f.hset -side bottom -fill x
         pack $f.vset -side right -fill y
         pack $f.t -side left -fill both -expand true
-        wm geometry $top +0+0
+        wm geometry $top 120x50+1920+0
     }
+    
+    set colslist [$tbl cget -columntitles]
+    set tree [dataToTblTree $data]
+    set loadstring [treeToTblLoad $tree $colslist]
+      walkTree tree {} printNode  
+    
     $t delete 1.0 end
     $t insert end   "row: $row :: rows : $rows :: noderow: $noderow :: [$tbl getkey $row]\n"
     $t insert end   "parentsRoot: $parentsRoot ::  parentkey: $parentkey ::  descendantcount: $descendantcountpk\n"
@@ -276,10 +311,14 @@ proc callbOutput {tbl} {
     $t insert end   "active childcount : $childcounta :: childindex: $childindexa :: childkeys: $childkeysa :: depth : $deptha\n"
     $t insert end  "\n \$tbl get 0 end\n"
     $t insert end  [join [$tbl get 0 end] \n]
-    $t insert end  "\n\n  dumptostring"
+    $t insert end  "\n\n dumptostring:\n"
     $t insert end [$tbl dumptostring]
+    $t insert end  "\n:dumptostring"
+    $t insert end  "\n\n extern loadstring:\n"
+    $t insert end  $loadstring
     $t insert end  "\n\n  data  length [llength $data]\n"
     $t insert end  [join $data \n]
+
 }
 
 #########################
@@ -295,6 +334,40 @@ set tbl [treetblcreate $mainFrame]
 
 #########################
 if {0} {
-    Output:
+    row: k0 :: rows : 0 :: noderow: 0 :: 0
+    parentsRoot: root k0 ::  parentkey: root ::  descendantcount: 11
+    childcount : 2 :: childindex: 0 :: childkeys: k0 :: depth : 0
 
+    row: k0 :: $tbl getkey $row: 0:: k0
+    parentkey: root ::  descendantcount: 10
+    childcount : 2 :: childindex: 0 :: childkeys: k1 k6 :: depth : 1
+
+    active rowa: 0 :: $tbl getkey $rowa: 0:: k0
+    active parentkey: root ::  descendantcount: 10
+    active childcount : 2 :: childindex: 0 :: childkeys: k1 k6 :: depth : 1
+
+    $tbl get 0 end
+    root 0 root 0 0 0 1 10 {k1 k6} 0 {}
+    a 1 k0 6 1 1 2 4 {k2 k4} 0 {}
+    001 2 k1 6 2 2 3 1 k3 0 {}
+    012 3 k2 4 3 3 4 0 {} 0 {}
+    002 4 k1 6 4 4 3 1 k5 1 {}
+    011 5 k4 6 5 5 4 0 {} 0 {}
+    b 6 k0 11 6 6 2 4 {k7 k9} 1 {}
+    101 7 k6 11 7 7 3 1 k8 0 {}
+    112 8 k7 9 8 8 4 0 {} 0 {}
+    102 9 k6 11 9 9 3 1 k10 1 {}
+    111 10 k9 11 10 10 4 0 {} 0 {}
+
+    dumptostringid one two three four five six seven eight nine ten
+    0 increasing
+
+    -1 0 1 2 1 4 0 6 7 6 9
+    {root 0 root 0 0 0 1 10 {k1 k6} 0 {}} {a 1 k0 6 1 1 2 4 {k2 k4} 0 {}} {001 2 k1 6 2 2 3 1 k3 0 {}} {012 3 k2 4 3 3 4 0 {} 0 {}} {002 4 k1 6 4 4 3 1 k5 1 {}} {011 5 k4 6 5 5 4 0 {} 0 {}} {b 6 k0 11 6 6 2 4 {k7 k9} 1 {}} {101 7 k6 11 7 7 3 1 k8 0 {}} {112 8 k7 9 8 8 4 0 {} 0 {}} {102 9 k6 11 9 9 3 1 k10 1 {}} {111 10 k9 11 10 10 4 0 {} 0 {}}
+
+    data  length 4
+    a 001 012
+    a 002 011
+    b 101 112
+    b 102 111
 }

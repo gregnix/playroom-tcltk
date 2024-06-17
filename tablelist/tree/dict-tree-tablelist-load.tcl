@@ -64,6 +64,10 @@ proc treeToTblLoad {tree colslist } {
 return $loadString
 }
 
+
+# Example
+if {[info script] eq $argv0} {
+
 set data {
     {a 001 012}
     {a 002 011}
@@ -84,7 +88,7 @@ puts \n
 puts "walkTree tree {} printNode"
 walkTree tree {} printNode
 
-
+}
 
 
 
