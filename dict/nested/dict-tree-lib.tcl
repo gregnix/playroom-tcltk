@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240616
+#20240617
 #todo
 # val: not a dict?
 # val: lappend, exists
@@ -148,6 +148,7 @@ proc getNodeValue {tree path} {
     }
 }
 
+# node exists
 proc setNodeValue {tree path newValue} {
     upvar 1 $tree dictTree
     set key [lindex $path end]
@@ -175,14 +176,40 @@ proc walkTree {tree path action} {
                 set currentPath [concat $path $subkey]
                 if {[is-dict $subvalue]} {
                     walkTree subvalue $currentPath $action
+                   
                 } else {
                     uplevel 1 [list $action $currentPath $subvalue]
+        
                 }
             }
         } elseif {$key eq "val"} {
             uplevel 1 [list $action $path $value]
+            
         }
     }
+}
+
+proc walkTreeList {tree path} {
+    upvar 1 $tree dictTree
+    dict for {key value} $dictTree {
+        if {$key eq "key"} {
+            dict for {subkey subvalue} $value {
+                set currentPath [concat $path $subkey]
+                if {[is-dict $subvalue]} {
+                   set res [walkTreeList subvalue $currentPath]
+                   lappend result {*}$res
+                   
+                } else {
+                    lappend result $currentPath $subvalue
+        
+                }
+            }
+        } elseif {$key eq "val"} {
+            lappend result $path $value
+            
+        }
+    }
+return $result
 }
 
 proc printTree {tree {indent ""}} {
@@ -206,7 +233,6 @@ proc printTree {tree {indent ""}} {
 proc printNode {path value} {
     puts "Path: [format %-30s $path] Value: $value"
 }
-
 
 proc size {tree} {
     upvar 1 $tree dictTree
@@ -234,6 +260,8 @@ proc depth {tree} {
     return [expr {$maxDepth + 1}]
 }
 
+
+###################################################################
 # Example
 if {[info script] eq $argv0} {
 
@@ -250,6 +278,7 @@ if {[info script] eq $argv0} {
     setNodeValue tree {b 103} "Nodevalue 103 "
     setNodeValue tree {b 101 112} "Nodevalue 112"
     addToTree tree {b 002} "addto value"
+    addToTree tree {a} "Nodevalue"
 
     # Baum durchlaufen und die Aktion auf jeden Knoten anwenden
     puts "Tree struct:"
@@ -324,11 +353,11 @@ if {[info script] eq $argv0} {
     puts {[dict get $tree key a key 002]}
     puts [dict get $tree key a key 002]
 
-    puts "Baumstruktur:"
+    puts "tree :"
     printTree tree
     addToTree tree {a 001} "value3a"
     addToTree tree {a 001} "value3aa id"
-    puts "Baumstruktur after addToTree tree {a 002 011 023} \"value3a\":"
+    puts "tree after addToTree tree :"
     printTree tree
     puts children
     puts [getChildren tree {a 001}]
@@ -350,8 +379,15 @@ if {[info script] eq $argv0} {
     puts [getNodeValue  tree {b 101}]
     puts [getNodeValue  tree {b 103}]
     
-    puts "walkTree tree {a 001 012} printNode"
-    walkTree tree {a 001 012} printNode
+    puts "walkTree tree {} printNode"
+    walkTree tree {} printNode
+    
+    puts \n
+    set liste [walkTreeList tree {}]
+    foreach {k v}  $liste {
+        puts "$k $v"
+    }
+    
 }
 
 #Output
@@ -367,6 +403,7 @@ a:
   002:
     011:
       value011
+  Nodevalue
 b:
   101:
     112:
@@ -390,7 +427,7 @@ Kindknoten von {a 001}:
 Baumstruktur nach dem Verschieben von {a 001 012} nach {b 102 012}:
 
 Größe des Baums:
-34
+35
 
 Tiefe des Baums:
 8
@@ -413,7 +450,7 @@ ende getAllNodes
 
 
 tree raw:
-key {a {key {001 {key {013 {val value013} 012 {val value012nm}}} 002 {key {011 {val value011}}}}} b {key {101 {key {112 {val {Nodevalue 112}}} val {Nodevalue 101 3}} 103 {key {111 {val value111}} val {Nodevalue 103 }} 002 {val {addto value}} 102 {key {012 {val value012n}}}}}}
+key {a {key {001 {key {013 {val value013} 012 {val value012nm}}} 002 {key {011 {val value011}}}} val Nodevalue} b {key {101 {key {112 {val {Nodevalue 112}}} val {Nodevalue 101 3}} 103 {key {111 {val value111}} val {Nodevalue 103 }} 002 {val {addto value}} 102 {key {012 {val value012n}}}}}}
 
 [dict keys [dict get $tree key a key]]
 001 002
@@ -426,7 +463,7 @@ value012nm
 
 [dict get $tree key a key 002]
 key {011 {val value011}}
-Baumstruktur:
+tree :
 a:
   001:
     013:
@@ -436,6 +473,7 @@ a:
   002:
     011:
       value011
+  Nodevalue
 b:
   101:
     112:
@@ -450,7 +488,7 @@ b:
   102:
     012:
       value012n
-Baumstruktur after addToTree tree {a 002 011 023} "value3a":
+tree after addToTree tree :
 a:
   001:
     013:
@@ -461,6 +499,7 @@ a:
   002:
     011:
       value011
+  Nodevalue
 b:
   101:
     112:
@@ -489,20 +528,32 @@ neu2
 neu2 neu3
 Nodevalue 101 3
 Nodevalue 103 
-walkTree tree {a 001 012} printNode
-Path: a 001 012 a 001 013            Value: value013
-Path: a 001 012 a 001 012            Value: value012nm
-Path: a 001 012 a 001                Value: value3aa id
-Path: a 001 012 a 002 011            Value: value011
-Path: a 001 012 a 002                Value: neu2 neu3
-Path: a 001 012 b 101 112            Value: Nodevalue 112
-Path: a 001 012 b 101                Value: Nodevalue 101 3
-Path: a 001 012 b 103 111            Value: value111
-Path: a 001 012 b 103                Value: Nodevalue 103 
-Path: a 001 012 b 002                Value: addto value
-Path: a 001 012 b 102 012            Value: value012n
+walkTree tree {} printNode
+Path: a 001 013                      Value: value013
+Path: a 001 012                      Value: value012nm
+Path: a 001                          Value: value3aa id
+Path: a 002 011                      Value: value011
+Path: a 002                          Value: neu2 neu3
+Path: a                              Value: Nodevalue
+Path: b 101 112                      Value: Nodevalue 112
+Path: b 101                          Value: Nodevalue 101 3
+Path: b 103 111                      Value: value111
+Path: b 103                          Value: Nodevalue 103 
+Path: b 002                          Value: addto value
+Path: b 102 012                      Value: value012n
 
 
-
+a 001 013 value013
+a 001 012 value012nm
+a 001 value3aa id
+a 002 011 value011
+a 002 neu2 neu3
+a Nodevalue
+b 101 112 Nodevalue 112
+b 101 Nodevalue 101 3
+b 103 111 value111
+b 103 Nodevalue 103 
+b 002 addto value
+b 102 012 value012n
 
 }
