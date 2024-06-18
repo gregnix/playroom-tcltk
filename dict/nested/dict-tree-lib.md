@@ -12,8 +12,8 @@ This script allows the creation, management, and traversal of tree structures us
    - **Returns:** 1 (true) or 0 (false).
 
 2. **addToTree**
-   - **Description:** Adds a value to the tree at a specific path position.
-   - **Parameters:** `tree`, `path`, `value`.
+   - **Description:** Adds a value and attrib to the tree at a specific path position.
+   - **Parameters:** `tree`, `path`, `value`, 'attr'.
 
 3. **deleteNode**
    - **Description:** Removes a node at a specific path from the tree.
@@ -43,7 +43,7 @@ This script allows the creation, management, and traversal of tree structures us
    - **Description:** Returns all nodes below a specific path.
    - **Parameters:** `tree`, `path`.
 
-10. **getFromTree**
+10. **getNodeFromTree**
     - **Description:** Returns the value of a node at a specific path.
     - **Parameters:** `tree`, `path`.
 
@@ -78,6 +78,9 @@ This script allows the creation, management, and traversal of tree structures us
 18. **walkTree**
     - **Description:** Recursively traverses the tree and performs an action for each node.
     - **Parameters:** `tree`, `path`, `action`, `recursiv`, `args`.
+19. **getAttrValue**
+20. **setAttrValue**
+21. 
 
 #### 3. Usage Example
 
