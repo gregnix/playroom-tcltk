@@ -1,8 +1,8 @@
 #! /usr/bin/env tclsh
 
-#20240618
+#20240618.2216
 #todo
-
+# Sortierlogik  Traversierungsmethode
 #proc
 #example
 #output
@@ -11,11 +11,12 @@ proc is-dict {value} {
     return [expr {[string is list $value] && ([llength $value] % 2) == 0}]
 }
 
-proc addToTree {tree path value} {
+proc addToTree {tree path value {attr {}}} {
     upvar 1 $tree dictTree
     set key [lindex $path 0]
     if {[llength $path] == 1} {
         dict set dictTree key $key val $value
+        dict set dictTree key $key attr $attr
     } else {
         set restPath [lrange $path 1 end]
         if {![dict exists $dictTree key $key]} {
@@ -28,7 +29,7 @@ proc addToTree {tree path value} {
             }
         }
         set subDict [dict get $dictTree key $key]
-        addToTree subDict $restPath $value
+        addToTree subDict $restPath $value $attr
         dict set dictTree key $key $subDict
     }
 }
@@ -50,15 +51,16 @@ proc deleteNode {tree path} {
 
 proc moveNode {tree fromPath toPath} {
     upvar 1 $tree dictTree
-    set value [getFromTree dictTree $fromPath]
+    set value [getNodeFromTree dictTree $fromPath]
+    set attrib [getAttrFromTree dictTree $fromPath]
     deleteNode dictTree $fromPath
-    addToTree dictTree $toPath $value
+    addToTree dictTree $toPath $value $attrib
 }
 
-proc replaceNode {tree path value} {
+proc replaceNode {tree path value attrib} {
     upvar 1 $tree dictTree
     deleteNode dictTree $path
-    addToTree dictTree $path $value
+    addToTree dictTree $path $value $attrib
 }
 
 proc clearTree {tree} {
@@ -109,7 +111,7 @@ proc getAllNodes {tree path} {
     return $result
 }
 
-proc getFromTree {tree path} {
+proc getNodeFromTree {tree path} {
     upvar 1 $tree dictTree
     set key [lindex $path 0]
     if {[llength $path] == 1} {
@@ -122,7 +124,7 @@ proc getFromTree {tree path} {
     } else {
         set restPath [lrange $path 1 end]
         set subDict [dict get $dictTree key $key]
-        return [getFromTree subDict $restPath]
+        return [getNodeFromTree subDict $restPath]
     }
 }
 
@@ -151,18 +153,97 @@ proc setNodeValue {tree path newValue} {
     set key [lindex $path end]
     set parentPath [lrange $path 0 end-1]
 
+    if {[llength $parentPath] == 0} {
+        # Handle root element
+        set parentDict $dictTree
+    } else {
+        set keyPath [lmap ipath $parentPath {list key $ipath}]
+        set keyPath [concat {*}$keyPath]
+        set parentDict [dict get $dictTree {*}$keyPath]
+        if {![dict exists $parentDict key $key]} {
+            error "Key \"$key\" not found in dictionary"
+        }
+    }
+
+    set node [dict get $parentDict key $key]
+    dict set node val $newValue
+    dict set parentDict key $key $node
+
+    if {[llength $parentPath] == 0} {
+        # Handle root element
+        set dictTree $parentDict
+    } else {
+        dict set dictTree {*}$keyPath $parentDict
+    }
+}
+
+proc getAttrFromTree {tree path} {
+    upvar 1 $tree dictTree
+    set key [lindex $path 0]
+    if {[llength $path] == 1} {
+        set node [dict get $dictTree key $key]
+        if {[dict exists $node attr]} {
+            return [dict get $node attr]
+        } else {
+            return {}
+        }
+    } else {
+        set restPath [lrange $path 1 end]
+        set subDict [dict get $dictTree key $key]
+        return [getAttrFromTree subDict $restPath]
+    }
+}
+
+proc getAttrValue {tree path} {
+    upvar 1 $tree dictTree
+    set key [lindex $path end]
+    set parentPath [lrange $path 0 end-1]
     set keyPath [lmap ipath $parentPath {list key $ipath}]
     set keyPath [concat {*}$keyPath]
-
     set parentDict [dict get $dictTree {*}$keyPath]
     if {![dict exists $parentDict key $key]} {
         error "Key \"$key\" not found in dictionary"
     }
     set node [dict get $parentDict key $key]
-    dict set node val $newValue
-    dict set parentDict key $key $node
-    dict set dictTree {*}$keyPath $parentDict
+
+    if {[dict exists $node attr]} {
+        return [dict get $node attr]
+    } else {
+        return {}
+    }
 }
+
+# node exists
+proc setAttrValue {tree path newAttribut} {
+    upvar 1 $tree dictTree
+    set key [lindex $path end]
+    set parentPath [lrange $path 0 end-1]
+
+    if {[llength $parentPath] == 0} {
+        # Handle root element
+        set parentDict $dictTree
+    } else {
+        set keyPath [lmap ipath $parentPath {list key $ipath}]
+        set keyPath [concat {*}$keyPath]
+        set parentDict [dict get $dictTree {*}$keyPath]
+        if {![dict exists $parentDict key $key]} {
+            error "Key \"$key\" not found in dictionary"
+        }
+    }
+
+    set node [dict get $parentDict key $key]
+    dict set node attr $newAttribut
+    dict set parentDict key $key $node
+
+    if {[llength $parentPath] == 0} {
+        # Handle root element
+        set dictTree $parentDict
+    } else {
+        dict set dictTree {*}$keyPath $parentDict
+    }
+}
+
+
 
 proc printTree {tree {indent ""}} {
     upvar 1 $tree dictTree
@@ -178,16 +259,25 @@ proc printTree {tree {indent ""}} {
             }
         } elseif {$key eq "val"} {
             puts "$indent$value"
+        } elseif  {$key eq "attr"} {
+            if {[llength $value] ne 0} {
+            puts "$indent$value"
+        }
         }
     }
 }
 
-proc cmdPrintNode {path value} {
-    puts "Path: [format %-30s $path] Value: $value"
+proc cmdPrintNode {path value {attr {}}} {
+    set formattedAttr ""
+    foreach {key val} $attr {
+        append formattedAttr "$key=$val "
+    }
+    puts "Path: [format %-30s $path] Value: [format %-20s $value] Attr: $formattedAttr"
 }
 
-proc cmdListNode {path value} {
-    list $path $value
+
+proc cmdListNode {path value {attr {}}} {
+    list $path $value $attr
 }
 
 
@@ -215,35 +305,6 @@ proc depth {tree} {
         }
     }
     return [expr {$maxDepth + 1}]
-}
-# not worked
-proc sortTree {tree} {
-    upvar 1 $tree dictTree
-    puts "dictTree: \n$dictTree\n"
-    set sortedTree [dict create]
-    dict for {key value} $dictTree {
-        if {$key eq "key"} {
-            dict set sortedTree $key [dict create]
-            set subDict [dict get $dictTree $key]
-            set sortedSubDict [dict create]
-            foreach subKey [lsort [dict keys $subDict]] {
-                dict set sortedSubDict $subKey [dict get $subDict $subKey]
-            }
-            dict set sortedTree $key $sortedSubDict
-        } elseif {$key eq "val"} {
-            dict set sortedTree $key $value
-        }
-    }
-    puts "sortedTree:\n$sortedTree\n"
-    set dictTree $sortedTree
-    dict for {key value} $dictTree {
-        if {[is-dict $value]} {
-            set subTree [dict get $dictTree $key]
-            sortTree subTree
-            dict set dictTree $key $subTree
-        }
-    }
-    
 }
 
 proc walkTree {tree path action {recursiv 0} args} {
@@ -273,18 +334,21 @@ proc walkTree {tree path action {recursiv 0} args} {
                 if {[is-dict $subvalue]} {
                     lappend result {*}[walkTree subvalue $currentPath $action 1 $opath]
                 } else {
-                    lappend result [$action $currentPath $subvalue]
+                    lappend result [$action $currentPath $subvalue [dict get $keysubDict attr]]
                 }
             }
         } elseif {$key eq "val"} {
             if {[llength $kpath]} {
                 set opath [lrange $opath 0 end-1]
             }
-            lappend result [$action $opath $value]
+            set values $value
+        } elseif {$key eq "attr"} {
+            lappend result [$action $opath $values $value]
         }
     }
     return $result
 }
+
 
 
 
@@ -296,10 +360,11 @@ if {[info script] eq $argv0} {
     set tree [dict create]
 
     # Hinzufügen von Daten zum Baum
+    addToTree tree {a} "value00"
     addToTree tree {a 001 012} "value012"
     addToTree tree {a 001 013} "value013"
     addToTree tree {a 002 011} "value011"
-    addToTree tree {b 101} "valueb101"
+    addToTree tree {b 101} "valueb101" "pid 0"
     addToTree tree {b 101 112} "value112"
     addToTree tree {b 101 112 121} "value121"
     addToTree tree {b 002} "value002"
@@ -308,9 +373,13 @@ if {[info script] eq $argv0} {
     setNodeValue tree {b 101 112} "Nodevalue 112"
     addToTree tree {a} "Nodevalue a"
     addToTree tree {b 103 114} "value114"
+    setAttrValue tree {a} {pid 0 pppid -1}
+    setNodeValue tree {a 001} {test1}
+    setNodeValue tree {a} {testxy}
+    printTree tree
 
-sortTree tree
-puts "after sortTree:\ndictTree:\n$tree"
+    puts $tree
+    puts \n
 
     #    puts " \nwalkTree tree {} printNode"
     #    walkTree tree {} printNode
@@ -319,14 +388,23 @@ puts "after sortTree:\ndictTree:\n$tree"
     #    walkTreeT tree {} printNode
 
 
-#    puts " \nwalkTree tree {} cmdPrintNode:"
- #   walkTree tree {} cmdPrintNode
+    puts " \nwalkTree tree {} cmdPrintNode:"
+    walkTree tree {} cmdPrintNode
 
-  #  puts " \nwalkTree tree {b} cmdPrintNode:"
-   # walkTree tree {b} cmdPrintNode
+    puts " \nwalkTree tree {b} cmdPrintNode:"
+    walkTree tree {b} cmdPrintNode
 
-    #puts " \nwalkTree tree {b} cmdListNode:"
-    #puts [walkTree tree {b} cmdListNode]
+    puts " \nwalkTree tree {b} cmdListNode:"
+    puts [walkTree tree {b} cmdListNode]
+
+    puts [getNodeValue tree {b 101}]
+    puts [getNodeFromTree tree {b 101}]
+    puts [getAttrValue tree {b 101}]
+    puts "gav: [getAttrFromTree tree {b 101}]"
+    puts \n
+    set a [setAttrValue tree {b 101} {pid 101}]
+    puts [getAttrValue tree {b 101}]
+    puts $a
 
 }
 
@@ -335,15 +413,44 @@ puts "after sortTree:\ndictTree:\n$tree"
 #Output
 if {0} {
 
-  
+  a:
+  testxy
+  pid 0 pppid -1
+  001:
+    012:
+      value012
+    013:
+      value013
+    test1
+  002:
+    011:
+      value011
+b:
+  101:
+    valueb101
+    pid 0
+    112:
+      Nodevalue 112
+      121:
+        value121
+  002:
+    value002
+  103:
+    111:
+      value111
+    114:
+      value114
+    Nodevalue b103
+key {a {val testxy attr {pid 0 pppid -1} key {001 {key {012 {val value012 attr {}} 013 {val value013 attr {}}} val test1} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 0} key {112 {val {Nodevalue 112} attr {} key {121 {val value121 attr {}}}}}} 002 {val value002 attr {}} 103 {key {111 {val value111 attr {}} 114 {val value114 attr {}}} val {Nodevalue b103}}}}}
+
 
  
- 
 walkTree tree {} cmdPrintNode:
+Path: a                              Value: testxy
 Path: a 001 012                      Value: value012
 Path: a 001 013                      Value: value013
+Path: a 001                          Value: test1
 Path: a 002 011                      Value: value011
-Path: a                              Value: Nodevalue a
 Path: b 101                          Value: valueb101
 Path: b 101 112                      Value: Nodevalue 112
 Path: b 101 112 121                  Value: value121
@@ -363,6 +470,15 @@ Path: b 103                          Value: Nodevalue b103
  
 walkTree tree {b} cmdListNode:
 {{b 101} valueb101} {{b 101 112} {Nodevalue 112}} {{b 101 112 121} value121} {{b 002} value002} {{b 103 111} value111} {{b 103 114} value114} {{b 103} {Nodevalue b103}}
+valueb101
+valueb101
+pid 0
+gav: pid 0
+
+
+pid 101
+key {a {val testxy attr {pid 0 pppid -1} key {001 {key {012 {val value012 attr {}} 013 {val value013 attr {}}} val test1} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 101} key {112 {val {Nodevalue 112} attr {} key {121 {val value121 attr {}}}}}} 002 {val value002 attr {}} 103 {key {111 {val value111 attr {}} 114 {val value114 attr {}}} val {Nodevalue b103}}}}}
+
 
 
 
