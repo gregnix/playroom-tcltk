@@ -194,7 +194,7 @@ proc getAttrFromTree {tree path} {
     }
 }
 
-proc getAttrValue {tree path} {
+proc getAttrValue {tree path args} {
     upvar 1 $tree dictTree
     set key [lindex $path end]
     set parentPath [lrange $path 0 end-1]
@@ -207,7 +207,13 @@ proc getAttrValue {tree path} {
     set node [dict get $parentDict key $key]
 
     if {[dict exists $node attr]} {
-        return [dict get $node attr]
+        if {[llength $args] ne 0 } {
+           return [dict get $node attr $args] 
+        } else {
+            return [dict get $node attr]
+        }
+        
+        
     } else {
         return {}
     }
@@ -279,7 +285,9 @@ proc cmdPrintNode {path value {attr {}}} {
 proc cmdListNode {path value {attr {}}} {
     list $path $value $attr
 }
-
+proc cmdListAttr {path value {attr {}}} {
+    list $path  $attr
+}
 
 proc size {tree} {
     upvar 1 $tree dictTree
