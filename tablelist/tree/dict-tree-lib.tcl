@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240619.0600
+#20240620.0600
 #todo
 # Sort
 #  Traversierungsmethode
@@ -251,7 +251,7 @@ proc setAttrValue {tree path newAttribut} {
     } else {
         dict set dictTree {*}$keyPath $parentDict
     }
-return
+    return
 }
 
 proc printTree {tree {indent ""}} {
@@ -308,17 +308,25 @@ proc size {tree} {
 
 proc depth {tree} {
     upvar 1 $tree dictTree
+    if {[dict exists $dictTree val]} {
+        return 0
+    }
     set maxDepth 0
-    dict for {key value} $dictTree {
-        if {[is-dict $value]} {
-            set subDepth [depth value]
-            if {$subDepth > $maxDepth} {
-                set maxDepth $subDepth
+    if {[dict exists $dictTree key]} {
+        dict for {key value} [dict get $dictTree key] {
+            if {[is-dict $value]} {
+                set subDepth [depth value]
+                if {$subDepth > $maxDepth} {
+                    set maxDepth $subDepth
+                }
             }
         }
     }
     return [expr {$maxDepth + 1}]
 }
+
+
+
 # walktree, action < cmds
 proc walkTree {tree path action {recursiv 0} args} {
     upvar 1 $tree dictTree
@@ -362,12 +370,75 @@ proc walkTree {tree path action {recursiv 0} args} {
     return $result
 }
 
+proc nodeExists {tree path} {
+    upvar 1 $tree dictTree
+    set key [lindex $path end]
+    set parentPath [lrange $path 0 end-1]
+    set keyPath [lmap ipath $parentPath {list key $ipath}]
+    set keyPath [concat {*}$keyPath]
 
+    if {[dict exists $dictTree {*}$keyPath key $key]} {
+        return 1
+    } else {
+        return 0
+    }
+}
+
+proc isLeafNode {tree path} {
+    upvar 1 $tree dictTree
+    set key [lindex $path end]
+    set parentPath [lrange $path 0 end-1]
+    set keyPath [lmap ipath $parentPath {list key $ipath}]
+    set keyPath [concat {*}$keyPath]
+
+    if {[dict exists $dictTree {*}$keyPath key $key]} {
+        set node [dict get $dictTree {*}$keyPath key $key]
+        if {[dict exists $node key]} {
+            return 0
+        } else {
+            return 1
+        }
+    } else {
+        return 0
+    }
+}
+
+proc getSubTree {tree path} {
+    upvar 1 $tree dictTree
+    set keyPath [lmap ipath $path {list key $ipath}]
+    set keyPath [concat {*}$keyPath]
+
+    if {[dict exists $dictTree {*}$keyPath]} {
+        return [dict get $dictTree {*}$keyPath]
+    } else {
+        error "Path \"$path\" not found in tree"
+    }
+}
 
 
 ###################################################################
 # Example
 if {[info script] eq $argv0} {
+
+    proc putd {command} {
+        set cmd [dict get [info frame -1] cmd]
+        set cmd "[string trimright [string trimleft $cmd  "putd \["] "\]"]"
+        puts "#cmd: ${cmd}"
+        puts $command
+        puts "\n"
+    }
+
+    proc putdr {command} {
+        set frameInfo [info frame -1]
+        set cmd [dict get $frameInfo cmd]
+        set regex {putd\s*\[\s*(.*?)\s*\]}
+        if {[regexp $regex $cmd all match]} {
+            puts "# $match:"
+            puts $command
+        } else {
+            puts "Fehler: Ungültiger Befehl."
+        }
+    }
 
     # Initialisieren eines leeren Baumes
     set tree [dict create]
@@ -389,7 +460,7 @@ if {[info script] eq $argv0} {
     setAttrValue tree {a} {pid 0 pppid -1}
     setNodeValue tree {a 001} {test1}
     setNodeValue tree {a} {testxy}
-    
+
     puts "\n# printTree:"
     printTree tree
 
@@ -418,15 +489,40 @@ if {[info script] eq $argv0} {
     puts "\n# getAttr...:"
     puts [getAttrValue tree {b 101}]
     puts [getAttrFromTree tree {b 101}]
-    
+
     puts "\n# getAttrValue tree {b 101}:"
     puts [getAttrValue tree {b 101}]
     puts "\n# setAttrValue tree {b 101} {pid 101}:"
     set a [setAttrValue tree {b 101} {pid 101}]
     puts "\n# getAttrValue tree {b 101}:"
     puts [getAttrValue tree {b 101}]
-  
+    # Tiefe des Baums
+    puts "\nTiefe des Baums:"
+    puts [depth tree]
 
+    puts "\n# tree2"
+    #tree2
+    # Define the tree structure as a nested dictionary
+    set tree2 [dict create]
+    addToTree tree2 {value} 10
+    addToTree tree2 {left value} 5
+    addToTree tree2 {left left value} 3
+    addToTree tree2 {left right value} 7
+    addToTree tree2 {right value} 15
+    addToTree tree2 {right left value} 12
+    addToTree tree2 {right right value} 18
+    printTree tree2
+    # Calculate and print the depth of the tree
+
+    putd "Depth of the tree: [depth tree2] "
+    puts "\n# subtree tree b: tree3"
+    set tree3 [getSubTree tree {b}]
+    printTree tree3
+
+    putd [isLeafNode tree {a 002}]
+    putd [isLeafNode tree {a 002 011}]
+    putd [nodeExists tree {a 002 011}]
+    putd [nodeExists tree {a 002 012}]
 }
 
 #Output
@@ -505,6 +601,67 @@ pid 0
 
 # getAttrValue tree {b 101}:
 pid 101
+
+Tiefe des Baums:
+2
+
+# tree2
+value:
+  10
+left:
+  value:
+    5
+  left:
+    value:
+      3
+  right:
+    value:
+      7
+right:
+  value:
+    15
+  left:
+    value:
+      12
+  right:
+    value:
+      18
+#cmd: "Depth of the tree: [depth tree2] "
+Depth of the tree: 3 
+
+
+
+# subtree tree b: tree3
+101:
+  valueb101
+  pid 101
+  112:
+    Nodevalue 112
+    121:
+      value121
+002:
+  value002
+103:
+  111:
+    value111
+  114:
+    value114
+  Nodevalue b103
+#cmd: isLeafNode tree {a 002}
+0
+
+
+#cmd: isLeafNode tree {a 002 011}
+1
+
+
+#cmd: nodeExists tree {a 002 011}
+1
+
+
+#cmd: nodeExists tree {a 002 012}
+0
+
 
 
 
