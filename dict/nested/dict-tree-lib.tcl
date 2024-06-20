@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240619.0600
+#20240620.0600
 #todo
 # Sort
 #  Traversierungsmethode
@@ -421,7 +421,6 @@ proc getSubTree {tree path} {
 if {[info script] eq $argv0} {
 
     proc putd {command} {
-        puts [info frame -1]
         set cmd [dict get [info frame -1] cmd]
         set cmd "[string trimright [string trimleft $cmd  "putd \["] "\]"]"
         puts "#cmd: ${cmd}"
@@ -429,7 +428,7 @@ if {[info script] eq $argv0} {
         puts "\n"
     }
 
-    proc putd {command} {
+    proc putdr {command} {
         set frameInfo [info frame -1]
         set cmd [dict get $frameInfo cmd]
         set regex {putd\s*\[\s*(.*?)\s*\]}
@@ -501,6 +500,7 @@ if {[info script] eq $argv0} {
     puts "\nTiefe des Baums:"
     puts [depth tree]
 
+    puts "\n# tree2"
     #tree2
     # Define the tree structure as a nested dictionary
     set tree2 [dict create]
@@ -511,15 +511,16 @@ if {[info script] eq $argv0} {
     addToTree tree2 {right value} 15
     addToTree tree2 {right left value} 12
     addToTree tree2 {right right value} 18
-
+    printTree tree2
     # Calculate and print the depth of the tree
-    puts "Depth of the tree: [depth tree2]"
 
+    putd "Depth of the tree: [depth tree2] "
+    puts "\n# subtree tree b: tree3"
     set tree3 [getSubTree tree {b}]
     printTree tree3
 
-    puts [isLeafNode tree {a 002}]
-    #puts [isLeafNode tree {a 002 011}]
+    putd [isLeafNode tree {a 002}]
+    putd [isLeafNode tree {a 002 011}]
     putd [nodeExists tree {a 002 011}]
     putd [nodeExists tree {a 002 012}]
 }
@@ -527,79 +528,140 @@ if {[info script] eq $argv0} {
 #Output
 if {0} {
 
-    # printTree:
-    a:
-    testxy
-    pid 0 pppid -1
-    001:
+# printTree:
+a:
+  testxy
+  pid 0 pppid -1
+  001:
     012:
-    value012
+      value012
     013:
-    value013
+      value013
     test1
-    002:
+  002:
     011:
-    value011
-    b:
-    101:
+      value011
+b:
+  101:
     valueb101
     pid 0
     112:
-    Nodevalue 112
-    121:
-    value121
-    002:
+      Nodevalue 112
+      121:
+        value121
+  002:
     value002
-    103:
+  103:
     111:
-    value111
+      value111
     114:
-    value114
+      value114
     Nodevalue b103
 
-    # puts $tree:
-    key {a {val testxy attr {pid 0 pppid -1} key {001 {key {012 {val value012 attr {}} 013 {val value013 attr {}}} val test1} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 0} key {112 {val {Nodevalue 112} attr {} key {121 {val value121 attr {}}}}}} 002 {val value002 attr {}} 103 {key {111 {val value111 attr {}} 114 {val value114 attr {}}} val {Nodevalue b103}}}}}
+# puts $tree:
+key {a {val testxy attr {pid 0 pppid -1} key {001 {key {012 {val value012 attr {}} 013 {val value013 attr {}}} val test1} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 0} key {112 {val {Nodevalue 112} attr {} key {121 {val value121 attr {}}}}}} 002 {val value002 attr {}} 103 {key {111 {val value111 attr {}} 114 {val value114 attr {}}} val {Nodevalue b103}}}}}
 
-    # walkTree examples:
+# walkTree examples:
 
-    # walkTree tree {} cmdPrintNode:
-    Path: a                              Value: testxy               Attr: pid=0 pppid=-1
-    Path: a 001 012                      Value: value012             Attr:
-    Path: a 001 013                      Value: value013             Attr:
-    Path: a 002 011                      Value: value011             Attr:
-    Path: b 101                          Value: valueb101            Attr: pid=0
-    Path: b 101 112                      Value: Nodevalue 112        Attr:
-    Path: b 101 112 121                  Value: value121             Attr:
-    Path: b 002                          Value: value002             Attr:
-    Path: b 103 111                      Value: value111             Attr:
-    Path: b 103 114                      Value: value114             Attr:
+# walkTree tree {} cmdPrintNode:
+Path: a                              Value: testxy               Attr: pid=0 pppid=-1 
+Path: a 001 012                      Value: value012             Attr: 
+Path: a 001 013                      Value: value013             Attr: 
+Path: a 002 011                      Value: value011             Attr: 
+Path: b 101                          Value: valueb101            Attr: pid=0 
+Path: b 101 112                      Value: Nodevalue 112        Attr: 
+Path: b 101 112 121                  Value: value121             Attr: 
+Path: b 002                          Value: value002             Attr: 
+Path: b 103 111                      Value: value111             Attr: 
+Path: b 103 114                      Value: value114             Attr: 
 
-    # walkTree tree {b} cmdPrintNode:
-    Path: b 101                          Value: valueb101            Attr: pid=0
-    Path: b 101 112                      Value: Nodevalue 112        Attr:
-    Path: b 101 112 121                  Value: value121             Attr:
-    Path: b 002                          Value: value002             Attr:
-    Path: b 103 111                      Value: value111             Attr:
-    Path: b 103 114                      Value: value114             Attr:
+# walkTree tree {b} cmdPrintNode:
+Path: b 101                          Value: valueb101            Attr: pid=0 
+Path: b 101 112                      Value: Nodevalue 112        Attr: 
+Path: b 101 112 121                  Value: value121             Attr: 
+Path: b 002                          Value: value002             Attr: 
+Path: b 103 111                      Value: value111             Attr: 
+Path: b 103 114                      Value: value114             Attr: 
 
-    # walkTree tree {b} cmdListNode:
-    {{b 101} valueb101 {pid 0}} {{b 101 112} {Nodevalue 112} {}} {{b 101 112 121} value121 {}} {{b 002} value002 {}} {{b 103 111} value111 {}} {{b 103 114} value114 {}}
+# walkTree tree {b} cmdListNode:
+{{b 101} valueb101 {pid 0}} {{b 101 112} {Nodevalue 112} {}} {{b 101 112 121} value121 {}} {{b 002} value002 {}} {{b 103 111} value111 {}} {{b 103 114} value114 {}}
 
-    # getNode...:
-    valueb101
-    valueb101
+# getNode...:
+valueb101
+valueb101
 
-    # getAttr...:
-    pid 0
-    pid 0
+# getAttr...:
+pid 0
+pid 0
 
-    # getAttrValue tree {b 101}:
-    pid 0
+# getAttrValue tree {b 101}:
+pid 0
 
-    # setAttrValue tree {b 101} {pid 101}:
+# setAttrValue tree {b 101} {pid 101}:
 
-    # getAttrValue tree {b 101}:
-    pid 101
+# getAttrValue tree {b 101}:
+pid 101
+
+Tiefe des Baums:
+2
+
+# tree2
+value:
+  10
+left:
+  value:
+    5
+  left:
+    value:
+      3
+  right:
+    value:
+      7
+right:
+  value:
+    15
+  left:
+    value:
+      12
+  right:
+    value:
+      18
+#cmd: "Depth of the tree: [depth tree2] "
+Depth of the tree: 3 
+
+
+
+# subtree tree b: tree3
+101:
+  valueb101
+  pid 101
+  112:
+    Nodevalue 112
+    121:
+      value121
+002:
+  value002
+103:
+  111:
+    value111
+  114:
+    value114
+  Nodevalue b103
+#cmd: isLeafNode tree {a 002}
+0
+
+
+#cmd: isLeafNode tree {a 002 011}
+1
+
+
+#cmd: nodeExists tree {a 002 011}
+1
+
+
+#cmd: nodeExists tree {a 002 012}
+0
+
 
 
 
