@@ -4,47 +4,51 @@
 source [file join [file dirname [info script]] dict-tree-lib.tcl]
 
 # for debug
-proc putd {command} {
-    set cmd [dict get [info frame -1] cmd]
-    set cmd [string range $cmd [string first $cmd \[] end-1]
-    puts "#cmd: ${cmd}"
-    puts $command
-    puts "\n"
-}
+   proc putd {command} {
+        set cmd [dict get [info frame -1] cmd]
+        set cmd [string range $cmd [string first \[ $cmd]+1 [string last \] $cmd]-1]
+        puts "#cmd: ${cmd}"
+        puts $command
+        puts "\n"
+    }
 
 # Initialisieren eines leeren Baumes
 set tree [dict create]
 
 # Define the tree structure as a nested dictionary
-addToTree tree {a} "value00"
-addToTree tree {a 001 012} "value012"
-addToTree tree {a 001 013} "value013"
-addToTree tree {a 002 011} "value011"
-addToTree tree {b 101 112} "value112"
-addToTree tree {b 103 111} "value111"
-setNodeValue tree {b 101} "Nodevalue 101 3"
-setNodeValue tree {b 103} "Nodevalue 103 "
-setNodeValue tree {b 101 112} "Nodevalue 112"
-addToTree tree {b 002} "addto value"
-addToTree tree {a} "Nodevalue"
-setAttrValue tree {a} {pid 0 pppid -1}
-setAttrValue tree {a 001 012} {pid 12}
+insertNode tree {a} "value00"
+insertNode tree {a 001 012} "value012"
+insertNode tree {a 001 013} "value013"
+insertNode tree {a 002 011} "value011"
+insertNode tree {b 101 112} "value112"
+insertNode tree {b 103 111} "value111"
+insertNode tree {b 002} "addto value"
+insertNode tree {a} "Nodevalue"
+setNodeAttr tree {a} {pid 0 pppid -1}
+setNodeAttr tree {a 001 012} {pid 12}
 
 #tree2
 # Define the tree structure as a nested dictionary
 set tree2 [dict create]
-addToTree tree2 {value} 10
-addToTree tree2 {left value} 5
-addToTree tree2 {left left value} 3
-addToTree tree2 {left right value} 7
-addToTree tree2 {right value} 15
-addToTree tree2 {right left value} 12
-addToTree tree2 {right right value} 18
+insertNode tree2 {value} 10
+insertNode tree2 {left value} 5
+insertNode tree2 {left left value} 3
+insertNode tree2 {left right value} 7
+insertNode tree2 {right value} 15
+insertNode tree2 {right left value} 12
+insertNode tree2 {right right value} 18
 
 # display tree
 puts "Tree struct:"
 printTree tree
+puts "\n# walkTree tree {} cmdPrintNode:"
+walkTree tree {} cmdPrintNode
 
+puts "\n# walkTree tree {a} cmdPrintNode:"
+walkTree tree {a} cmdPrintNode
+
+puts "\n# walkTree tree {a} cmdListNode:"
+puts [walkTree tree {a} cmdListNode]
 # treetmp deleteNode
 set treetmp $tree
 puts "\n#treetmp struct:"
@@ -78,8 +82,8 @@ putd [deleteNode tree {a 001 012}]
 putd [getChildren tree {a 001}]
 
 #
-addToTree tree {a 001 012} "value012n"
-setAttrValue tree {a 001 012} {pid 12a}
+insertNode tree {a 001 012} "value012n"
+setNodeAttr tree {a 001 012} {pid 12a}
 
 puts "\nBaumstruktur vor dem Verschieben:"
 printTree tree
@@ -94,6 +98,8 @@ putd [moveNode tree {b 102 012} {a 001 012}]
 putd [isLeafNode tree {b 102}]
 puts "\nBaumstruktur nach dem Verschieben von {b 102 012} nach {a 001 012}:"
 printTree tree 
+putd [isLeafNode tree {b 101}]
+putd [isLeafNode tree {b 102}]
 exit
 
 # Größe des Baums
@@ -141,9 +147,9 @@ puts [dict get $tree key a key 002]
 
 puts "tree :"
 printTree tree
-addToTree tree {a 001} "value3a"
-addToTree tree {a 001} "value3aa id"
-puts "tree after addToTree tree :"
+insertNode tree {a 001} "value3a"
+insertNode tree {a 001} "value3aa id"
+puts "tree after insertNode tree :"
 printTree tree
 puts children
 puts [getChildren tree {a 001}]
