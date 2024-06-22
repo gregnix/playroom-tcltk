@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240621.0700
+#20240622.0700
 #todo
 # Sort
 #  Traversierungsmethode
@@ -46,6 +46,43 @@ proc insertNode {utree path {value {}}  {attr {}}} {
         set subDict [dict get $tree key $key]
         insertNode subDict $restPath $value $attr
         dict set tree key $key $subDict
+    }
+}
+
+proc updateNode {utree path {newValue {}} {newAttr {}}} {
+    upvar 1 $utree tree
+    set key [lindex $path end]
+    set parentPath [lrange $path 0 end-1]
+
+    if {![existsNode $tree $path]} {
+        error "Node does not exist at path: $path"
+    }
+
+    set keyPath [lmap ipath $parentPath {list key $ipath}]
+    set keyPath [concat {*}$keyPath]
+    set parentDict [dict get $tree {*}$keyPath]
+    set node [dict get $parentDict key $key]
+
+    if {[llength $newValue] > 0} {
+        dict set node val $newValue
+    }
+    if {[llength $newAttr] > 0} {
+        dict set node attr $newAttr
+    }
+
+    dict set parentDict key $key $node
+    if {[llength $parentPath] == 0} {
+        set tree $parentDict
+    } else {
+        dict set tree {*}$keyPath $parentDict
+    }
+}
+
+proc upsertNode {utree path {value {}} {attr {}}} {
+    if {![existsNode $utree $path]} {
+        insertNode $utree $path $value $attr
+    } else {
+        updateNode $utree $path $value $attr
     }
 }
 
@@ -619,82 +656,70 @@ if {[info script] eq $argv0} {
 
 #Output
 if {0} {
-    a:
-    value00
-    001:
+
+a:
+  value00
+  001:
     012:
-    value012
+      value012
     013:
-    014:
-    value014
-    002:
+      014:
+        value014
+  002:
     011:
-    value011
-    b:
-    101:
+      value011
+b:
+  101:
     valueb101
     pid 0
     112:
-    sNV112
-    pid 14
-    121:
-    value121
-    104:
+      sNV112
+      pid 14
+      121:
+        value121
+  104:
     142:
-    value112
-    002:
+      value112
+  002:
     value002
-    103:
+  103:
     111:
-    valueb111
-    Path: b 103 111                      Value: valueb111            Attr:
-    Path: b 002                          Value: value002             Attr:
-    Path: b 104 142                      Value: value112             Attr:
-    Path: b 101                          Value: valueb101            Attr: pid=0
-    Path: b 101 112                      Value: sNV112               Attr: pid=14
-    Path: b 101 112 121                  Value: value121             Attr:
-    Path: a                              Value: value00              Attr:
-    Path: a 002 011                      Value: value011             Attr:
-    Path: a 001 013 014                  Value: value014             Attr:
-    Path: a 001 012                      Value: value012             Attr:
-
-    Path: a                              Value: value00              Attr:
-    Path: a 001 012                      Value: value012             Attr:
-    Path: a 001 013 014                  Value: value014             Attr:
-    Path: a 002 011                      Value: value011             Attr:
-    Path: b 101                          Value: valueb101            Attr: pid=0
-    Path: b 101 112                      Value: sNV112               Attr: pid=14
-    Path: b 101 112 121                  Value: value121             Attr:
-    Path: b 104 142                      Value: value112             Attr:
-    Path: b 002                          Value: value002             Attr:
-    Path: b 103 111
-
-
-
+      valueb111
+Path: a                              Value: value00              Attr: 
+Path: a 001 012                      Value: value012             Attr: 
+Path: a 001 013 014                  Value: value014             Attr: 
+Path: a 002 011                      Value: value011             Attr: 
+Path: b 002                          Value: value002             Attr: 
+Path: b 101 112 121                  Value: value121             Attr: 
+Path: b 101 112                      Value: sNV112               Attr: pid=14 
+Path: b 101                          Value: valueb101            Attr: pid=0 
+Path: b 103 111                      Value: valueb111            Attr: 
+Path: b 104 142                      Value: value112             Attr: 
+Path: a                               Attr: 
+Path: a 001 012                       Attr: 
+Path: a 001 013 014                   Attr: 
+Path: a 002 011                       Attr: 
+Path: b 002                           Attr: 
+Path: b 101 112 121                   Attr: 
+Path: b 101 112                       Attr: pid=14 
+Path: b 101                           Attr: pid=0 
+Path: b 103 111                       Attr: 
+Path: b 104 142                       Attr: 
+#cmd: 
+key {a {val value00 attr {} key {001 {key {012 {val value012 attr {}} 013 {key {014 {val value014 attr {}}}}}} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 0} key {112 {val sNV112 attr {pid 14} key {121 {val value121 attr {}}}}}} 104 {key {142 {val value112 attr {}}}} 002 {val value002 attr {}} 103 {key {111 {val valueb111 attr {}}}}}}}
 
 
+#cmd: size tree
+16
 
 
+#cmd: depth tree
+3
 
 
+#cmd: getAllNodes tree {}]
+a {a 001} {a 001 012} {a 001 013} {a 001 013 014} {a 002} {a 002 011} b {b 101} {b 101 112} {b 101 112 121} {b 104} {b 104 142} {b 002} {b 103} {b 103 111}]
 
-
-
-
-    #cmd:
-    key {a {val value00 attr {} key {001 {key {012 {val value012 attr {}} 013 {key {014 {val value014 attr {}}}}}} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 0} key {112 {val sNV112 attr {pid 14} key {121 {val value121 attr {}}}}}} 104 {key {142 {val value112 attr {}}}} 002 {val value002 attr {}} 103 {key {111 {val valueb111 attr {}}}}}}}
-
-
-    #cmd: size tree
-    16
-
-
-    #cmd: depth tree
-    3
-
-
-    #cmd: getAllNodes tree {a}]
-    {a 001} {a 001 012} {a 001 013} {a 001 013 014} {a 002} {a 002 011}]
 
 
 
