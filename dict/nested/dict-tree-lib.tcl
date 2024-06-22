@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240622.0700
+#20240622.1500
 #todo
 # Sort
 #  Traversierungsmethode
@@ -16,14 +16,14 @@ proc is-dict {value} {
 }
 
 proc sortPid {a b} {
-  set a0 [dict get [lindex $a 2] pid]
-  set b0 [dict get [lindex $b 2] pid]
-  if {$a0 < $b0} {
-    return -1
-  } elseif {$a0 > $b0} {
-    return 1
-  }
-  return 0
+    set a0 [dict get [lindex $a 2] pid]
+    set b0 [dict get [lindex $b 2] pid]
+    if {$a0 < $b0} {
+        return -1
+    } elseif {$a0 > $b0} {
+        return 1
+    }
+    return 0
 }
 
 proc insertNode {utree path {value {}}  {attr {}}} {
@@ -54,7 +54,7 @@ proc updateNode {utree path {newValue {}} {newAttr {}}} {
     set key [lindex $path end]
     set parentPath [lrange $path 0 end-1]
 
-    if {![existsNode $tree $path]} {
+    if {![existsNode tree $path]} {
         error "Node does not exist at path: $path"
     }
 
@@ -79,10 +79,11 @@ proc updateNode {utree path {newValue {}} {newAttr {}}} {
 }
 
 proc upsertNode {utree path {value {}} {attr {}}} {
-    if {![existsNode $utree $path]} {
-        insertNode $utree $path $value $attr
+    upvar 1 $utree tree
+    if {![existsNode tree $path]} {
+        insertNode tree $path $value $attr
     } else {
-        updateNode $utree $path $value $attr
+        updateNode tree $path $value $attr
     }
 }
 
@@ -288,6 +289,7 @@ proc getNodeAttr {utree path args} {
         return {}
     }
 }
+
 
 #
 proc setNodeAttr {utree path newAttrib} {
@@ -641,6 +643,17 @@ if {[info script] eq $argv0} {
     insertNode tree {b 002} "value002"
     insertNode tree {b 103 111} "valueb111"
 
+    upsertNode tree {b 100 117} {} {pid 103}
+    putd [getNodeAttr tree {b 100 117}]
+    try {
+        putd [getNodeAttr tree {b 100 118}]
+    } on error {msg options} {
+        puts $msg
+    }
+
+
+    upsertNode tree {b 100 117} {} {counter 105}
+
     printTree tree
     # Ergebnisse sortiert abrufen
     set sortedResults [walkTree tree {}]
@@ -657,6 +670,11 @@ if {[info script] eq $argv0} {
 #Output
 if {0} {
 
+#cmd: getNodeAttr tree {b 100 117}
+pid 103
+
+
+Key "118" not found in dictionary
 a:
   value00
   001:
@@ -685,11 +703,16 @@ b:
   103:
     111:
       valueb111
+  100:
+    117:
+      
+      counter 105
 Path: a                              Value: value00              Attr: 
 Path: a 001 012                      Value: value012             Attr: 
 Path: a 001 013 014                  Value: value014             Attr: 
 Path: a 002 011                      Value: value011             Attr: 
 Path: b 002                          Value: value002             Attr: 
+Path: b 100 117                      Value:                      Attr: counter=105 
 Path: b 101 112 121                  Value: value121             Attr: 
 Path: b 101 112                      Value: sNV112               Attr: pid=14 
 Path: b 101                          Value: valueb101            Attr: pid=0 
@@ -700,17 +723,18 @@ Path: a 001 012                       Attr:
 Path: a 001 013 014                   Attr: 
 Path: a 002 011                       Attr: 
 Path: b 002                           Attr: 
+Path: b 100 117                       Attr: counter=105 
 Path: b 101 112 121                   Attr: 
 Path: b 101 112                       Attr: pid=14 
 Path: b 101                           Attr: pid=0 
 Path: b 103 111                       Attr: 
 Path: b 104 142                       Attr: 
 #cmd: 
-key {a {val value00 attr {} key {001 {key {012 {val value012 attr {}} 013 {key {014 {val value014 attr {}}}}}} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 0} key {112 {val sNV112 attr {pid 14} key {121 {val value121 attr {}}}}}} 104 {key {142 {val value112 attr {}}}} 002 {val value002 attr {}} 103 {key {111 {val valueb111 attr {}}}}}}}
+key {a {val value00 attr {} key {001 {key {012 {val value012 attr {}} 013 {key {014 {val value014 attr {}}}}}} 002 {key {011 {val value011 attr {}}}}}} b {key {101 {val valueb101 attr {pid 0} key {112 {val sNV112 attr {pid 14} key {121 {val value121 attr {}}}}}} 104 {key {142 {val value112 attr {}}}} 002 {val value002 attr {}} 103 {key {111 {val valueb111 attr {}}}} 100 {key {117 {val {} attr {counter 105}}}}}}}
 
 
 #cmd: size tree
-16
+18
 
 
 #cmd: depth tree
@@ -718,7 +742,7 @@ key {a {val value00 attr {} key {001 {key {012 {val value012 attr {}} 013 {key {
 
 
 #cmd: getAllNodes tree {}]
-a {a 001} {a 001 012} {a 001 013} {a 001 013 014} {a 002} {a 002 011} b {b 101} {b 101 112} {b 101 112 121} {b 104} {b 104 142} {b 002} {b 103} {b 103 111}]
+a {a 001} {a 001 012} {a 001 013} {a 001 013 014} {a 002} {a 002 011} b {b 101} {b 101 112} {b 101 112 121} {b 104} {b 104 142} {b 002} {b 103} {b 103 111} {b 100} {b 100 117}]
 
 
 
