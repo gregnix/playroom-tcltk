@@ -3,6 +3,10 @@ tclmagick
 + http://www.graphicsmagick.org/TclMagick/doc/TclMagick.html
 + http://www.graphicsmagick.org/TclMagick/doc/
 + https://sourceforge.net/projects/graphicsmagick/
++ https://sourceforge.net/p/graphicsmagick/mailman/graphicsmagick-tclmagick/
++ http://www.graphicsmagick.org/GraphicsMagick.html
++ http://www.graphicsmagick.org/formats.html
++ http://www.graphicsmagick.org/programming.html
 + https://wiki.tcl-lang.org/page/TclMagick
 
 Debian with Graphicsmagick
