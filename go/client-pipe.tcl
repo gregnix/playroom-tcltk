@@ -12,7 +12,7 @@ if {0} {
     chmod +x server
 }
     
-    proc start_server {} {
+proc start_server {} {
     set chan [open "|./server" r+]
     fconfigure $chan -buffering line -blocking 0 -encoding utf-8
     puts "Server started with channel: $chan"
