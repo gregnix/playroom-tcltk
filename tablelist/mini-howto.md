@@ -68,9 +68,9 @@ set cell  [$tbl containingcell $x $y]
 + [DEFAULT AND INDIVIDUAL BINDINGS FOR THE HEADER LABELS](https://www.nemethi.de/tablelist/tablelistWidget.html#body_bindings)
 + [DEFAULT BINDINGS FOR INTERACTIVE CELL EDITING]()
 ```
-
-bind $tbl <Double-1> {handleDoubleClick %W %x %y}
-bind $tbl <1> {handleSingleClick %W %x %y}
+# m mouse k keyboard b button
+bind [$tbl bodytag] <Button-1> [list [namespace current]::cbtree m row %W %x %y]]
+bind [$tbl bodytag] <KeyRelease> [list [namespace current]::cbtree k row %W %k %K]]
 ```
 
 ### Navigation and Scrolling
