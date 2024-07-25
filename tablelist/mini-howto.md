@@ -26,6 +26,8 @@ set top [$tbl getkeys top]
 set bottom  [$tbl getkeys bottom]
 set end [$tbl getkeys end]
 set last [$tbl getkeys last]
+# knumber e.q. k0
+set number [$tbl getkeys k0]
 
 ```
 ## knumber
