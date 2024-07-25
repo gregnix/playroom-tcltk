@@ -1,6 +1,19 @@
 package require tablelist_tile
 package require dicttool
 
+proc expand_all {} {
+    .tbl expandall -fully
+}
+
+proc collapse_all {} {
+    .tbl collapseall -fully
+}
+
+proc cbtree {args} {
+    puts "llength args: [llength $args] :: args:  $args]"
+}
+
+
 # Function to recursively display a dictionary in the tree
 proc insert_dict_into_tree {widget parent dict} {
     foreach {key value} $dict {
@@ -19,8 +32,15 @@ proc insert_dict_into_tree {widget parent dict} {
 }
 
 # Create the Tablelist widget with tree configuration
-tablelist::tablelist .tbl -columns {0 "Key" 1 "Value"} -height 15 -width 50 \
-    -treecolumn 0 -treestyle classic
+proc createTree {} {
+    set tbl [tablelist::tablelist .tbl -columns {0 "Key" 0 "Value"} -height 15 -width 50 \
+    -treecolumn 0 -treestyle classic \
+    -collapsecommand [list cbtree "Collapsed: %W"] \
+    -expandcommand [list cbtree "Expanded: %W"]]
+    return $tbl
+}
+
+set tbl [createTree]
 
 # Example data
 set data {
@@ -34,12 +54,14 @@ set data {
     }
     job {
         title "Developer"
-        company "OpenAI"
+        company "Works"
     }
 }
 
 # Insert the data into the Tablelist widget, starting at the root node
-insert_dict_into_tree .tbl root $data
+insert_dict_into_tree $tbl root $data
 
 # Display the Tablelist widget
-pack .tbl -expand yes -fill both
+pack $tbl -expand yes -fill both
+
+puts "dict keys: [dict keys $data]"
