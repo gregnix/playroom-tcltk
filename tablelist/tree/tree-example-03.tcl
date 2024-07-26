@@ -113,20 +113,7 @@ proc createTree {w} {
 }
 
 # Example data
-set data {
-    person {
-        name "John Doe"
-        age 30
-        address {
-            street "123 Main St"
-            city "Anytown"
-        }
-    }
-    job {
-        title "Developer"
-        company "Works"
-    }
-}
+set data {person {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}} job {title "Developer" company "Works"}}
 
 ttk::frame .fr1
 ttk::frame .fr2
