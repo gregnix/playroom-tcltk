@@ -155,21 +155,9 @@ tlog $convertedData 0
 if {0} {
 person {name {John Doe} age 30 address {street {123 Main St} city Anytown}} job {title Developer company Works}
 Converted Dictionary:
-
-    person {
-        name "John Doe"
-        age 30
-        address {
-            street "123 Main St"
-            city "Anytown"
-        }
-    }
-    job {
-        title "Developer"
-        company "Works"
-    }
-
+person {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}} job {title "Developer" company "Works"}
 puts $data
+ 
  
 cbtree: type_: expa
 m expa W: .fr1.frt.tbl llength args: 1 :: args:  1
