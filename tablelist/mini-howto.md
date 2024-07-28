@@ -83,9 +83,13 @@ lassign [$tbl yview] top bottom
 ### Managing Selections
 ```
 set rows [$tbl curselection]
-$tbl activate $pos
-$tbl selection set  $pos1 $pos2
+
 $tbl selection clear $pos1 $pos2
+$tbl selection set  $pos1 $pos2
+$tbl activate $pos
+
+
+
 ```
 
 ### 
