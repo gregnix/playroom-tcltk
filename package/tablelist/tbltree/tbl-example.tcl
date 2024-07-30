@@ -3,7 +3,7 @@
 package require Tk
 package require tablelist_tile
 set dirname [file dirname [info script]]
-source [file join $dirname tbltreedict.tcl]
+#source [file join $dirname tbltreedict.tcl]
 
 # Create the Tablelist widget with tree configuration
 proc createTbl {w} {
@@ -16,8 +16,8 @@ proc createTbl {w} {
    set hsb [scrollbar $frt.hsb -orient horizontal -command [list $tbl xview]]
    $tbl configure -yscroll [list $vsb set] -xscroll [list $hsb set]
     
-   tbl::init_moveMBind $tbl
-   tbl::init_moveKBind $tbl
+   #tbl::init_moveMBind $tbl
+   #tbl::init_moveKBind $tbl
    pack $vsb -side right -fill y
    pack $hsb -side bottom -fill x
    pack $tbl -expand yes -fill both
@@ -39,8 +39,8 @@ pack .fr -side top -expand 1 -fill both
   
   set tbl [createTbl  .fr]
   $tbl insertlist end $data
-  tbl::init_moveKBind $tbl
-  tbl::init_moveMBind $tbl
+#  tbl::init_moveKBind $tbl
+#  tbl::init_moveMBind $tbl
 
 }
 main

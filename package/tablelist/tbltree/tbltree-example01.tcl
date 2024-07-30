@@ -4,21 +4,37 @@ package require Tk
 package require tablelist_tile
 set dirname [file dirname [info script]]
 source [file join $dirname tbltreedict.tcl]
-source [file join $dirname tbltreemove.tcl]
+
+# Example functions to validate moving rows
+
+
+# funktioniert leider nicht, kann den Fehler nicht finden   
+proc acceptChildCmd {tbl targetParentNodeIdx sourceRow} {
+   # Debugging output
+   #puts "acceptChildCmd called with: $tbl, targetParentNodeIdx: $targetParentNodeIdx, sourceRow: $sourceRow"
+   return 1  ;# For simplicity, allow all moves
+}
+
+proc acceptDropCmd {tbl targetRow sourceRow} {
+   # Beispiel: Prüfen, ob die Operation innerhalb desselben Elternknotens bleibt
+
+    return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
+   return 1
+}
 
 # Create the Tablelist widget with tree configuration
 proc createTbl {w} {
    set frt [ttk::frame $w.frt]
    set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 0 "Value" 0 "Detail"} -height 20 -width 0 \
-    -stretch all -treecolumn 0 -selectmode single]
+    -stretch all -movablerows true -acceptchildcommand "acceptChildCmd" -acceptdropcommand "acceptDropCmd" -treecolumn 0 -selectmode single]
    $tbl columnconfigure 0 -name key
    $tbl columnconfigure 1 -name value
    set vsb [scrollbar $frt.vsb -orient vertical -command [list $tbl yview]]
    set hsb [scrollbar $frt.hsb -orient horizontal -command [list $tbl xview]]
    $tbl configure -yscroll [list $vsb set] -xscroll [list $hsb set]
 
-   tbl::init_moveMBind $tbl
-   tbl::init_moveKBind $tbl
+   #tbl::init_moveMBind $tbl
+   #tbl::init_moveKBind $tbl
    pack $vsb -side right -fill y
    pack $hsb -side bottom -fill x
    pack $tbl -expand yes -fill both

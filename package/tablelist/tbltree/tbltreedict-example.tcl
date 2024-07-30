@@ -3,8 +3,9 @@
 #tbltreedict-example.tcl
 #20240729
 
-# move, delete and insert with popup
-
+# delete and insert with popup
+# https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
+#
 package require tablelist_tile
 package require ctext
 package require dicttool
@@ -12,6 +13,7 @@ catch {source [file join $tablelist::library demos option_tile.tcl]}
 
 set dirname [file dirname [info script]]
 source [file join $dirname tbltreedict.tcl]
+source [file join $dirname tbltreemove.tcl]
 
 # callback for tbl, Double 1 or space
 proc cbtree {input t W x y args} {
@@ -84,7 +86,8 @@ proc infoRow {tbl row t} {
 proc createTree {w t} {
    set frt [ttk::frame $w.frt]
    set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 40 "Value"} -height 20 -width 0 \
-    -stretch all -treecolumn 0 -treestyle classic ]
+    -stretch all -treecolumn 0 -treestyle classic \
+    -selectmode single]
    $tbl columnconfigure 0 -name key
    $tbl columnconfigure 1 -name value
    set vsb [scrollbar $frt.vsb -orient vertical -command [list $tbl yview]]
@@ -96,7 +99,7 @@ proc createTree {w t} {
 
    bind [$tbl bodytag] <<Button3>> +[list cbtk_popup %W  %x %y %X %Y $t]
    bind [$tbl bodytag] <Button-1> +[list cbtk_popupExists  %W  %x %y %X %Y $t]
-   
+
    tbl::init_moveMBind $tbl
    tbl::init_moveKBind $tbl
    pack $vsb -side right -fill y
@@ -106,6 +109,9 @@ proc createTree {w t} {
    pack $frt -expand yes -fill both
    return $tbl
 }
+
+# https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
+# Example functions to validate moving rows
 
 # button1 selection for popup only if popup already exists
 proc cbtk_popupExists {W x y X Y t} {
@@ -199,7 +205,7 @@ proc createButton {w tbl1 tbl2 data t} {
    set frt [ttk::frame $w.frt]
    # combobox
    set cbselection [ttk::combobox $frt.cbselection -values $dataList -exportselection 0 -width 8]
-   $cbselection current 1
+   $cbselection current 5
 
    bind $cbselection <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tbl1 $tbl2 $data $t]]
    cbComboSelected $cbselection $tbl1 $tbl2 $data $t
@@ -277,4 +283,4 @@ set tbl2 [createTree .fr2 $t]
 set btn  [createButton .frb $tbl1 $tbl2 $data $t]
 
 puts  [$tbl1 cget -treecolumn]
-   
+
