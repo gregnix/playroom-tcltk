@@ -26,23 +26,9 @@ proc createTbl {w} {
    return $tbl
 }
 
-
-
 proc main {} {
-    set i 1
-    set data$i [dict create a$i [list b1$i c1 b1$i c1]]
-    set i 2
-    set data$i [dict create a$i [list b1$i c1 b2$i c1]]
-    set data [dict create]
-    dict set data a1 b1 $data1
-    dict set data a2 b1 $data1
-    dict set data a1 b1 $data2
-    dict set data a2 b1 $data2
-    dict set data a1 b2 $data1
-    dict set data a2 b2 $data1
-    dict set data a1 b2 $data2
-    dict set data a2 b2 $data2 
-  
+set data {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
+ 
    ttk::frame .fr
    pack .fr -side top -expand 1 -fill both
 
