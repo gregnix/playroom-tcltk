@@ -65,24 +65,25 @@ namespace eval tbl {
     #  todo: after, array state for multi selection,
     # Function to set the source index on mouse click
     proc setSourceIndex {W x y} {
+        variable state
         set tbl [tablelist::getTablelistPath $W]
         foreach {tbl x y} [tablelist::convEventFields $W $x $y] {}
-        set sourceIndex [$tbl index @$x,$y]
+        dict set state $tbl mouse sourceIndex [$tbl index @$x,$y]
         $tbl selection clear 0 end
-        $tbl selection set $sourceIndex
-        return $sourceIndex
+        $tbl selection set [dict get $state $tbl mouse sourceIndex]
     }
 
     # Function to move the element when releasing the mouse button
-    proc moveElement {W x y sourceIndex} {
+    proc moveElement {W x y} {
+        variable state
         # after 0 before, after 1 after
         set after 0
         set tbl [tablelist::getTablelistPath $W]
         foreach {tbl x y} [tablelist::convEventFields $W $x $y] {}
-        if {$sourceIndex != -1} {
+        if {[dict get $state $tbl mouse sourceIndex] != -1} {
             set newIndex [$tbl index @$x,$y]
-            if {$newIndex != $sourceIndex} {
-                set sidx $sourceIndex
+            if {$newIndex != [dict get $state $tbl mouse sourceIndex]} {
+                set sidx [dict get $state $tbl mouse sourceIndex]
                 set pidx [$tbl parentkey $newIndex]
                 set cidx  [expr {$after + [$tbl childindex $newIndex]}]
                 $tbl move $sidx $pidx $cidx
@@ -91,6 +92,7 @@ namespace eval tbl {
                 $tbl activate $newIndex
             }
         }
+        dict set state $tbl mouse sourceIndex -1
     }
 
     # Function to update the selection when dragging
@@ -104,15 +106,15 @@ namespace eval tbl {
     }
     # binds
     proc init_moveMBind {tbl} {
-        #variable state ;# use as local var
+        variable state
         #for move
-        dict set state mouse sourceIndex -1
-        bind [$tbl bodytag] <ButtonPress-1>  [namespace code {
-            dict set state mouse sourceIndex [setSourceIndex %W %x %y]
+        dict set state $tbl mouse sourceIndex -1
+        bind [$tbl bodytag] <ButtonPress-1>  +[namespace code {
+            setSourceIndex %W %x %y
         }]
         bind [$tbl bodytag] <ButtonRelease-1> [namespace code {
-            moveElement %W %x %y [dict get $state mouse sourceIndex]
-            dict set state mouse sourceIndex -1
+            moveElement %W %x %y 
+            
         }]
         bind [$tbl bodytag] <B1-Motion> [namespace code {
             updateSelection %W %x %y
