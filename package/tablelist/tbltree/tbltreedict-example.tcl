@@ -83,8 +83,8 @@ proc infoRow {tbl row t} {
 }
 
 # Create the Tablelist widget with tree configuration
-proc createTree {w t} {
-   set frt [ttk::frame $w.frt]
+proc createTree {w t args} {
+   set frt [ttk::labelframe $w.frt -text $args]
    set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 40 "Value"} -height 20 -width 0 \
     -stretch all -treecolumn 0 -treestyle classic \
     -selectmode single]
@@ -111,7 +111,45 @@ proc createTree {w t} {
 }
 
 # https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
-# Example functions to validate moving rows
+# funktioniert  nicht einwandfrei, kann meinen Fehler nicht finden   
+proc acceptChildCmd {tbl targetParentNodeIdx sourceRow} {
+   # Debugging output
+   #puts "acceptChildCmd called with: $tbl, targetParentNodeIdx: $targetParentNodeIdx, sourceRow: $sourceRow"
+   return 1  ;# For simplicity, allow all moves
+}
+
+proc acceptDropCmd {tbl targetRow sourceRow} {
+   # Beispiel: Prüfen, ob die Operation innerhalb desselben Elternknotens bleibt
+
+#    return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
+   return 0
+}
+# Create the Tablelist widget with tree configuration and local drag_and_drop
+proc createTreelDD {w t args} {
+   set frt [ttk::labelframe $w.frt -text $args]
+   set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 40 "Value"} -height 20 -width 0 \
+    -stretch all -treecolumn 0 -treestyle classic \
+    -movablerows true -acceptchildcommand "acceptChildCmd" -acceptdropcommand "acceptDropCmd" -selectmode single]
+   $tbl columnconfigure 0 -name key
+   $tbl columnconfigure 1 -name value
+   set vsb [scrollbar $frt.vsb -orient vertical -command [list $tbl yview]]
+   set hsb [scrollbar $frt.hsb -orient horizontal -command [list $tbl xview]]
+   $tbl configure -yscroll [list $vsb set] -xscroll [list $hsb set]
+
+   bind [$tbl bodytag] <Double-1> [list cbtree m $t %W %x %y ]
+   bind [$tbl bodytag] <KeyRelease> [list cbtree k $t %W %k %K ]
+
+   bind [$tbl bodytag] <<Button3>> +[list cbtk_popup %W  %x %y %X %Y $t]
+   bind [$tbl bodytag] <Button-1> +[list cbtk_popupExists  %W  %x %y %X %Y $t]
+
+   pack $vsb -side right -fill y
+   pack $hsb -side bottom -fill x
+   pack $tbl -expand yes -fill both
+
+   pack $frt -expand yes -fill both
+   return $tbl
+}
+
 
 # button1 selection for popup only if popup already exists
 proc cbtk_popupExists {W x y X Y t} {
@@ -120,9 +158,10 @@ proc cbtk_popupExists {W x y X Y t} {
    }
 }
 
-# popup
+# popup for infos
 proc cbtk_popup {W x y X Y t} {
    if {[winfo exists .cbtk_popup]} {
+      set geometry [wm geometry .cbtk_popup]
       destroy .cbtk_popup
    }
    set tbl [tablelist::getTablelistPath $W]
@@ -135,7 +174,12 @@ proc cbtk_popup {W x y X Y t} {
    set key [$tbl cellcget $row,key -text]
    set value [$tbl cellcget $row,value -text]
    set top [toplevel .cbtk_popup ]
-   wm geometry $top +$X+[expr {$Y+50}]
+
+   if {[info exists geometry]}  {
+      wm geometry $top $geometry
+   } else {
+      wm geometry $top +$X+[expr {$Y+50}]
+   }
    wm transient $top $tbl
 
    $tbl selection clear 0 end
@@ -143,9 +187,18 @@ proc cbtk_popup {W x y X Y t} {
    $tbl selection set $row
    $tbl activate $row
 
+   set krow [$tbl getfullkey $row]
+   set pk [$tbl parentkey $row]
+   set cix [$tbl childindex $row]
+   set cc [$tbl childcount $row]
+   set dc [$tbl  descendantcount $row]
+   set nr [$tbl noderow $pk $cix]
+   
+   ttk::label $top.labinfo1 -text "row: $row krow: $krow nr: $nr" -background white 
+   ttk::label $top.labinfo2 -text "pk: $pk cix: $cix cc: $cc dc: $dc" -background white 
    ttk::button $top.btninfo -text "Info row $row"  -command [list infoRow $tbl $row $t]
    ttk::button $top.btndump -text "dumptostring " -command [list cbtkpm $tbl $row dumptostring $top.entkey $top.entvalue $t]
-   ttk::button $top.btntree2dict -text tbltree2dict -command [list cbtkpm $tbl $row tbltree2dict $top.entkey $top.entvalue $t]   
+   ttk::button $top.btntree2dict -text tbltree2dict -command [list cbtkpm $tbl $row tbltree2dict $top.entkey $top.entvalue $t]
    ttk::button $top.btndel -text "Delete row $row" -command [list $tbl delete $row]
    ttk::button $top.btnupt -text "Update row $row" -command [list cbtkpm $tbl $row update $top.entkey $top.entvalue $t]
    ttk::button $top.btnins -text "Insert after row $row" -command [list cbtkpm $tbl $row insert $top.entkey $top.entvalue $t]
@@ -287,7 +340,7 @@ pack .frb .fr1  .fr2 -side top -expand 1 -fill both
 
 set t    [createText .frt]
 set tbl1 [createTree .fr1 $t]
-set tbl2 [createTree .fr2 $t]
+set tbl2 [createTreelDD .fr2 $t "local drag and drop"]
 set btn  [createButton .frb $tbl1 $tbl2 $data $t]
 
 puts  [$tbl1 cget -treecolumn]

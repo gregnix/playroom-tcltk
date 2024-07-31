@@ -18,8 +18,8 @@ proc acceptChildCmd {tbl targetParentNodeIdx sourceRow} {
 proc acceptDropCmd {tbl targetRow sourceRow} {
    # Beispiel: Prüfen, ob die Operation innerhalb desselben Elternknotens bleibt
 
-    return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
-   return 1
+#    return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
+   return 0
 }
 
 # Create the Tablelist widget with tree configuration
