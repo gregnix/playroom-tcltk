@@ -122,8 +122,9 @@ proc acceptDropCmd {tbl targetRow sourceRow} {
    # Beispiel: Prüfen, ob die Operation innerhalb desselben Elternknotens bleibt
 
 #    return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
-   return 0
+   return 1
 }
+
 # Create the Tablelist widget with tree configuration and local drag_and_drop
 proc createTreelDD {w t args} {
    set frt [ttk::labelframe $w.frt -text $args]
