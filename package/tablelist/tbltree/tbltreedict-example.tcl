@@ -264,7 +264,16 @@ set employeeInfo {
 }
 
 dict set data employeeInfo $employeeInfo
-set data1 [dict get $data Example4]
+
+set fp [open cd_catalog.xml r]
+set XML [read $fp]
+close $fp
+dict set data  dataXml [tbl::xml2dict $XML]
+
+set fp [open doc.xml r]
+set XML [read $fp]
+close $fp
+dict set data  dataXml2 [tbl::xml2dict $XML]
 
 ###
 #main

@@ -1,0 +1,17 @@
+ <?xml version="1.0"?>
+ <document>
+     <title>XML to Tk Canvas</title>
+     <heading1>1. First Section</heading1>
+     <heading2>1.1 Sub section</heading2>
+     <text>This is some text. Here is a
+         <quote>quote</quote>
+     </text>
+     <heading2>1.2 Lists</heading2>
+     <text>
+      This is a list:
+      <list>
+          <item>Item one</item>
+          <item>The second item</item>
+      </list>
+      </text>
+ </document>
