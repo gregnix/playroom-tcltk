@@ -247,6 +247,7 @@ proc cbComboSelected {w tbl1 tbl2 data t} {
    set data2 [tbl::tbltree2dict $tbl1 root]
    # Insert the  data2 into another Tablelist widget
    dataTotbl $tbl2 $data2 $t
+   $t see end.1
 }
 
 
@@ -270,10 +271,7 @@ set XML [read $fp]
 close $fp
 dict set data  dataXml [tbl::xml2dict $XML]
 
-set fp [open doc.xml r]
-set XML [read $fp]
-close $fp
-dict set data  dataXml2 [tbl::xml2dict $XML]
+
 
 ###
 #main
