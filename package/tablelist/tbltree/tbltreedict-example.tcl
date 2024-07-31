@@ -111,20 +111,18 @@ proc createTree {w t args} {
 }
 
 # https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
-# funktioniert  nicht einwandfrei, kann meinen Fehler nicht finden   
-proc acceptChildCmd {args} {
+# not working properly, can't find my error  
+proc acceptChildCmd {tbl targetParentNodeIdx sourceRow} {
    # tbl targetParentNodeIdx sourceRow
    # Debugging output
    #puts "acceptChildCmd called with: $tbl, targetParentNodeIdx: $targetParentNodeIdx, sourceRow: $sourceRow"
-   puts $args
    return 1  ;# For simplicity, allow all moves
 }
 
-proc acceptDropCmd {args} {
+proc acceptDropCmd {tbl targetRow sourceRow} {
    # tbl targetRow sourceRow
-   # Beispiel: Prüfen, ob die Operation innerhalb desselben Elternknotens bleibt
-puts $args
-#    return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
+   # Check if the operation stays within the same parent node
+   # return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
    return 1
 }
 
