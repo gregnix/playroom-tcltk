@@ -144,11 +144,12 @@ proc cbtk_popup {W x y X Y t} {
    $tbl activate $row
 
    ttk::button $top.btninfo -text "Info row $row"  -command [list infoRow $tbl $row $t]
+   ttk::button $top.btndump -text "dumptostring " -command [list cbtkpm $tbl $row dumptostring $top.entkey $top.entvalue $t]
+   ttk::button $top.btntree2dict -text tbltree2dict -command [list cbtkpm $tbl $row tbltree2dict $top.entkey $top.entvalue $t]   
    ttk::button $top.btndel -text "Delete row $row" -command [list $tbl delete $row]
    ttk::button $top.btnupt -text "Update row $row" -command [list cbtkpm $tbl $row update $top.entkey $top.entvalue $t]
    ttk::button $top.btnins -text "Insert after row $row" -command [list cbtkpm $tbl $row insert $top.entkey $top.entvalue $t]
-   ttk::button $top.btndump -text "dumptostring " -command [list cbtkpm $tbl $row dumptostring $top.entkey $top.entvalue $t]
-   ttk::button $top.btntree2dict -text tbltree2dict -command [list cbtkpm $tbl $row tbltree2dict $top.entkey $top.entvalue $t]
+
    ttk::entry $top.entkey
    ttk::entry $top.entvalue
 
@@ -188,7 +189,7 @@ proc cbtkpm {tbl row cmd entkey entval t} {
 # text window for information
 proc createText {w} {
    set frt [ttk::frame $w.frt]
-   set t [ctext $frt.t -setgrid true -wrap none -width 120 \
+   set t [ctext $frt.t -setgrid true -wrap word -width 120 \
     -yscrollcommand "$frt.vsb set" -xscrollcommand "$frt.hsb set"]
    set vsb [scrollbar $frt.vsb -orient vertical -command "$t yview"]
    set hsb [scrollbar $frt.hsb -orient horizontal -command "$t xview"]
@@ -247,7 +248,7 @@ proc cbComboSelected {w tbl1 tbl2 data t} {
    set data2 [tbl::tbltree2dict $tbl1 root]
    # Insert the  data2 into another Tablelist widget
    dataTotbl $tbl2 $data2 $t
-   $t see end.1
+   $t see end
 }
 
 
