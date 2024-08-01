@@ -1,5 +1,5 @@
- <?xml version="1.0"?>
- <document>
+<?xml version="1.0"?>
+<document>
      <title>XML to Tk Canvas</title>
      <heading1>1. First Section</heading1>
      <heading2>1.1 Sub section</heading2>
@@ -14,4 +14,4 @@
           <item>The second item</item>
       </list>
       </text>
- </document>
+</document>
