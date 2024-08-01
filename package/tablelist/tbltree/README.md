@@ -8,6 +8,8 @@ tablelist as tree with dict
 + https://www.nemethi.de/tablelist/tablelistWidget.html#tree_widget
 + https://www.nemethi.de/tablelist/tablelistWidget.html#move
 + https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
++ https://www.nemethi.de/tablelist/tablelistWidget.html#acceptchildcommand
++ https://www.nemethi.de/tablelist/tablelistWidget.html#acceptdropcommand
 + https://wiki.tcl-lang.org/page/Natural+local+drag%26drop+for+tablelist+mega+widget
 + https://wiki.tcl-lang.org/page/xml2dict
 + [tcllib json](https://core.tcl-lang.org/tcllib/doc/trunk/embedded/md/tcllib/files/modules/json/json.md)
