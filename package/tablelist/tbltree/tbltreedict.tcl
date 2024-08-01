@@ -24,6 +24,32 @@ namespace eval tbl {
         return 0
     }
 
+    proc printDictAdjusted {dict {ind 0}} {
+        foreach {key value} $dict {
+            if { [isDictAdjusted $value]} {
+                append print "[string repeat " " $ind]$key:" \n
+                append print [printDictAdjusted $value [incr ind]] \n
+            } else {
+                append print "[string repeat " " $ind]$key: $value" \n
+            }
+        }
+    return  $print
+    }
+    proc isDict value {
+        expr {![catch {dict size $value}]}
+    }
+
+    proc printDict {dict} {
+        foreach {key value} $dict {
+            if { [isDict $value]} {
+                puts "$key:"
+                printDict $value
+            } else {
+                puts "$key: $value"
+            }
+        }
+    }
+
     # Function to recursively convert a tree into a dictionary
     proc tbltree2dict {tbl node} {
         set result {}

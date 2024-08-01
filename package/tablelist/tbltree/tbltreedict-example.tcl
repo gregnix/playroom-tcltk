@@ -9,6 +9,7 @@
 package require tablelist_tile
 package require ctext
 package require dicttool
+package require textutil
 catch {source [file join $tablelist::library demos option_tile.tcl]}
 
 set dirname [file dirname [info script]]
@@ -112,7 +113,7 @@ proc createTree {w t args} {
 }
 
 # https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
-# not working properly, can't find my error  
+# not working properly, can't find my error
 proc acceptChildCmd {tbl targetParentNodeIdx sourceRow} {
    # tbl targetParentNodeIdx sourceRow
    # Debugging output
@@ -196,9 +197,9 @@ proc cbtk_popup {W x y X Y t} {
    set cc [$tbl childcount $row]
    set dc [$tbl  descendantcount $row]
    set nr [$tbl noderow $pk $cix]
-   
-   ttk::label $top.labinfo1 -text "row: $row krow: $krow nr: $nr" -background white 
-   ttk::label $top.labinfo2 -text "pk: $pk cix: $cix cc: $cc dc: $dc" -background white 
+
+   ttk::label $top.labinfo1 -text "row: $row krow: $krow nr: $nr" -background white
+   ttk::label $top.labinfo2 -text "pk: $pk cix: $cix cc: $cc dc: $dc" -background white
    ttk::button $top.btninfo -text "Info row $row"  -command [list infoRow $tbl $row $t]
    ttk::button $top.btndump -text "dumptostring " -command [list cbtkpm $tbl $row dumptostring $top.entkey $top.entvalue $t]
    ttk::button $top.btntree2dict -text tbltree2dict -command [list cbtkpm $tbl $row tbltree2dict $top.entkey $top.entvalue $t]
@@ -294,7 +295,6 @@ proc cbComboSelected {w tbl1 tbl2 data t} {
    if {[$w get] eq "all" }  {
       set data1 $data
    }
-   set ::spinvar(actuell) {}
    $tbl1 delete 0 end
    $tbl2 delete 0 end
    $t delete 1.0 end
@@ -316,11 +316,11 @@ dict set data Example2 {person  {name "John Doe" age 30 address {street "123 Mai
 dict set data Example3 {person  {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} } } job {title "Developer" company "Works"}}
 dict set data Example4 {person  {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} {name "John Good"} {name "Jane Good"}} } job {title "Developer" company "Works"}}
 dict set data Example5 {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
+
 set employeeInfo {
    12345-A {forenames "Joe" surname "Schmoe" street "147 Short Street" city "Springfield" phone "555-1234"}
    98372-J {forenames "Anne" surname "Other" street "32995 Oakdale Way" city "Springfield" phone "555-8765"}
 }
-
 dict set data employeeInfo $employeeInfo
 
 ###
@@ -338,6 +338,4 @@ set t    [createText .frt]
 set tbl1 [createTree .fr1 $t]
 set tbl2 [createTreelDD .fr2 $t "local drag and drop"]
 set btn  [createButton .frb $tbl1 $tbl2 $data $t]
-
-puts  [$tbl1 cget -treecolumn]
 
