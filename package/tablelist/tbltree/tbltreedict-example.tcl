@@ -14,6 +14,7 @@ catch {source [file join $tablelist::library demos option_tile.tcl]}
 set dirname [file dirname [info script]]
 source [file join $dirname tbltreedict.tcl]
 source [file join $dirname tbltreemove.tcl]
+source [file join $dirname tbltreexml.tcl]
 
 # callback for tbl, Double 1 or space
 proc cbtree {input t W x y args} {
@@ -327,6 +328,10 @@ set XML [read $fp]
 close $fp
 dict set data  dataXml [tbl::xml2dict $XML]
 
+set fp [open doc.xml r]
+set XML [read $fp]
+close $fp
+dict set data  datadcXml [tbl::xml2dict $XML]
 
 
 ###
