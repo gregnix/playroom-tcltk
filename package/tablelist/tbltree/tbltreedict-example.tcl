@@ -323,7 +323,7 @@ set employeeInfo {
 }
 dict set data employeeInfo $employeeInfo
 
-dict set data  dir_info [tbl::scan_directory [file normalize ../../]]
+dict set data  dir_info [tbl::scan_directory [file normalize ../../../../]]
 
 ###
 #main

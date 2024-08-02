@@ -90,35 +90,44 @@ namespace eval tbl {
 
 
 namespace eval tbl {
-    # Funktion, um Informationen über eine Datei zu sammeln
-    proc get_file_info {file_path} {
-        set info [dict create]
-        dict set info size [file size $file_path]
-        dict set info atime [file atime $file_path]
-        dict set info mtime [file mtime $file_path]
-        dict set info type [file type $file_path]
-        dict set info readable [file readable $file_path]
-        dict set info writable [file writable $file_path]
-        dict set info executable [file executable $file_path]
-        return $info
-    }
+# Funktion, um Informationen über eine Datei zu sammeln
+#!/usr/bin/env tclsh
+package require Tcl 8.6
+package require dicttool
 
-    # Rekursive Funktion, um die Verzeichnisstruktur zu durchlaufen
-    proc scan_directory {dir} {
-        set result [dict create]
+# Funktion, um Informationen über eine Datei oder ein Verzeichnis zu sammeln
+proc get_file_info {path} {
+    set info [dict create]
+    dict set info size [file size $path]
+    dict set info atime [file atime $path]
+    dict set info mtime [file mtime $path]
+    dict set info type [file type $path]
+    dict set info readable [file readable $path]
+    dict set info writable [file writable $path]
+    dict set info executable [file executable $path]
+    return $info
+}
 
-        # Durchlaufe alle Dateien und Verzeichnisse im aktuellen Verzeichnis
-        foreach item [glob -nocomplain -directory $dir *] {
-            set item_path [file join $dir $item]
-            if {[file isdirectory $item_path]} {
-                # Wenn es ein Verzeichnis ist, rufe die Funktion rekursiv auf
-                dict set result $item [scan_directory $item_path]
-            } elseif {[file isfile $item_path]} {
-                # Wenn es eine Datei ist, sammle die Informationen darüber
-                dict set result $item [get_file_info $item_path]
-            }
+# Rekursive Funktion, um die Verzeichnisstruktur zu durchlaufen
+proc scan_directory {dir} {
+    set result [dict create]
+    
+    # Füge Informationen über das aktuelle Verzeichnis hinzu
+    dict set result __info__ [get_file_info $dir]
+    
+    # Durchlaufe alle Dateien und Verzeichnisse im aktuellen Verzeichnis
+    foreach item [glob -nocomplain -tails -directory $dir *] {
+        set item_path [file join $dir $item]
+        if {[file isdirectory $item_path]} {
+            # Wenn es ein Verzeichnis ist, rufe die Funktion rekursiv auf
+            dict set result $item [scan_directory $item_path]
+        } elseif {[file isfile $item_path]} {
+            # Wenn es eine Datei ist, sammle die Informationen darüber
+            dict set result $item [get_file_info $item_path]
         }
-
-        return $result
     }
+    
+    return $result
+}
+
 }

@@ -2,16 +2,20 @@
 package require Tcl 8.6
 package require dicttool
 
-# Funktion, um Informationen über eine Datei zu sammeln
-proc get_file_info {file_path} {
+#!/usr/bin/env tclsh
+package require Tcl 8.6
+package require dicttool
+
+# Funktion, um Informationen über eine Datei oder ein Verzeichnis zu sammeln
+proc get_file_info {path} {
     set info [dict create]
-    dict set info size [file size $file_path]
-    dict set info atime [file atime $file_path]
-    dict set info mtime [file mtime $file_path]
-    dict set info type [file type $file_path]
-    dict set info readable [file readable $file_path]
-    dict set info writable [file writable $file_path]
-    dict set info executable [file executable $file_path]
+    dict set info size [file size $path]
+    dict set info atime [file atime $path]
+    dict set info mtime [file mtime $path]
+    dict set info type [file type $path]
+    dict set info readable [file readable $path]
+    dict set info writable [file writable $path]
+    dict set info executable [file executable $path]
     return $info
 }
 
@@ -19,8 +23,11 @@ proc get_file_info {file_path} {
 proc scan_directory {dir} {
     set result [dict create]
     
+    # Füge Informationen über das aktuelle Verzeichnis hinzu
+    dict set result __info__ [get_file_info $dir]
+    
     # Durchlaufe alle Dateien und Verzeichnisse im aktuellen Verzeichnis
-    foreach item [glob -nocomplain -directory $dir *] {
+    foreach item [glob -nocomplain -tails -directory $dir *] {
         set item_path [file join $dir $item]
         if {[file isdirectory $item_path]} {
             # Wenn es ein Verzeichnis ist, rufe die Funktion rekursiv auf
@@ -34,14 +41,29 @@ proc scan_directory {dir} {
     return $result
 }
 
-if {[info script] eq $argv0} {
 # Beispielverzeichnis zum Scannen
-set dir "/home/greg/Project/github"
+set dir [file normalize ../../]
 
 # Scanne das Verzeichnis und speichere die Informationen in einem Dictionary
 set dir_info [scan_directory $dir]
 
-# Ausgabe des Ergebnisses
-puts [dict print $dir_info]
- 
+# Funktion, um ein Dictionary formatiert auszugeben
+proc print_dict {dict {indent ""}} {
+    foreach {key value} [dict get $dict] {
+        if {[dict is_dict $value]} {
+            if {$key eq "__info__"} {
+                puts "$indent$key:"
+                print_dict $value "$indent  "
+            } else {
+                puts "$indent$key/"
+                print_dict $value "$indent  "
+            }
+        } else {
+            puts "$indent$key: $value"
+        }
+    }
 }
+
+# Ausgabe des Ergebnisses
+print_dict $dir_info
+
