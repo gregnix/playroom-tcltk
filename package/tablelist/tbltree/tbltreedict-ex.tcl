@@ -9,15 +9,10 @@
 package require tablelist_tile
 package require ctext
 package require dicttool
-package require textutil
-package require md5
 catch {source [file join $tablelist::library demos option_tile.tcl]}
 
 set dirname [file dirname [info script]]
 source [file join $dirname tbltreedict.tcl]
-source [file join $dirname tbltreemove.tcl]
-source [file join $dirname tbltreexml.tcl]
-source [file join $dirname tbltreehelpers.tcl]
 
 # callback for tbl, Double 1 or space
 proc cbtree {input t W x y args} {
@@ -86,53 +81,22 @@ proc infoRow {tbl row t} {
    $t see end
 }
 
-# Create the Tablelist widget with tree configuration
-proc createTree {w t args} {
-   set frt [ttk::labelframe $w.frt -text $args]
-   set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 40 "Value"} -height 20 -width 0 \
-    -stretch all -treecolumn 0 -treestyle classic \
-    -selectmode single]
-   $tbl columnconfigure 0 -name key
-   $tbl columnconfigure 1 -name value
-   set vsb [scrollbar $frt.vsb -orient vertical -command [list $tbl yview]]
-   set hsb [scrollbar $frt.hsb -orient horizontal -command [list $tbl xview]]
-   $tbl configure -yscroll [list $vsb set] -xscroll [list $hsb set]
-
-   bind [$tbl bodytag] <Double-1> [list cbtree m $t %W %x %y ]
-   bind [$tbl bodytag] <KeyRelease> [list cbtree k $t %W %k %K ]
-
-   bind [$tbl bodytag] <<Button3>> +[list cbtk_popup %W  %x %y %X %Y $t]
-   bind [$tbl bodytag] <Button-1> +[list cbtk_popupExists  %W  %x %y %X %Y $t]
-
-   tbl::init_moveMBind $tbl
-   tbl::init_moveKBind $tbl
-   pack $vsb -side right -fill y
-   pack $hsb -side bottom -fill x
-   pack $tbl -expand yes -fill both
-
-   pack $frt -expand yes -fill both
-   return $tbl
-}
-
 # https://www.nemethi.de/tablelist/tablelistWidget.html#local_drag_and_drop
-# not working properly, can't find my error
 proc acceptChildCmd {tbl targetParentNodeIdx sourceRow} {
-   # tbl targetParentNodeIdx sourceRow
    # Debugging output
    #puts "acceptChildCmd called with: $tbl, targetParentNodeIdx: $targetParentNodeIdx, sourceRow: $sourceRow"
    return 1  ;# For simplicity, allow all moves
 }
 
 proc acceptDropCmd {tbl targetRow sourceRow} {
-   # tbl targetRow sourceRow
    # Check if the operation stays within the same parent node
    # return [expr {$sourceRow != $rowCount - 1 && $targetRow < $rowCount}]
    return 1
 }
 
 # Create the Tablelist widget with tree configuration and local drag_and_drop
-proc createTreelDD {w t args} {
-   set frt [ttk::labelframe $w.frt -text $args]
+proc createTree {w t args} {
+   set frt [ttk::frame $w.frt]
    set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 40 "Value"} -height 20 -width 0 \
     -stretch all -treecolumn 0 -treestyle classic \
     -movablerows true -acceptchildcommand "acceptChildCmd" -acceptdropcommand "acceptDropCmd" -selectmode single]
@@ -264,8 +228,8 @@ proc createButton {w tbl1 tbl2 data t} {
    set dataList [dict keys $data]
    set frt [ttk::frame $w.frt]
    # combobox
-   set cbselection [ttk::combobox $frt.cbselection -values $dataList -exportselection 0 -width 8]
-   $cbselection current 5
+   set cbselection [ttk::combobox $frt.cbselection -values $dataList -exportselection 0 -width 15]
+   $cbselection current 2
 
    bind $cbselection <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tbl1 $tbl2 $data $t]]
    cbComboSelected $cbselection $tbl1 $tbl2 $data $t
@@ -300,24 +264,21 @@ proc cbComboSelected {w tbl1 tbl2 data t} {
    $tbl1 delete 0 end
    $tbl2 delete 0 end
    $t delete 1.0 end
-   # data to tbl1
    dataTotbl $tbl1 $data1 $t
-   # Convert the tree back to a dictionary
    set data2 [tbl::tbltree2dict $tbl1 root]
-   # Insert the  data2 into another Tablelist widget
    dataTotbl $tbl2 $data2 $t
    $t see end
 }
 
+###############
+# Example datas
+###############
 
-###
 #Example datas in dict data, 2-4 differences in number of employees
 dict set data all {}
 dict set data Example1 {person {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}} job {title "Developer" company "Works"}}
-dict set data Example2 {person  {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} {name "John Good"} } } job {title "Developer" company "Works"}}
-dict set data Example3 {person  {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} } } job {title "Developer" company "Works"}}
-dict set data Example4 {person  {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} {name "John Good"} {name "Jane Good"}} } job {title "Developer" company "Works"}}
-dict set data Example5 {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
+dict set data Example2 {person  {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}  employees {{name "Alice Smith"} {name "Bob Smith"} {name "John Good"} {name "Jane Good"}}} job {title "Developer" company "Works"}}
+dict set data Example3 {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
 
 set employeeInfo {
    12345-A {forenames "Joe" surname "Schmoe" street "147 Short Street" city "Springfield" phone "555-1234"}
@@ -325,13 +286,10 @@ set employeeInfo {
 }
 dict set data employeeInfo $employeeInfo
 
-set dir [file join [pwd] ../../]
-dict set data  dir_info [tbl::scan_directory $dir]
-dict set data  $dir [tbl::lsD-R $dir]
-
-
-###
+#####
 #main
+#####
+
 # create two Tablelist and a text widget
 ttk::frame .fr1
 ttk::frame .fr2
@@ -343,6 +301,6 @@ pack .frb .fr1  .fr2 -side top -expand 1 -fill both
 
 set t    [createText .frt]
 set tbl1 [createTree .fr1 $t]
-set tbl2 [createTreelDD .fr2 $t "local drag and drop"]
+set tbl2 [createTree .fr2 $t]
 set btn  [createButton .frb $tbl1 $tbl2 $data $t]
 

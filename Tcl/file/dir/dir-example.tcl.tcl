@@ -3,8 +3,7 @@ package require Tcl 8.6
 package require dicttool
 
 #!/usr/bin/env tclsh
-package require Tcl 8.6
-package require dicttool
+
 
 # Funktion, um Informationen über eine Datei oder ein Verzeichnis zu sammeln
 proc get_file_info {path} {
@@ -41,29 +40,20 @@ proc scan_directory {dir} {
     return $result
 }
 
+
+#example
+if {[info script] eq $argv0} {
+source printdict.tcl
+
 # Beispielverzeichnis zum Scannen
 set dir [file normalize ../../]
 
 # Scanne das Verzeichnis und speichere die Informationen in einem Dictionary
 set dir_info [scan_directory $dir]
 
-# Funktion, um ein Dictionary formatiert auszugeben
-proc print_dict {dict {indent ""}} {
-    foreach {key value} [dict get $dict] {
-        if {[dict is_dict $value]} {
-            if {$key eq "__info__"} {
-                puts "$indent$key:"
-                print_dict $value "$indent  "
-            } else {
-                puts "$indent$key/"
-                print_dict $value "$indent  "
-            }
-        } else {
-            puts "$indent$key: $value"
-        }
-    }
-}
+
 
 # Ausgabe des Ergebnisses
 print_dict $dir_info
 
+}
