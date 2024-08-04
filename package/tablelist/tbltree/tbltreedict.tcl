@@ -7,6 +7,8 @@
 # tbl::dict2tbltree $tbl root $data
 # set data [tbl::tbltree2dict $tbl root]
 
+# needs dict isdict from dicttool
+
 namespace eval tbl {
    # Function to check whether the first elements of the lists are equal
    # use in proc dict2tbltree

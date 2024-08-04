@@ -264,7 +264,7 @@ proc createButton {w tbl1 tbl2 data t} {
    set dataList [dict keys $data]
    set frt [ttk::frame $w.frt]
    # combobox
-   set cbselection [ttk::combobox $frt.cbselection -values $dataList -exportselection 0 -width 8]
+   set cbselection [ttk::combobox $frt.cbselection -values $dataList -exportselection 0 -width 15]
    $cbselection current 5
 
    bind $cbselection <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tbl1 $tbl2 $data $t]]
@@ -325,9 +325,10 @@ set employeeInfo {
 }
 dict set data employeeInfo $employeeInfo
 
-set dir [file join [pwd] ../../]
+set dir [file join [pwd] ../../../]
 dict set data  dir_info [tbl::scan_directory $dir]
 dict set data  $dir [tbl::lsD-R $dir]
+dict set data dictdir [tbl::dictdir /home/greg]
 
 
 ###

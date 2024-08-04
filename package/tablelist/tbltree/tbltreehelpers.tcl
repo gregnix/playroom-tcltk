@@ -26,11 +26,15 @@ namespace eval tbl {
     }
 
     # recursively builds a nested dict of all directories under $path
-    proc lsD-R {path} {
+    proc lsD-R {path {depth 3}} {
+        if {$depth eq "0"} {
+            return {}
+        }
         set result {}
+        incr depth -1
         foreach item [lsD $path] {
             #set itemlength [llength $item]
-            set res [lsD-R [file join $path $item]]
+            set res [lsD-R [file join $path $item] $depth]
             #set reslength  [llength $res]
             dict set result $item $res
 
@@ -85,5 +89,27 @@ namespace eval tbl {
 
         return $result
     }
+}
 
+namespace eval tbl {
+    proc dictdir { dir } {
+        set d ""
+#        file stat $dir fstat
+#        foreach item [lsort [array names fstat]] {
+#            dict set d [file normalize .] $item $fstat($item)
+#        }
+        foreach subdir [lsort [glob -directory $dir -nocomplain -types d "*"]] {
+            dict set d {*}[dictdir $subdir]
+        }
+#        foreach fname [lsort [glob -directory $dir -nocomplain -types f "*"]] {
+#            file stat $fname fstat
+            # sorted:
+#            foreach item [lsort [array names fstat]] {
+#                dict set d [file tail $fname] $item $fstat($item)
+#            }
+            # faster but unsorted:
+            # dict set d [file tail $fname] [array get fstat]
+#        }
+        return [list [file tail $dir]/ $d]
+    }
 }
