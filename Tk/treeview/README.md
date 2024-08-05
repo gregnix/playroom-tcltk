@@ -9,6 +9,8 @@ ttk::treeview
 
 ## package
 + https://wiki.tcl-lang.org/page/dgw%3A%3Atvmixins
++ https://chiselapp.com/user/dgroth/repository/tclcode/doc/tip/dgw/tvmixins.html
++ https://core.tcl-lang.org/tklib/file?name=modules/treeview/tvmixins.html
 
 ## example
 + https://wiki.tcl-lang.org/page/Inplace+edit+in+ttk%3A%3Atreeview
