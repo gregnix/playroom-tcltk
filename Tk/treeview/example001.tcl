@@ -1,4 +1,6 @@
 package require Tk
+source treeview-lib.tcl
+namespace import tvlib::*
 
 ::ttk::label .msg -font "Times 24 bold" -textvariable ::msg -width 20 \
     -background yellow -borderwidth 2 -relief ridge
@@ -23,3 +25,5 @@ foreach txt {first second third} {
         }
     }
 }
+tvlib::band_init .tree
+tvlib::band .tree
