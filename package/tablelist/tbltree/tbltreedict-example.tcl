@@ -325,10 +325,10 @@ set employeeInfo {
 }
 dict set data employeeInfo $employeeInfo
 
-set dir [file join [pwd] ../../../]
+set dir [file normalize [file join [pwd] ../../../]]
 dict set data  dir_info [tbl::scan_directory $dir]
 dict set data  $dir [tbl::lsD-R $dir]
-dict set data dictdir [tbl::dictdir /home/greg]
+dict set data dictdir [tbl::dictdir  $dir]
 
 
 ###

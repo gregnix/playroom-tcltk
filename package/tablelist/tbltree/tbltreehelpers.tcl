@@ -98,7 +98,7 @@ namespace eval tbl {
 #        foreach item [lsort [array names fstat]] {
 #            dict set d [file normalize .] $item $fstat($item)
 #        }
-        foreach subdir [lsort [glob -directory $dir -nocomplain -types d "*"]] {
+        foreach subdir [lsort [glob -directory $dir  -nocomplain -types d "*"]] {
             dict set d {*}[dictdir $subdir]
         }
 #        foreach fname [lsort [glob -directory $dir -nocomplain -types f "*"]] {
@@ -111,5 +111,6 @@ namespace eval tbl {
             # dict set d [file tail $fname] [array get fstat]
 #        }
         return [list [file tail $dir]/ $d]
+        #return [list ${dir}/ $d]
     }
 }
