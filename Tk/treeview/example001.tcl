@@ -25,9 +25,10 @@ proc createTV {w} {
 
 
 ::ttk::label .msg -font "Times 24 bold" -textvariable ::msg -width 20 \
-    -background yellow -borderwidth 2 -relief ridge
+    -background gray -borderwidth 2 -relief ridge
 
 ttk::frame .fr1
+pack .msg -side top
 pack .fr1  -side top -expand 1 -fill both
 set tree [createTV .fr1]
 
@@ -40,6 +41,6 @@ foreach txt {first second third} {
     }
   }
 }
-tvlib::band_init $tree
+tvlib::bandInit $tree
 tvlib::band $tree
 

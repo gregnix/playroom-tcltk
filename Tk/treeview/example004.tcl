@@ -39,7 +39,7 @@ proc dict2tbltree {widget parent dict} {
       if { [checkFirstElementsEqual $keyValue] } {
         $widget insert $parent end -text $key -values \{$keyValue\}
         continue
-      } 
+      }
       if {[dict is_dict $keyValue] && [llength $keyValue] != "2"} {
         set newParent [$widget insert $parent end -text $key -values "D"]
         dict2tbltree $widget $newParent $keyValue
@@ -53,7 +53,6 @@ proc dict2tbltree {widget parent dict} {
     }
   }
 }
-
 
 
 
@@ -81,10 +80,10 @@ grid .tree -sticky news
 
 
 # Daten aus dem Dict in das Treeview einfügen
-#dict2tbltree .tree {} $data
-insertDict .tree {} $data
+dict2tbltree .tree {} $data
+#insertDict .tree {} $data
 tvlib::band .tree
-tvlib::band_init .tree
+tvlib::bandInit .tree
 
 
 # Fenster anpassen
@@ -93,3 +92,21 @@ grid rowconfigure . 0 -weight 1
 
 # Haupt-Event-Loop starten
 # (dies wird automatisch vom Tcl-Interpreter verwaltet)
+
+puts "size: [tvlib::treesize .tree]"
+puts [.tree item {}]
+puts [.tree children {}]
+proc testit {tree {p {}}} {
+  foreach c [$tree children $p] {
+    puts "w: $p c: $c"
+    puts "next: [$tree  next $c]"
+    puts "prev: [$tree  prev $c]"
+    puts "parent: [$tree  parent $c]"
+    puts "idepth: [tvlib::itemdepth $tree $c]"
+    puts "c: [$tree children $c]\n"
+    testit $tree $c
+  }
+}
+testit .tree
+
+puts [tvlib::treedepth .tree {} 0]
