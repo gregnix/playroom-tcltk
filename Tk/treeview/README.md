@@ -28,7 +28,7 @@
 
 ## bind
 + hhttps://www.tcl-lang.org/man/tcl/TkCmd/bind.htm
-+ ttps://wiki.tcl-lang.org/page/bind
++ https://wiki.tcl-lang.org/page/bind
 
 ## bindtags
 + https://wiki.tcl-lang.org/page/bindtags
