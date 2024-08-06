@@ -15,16 +15,16 @@ proc show {args} {
 
 ctext .text -width 200 
 #Bindungen und Selektion
-ttk::treeview .t
+set tree [ttk::treeview .t]
 
 for {set i 1} {$i < 6} {incr i} {
-  .t insert {} end -text "Item # $i"
+  $tree insert {} end -text "Item # $i"
 }
-bind .t <<TreeviewSelect>> {show %W %X %Y %# %a %b %c %d  %f %h %i %k %m %o %p %s %t %w %x %y %A %B %D %E %K %M %N %P %R %S %T}
+bind $tree <<TreeviewSelect>> {show %W %X %Y %# %a %b %c %d  %f %h %i %k %m %o %p %s %t %w %x %y %A %B %D %E %K %M %N %P %R %S %T}
 
 #band 
-tvlib::band_init .t
-tvlib::band .t
+tvlib::band_init $tree
+tvlib::band $tree
 # event generate .t <<TVItemsChanges>> -data [.t selection]
 # tvlib::band_event .t}
 
