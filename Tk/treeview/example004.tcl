@@ -22,7 +22,7 @@ proc checkFirstElementsEqual {listOfLists} {
 }
 
 # Funktion zum Einfügen von Daten in das Treeview
-proc insertDict2 {tree parent data} {
+proc insertDict {tree parent data} {
   foreach {key value} [dict get $data] {
     if {[catch {dict get $value}]} {
       $tree insert $parent end -text $key -values $value
@@ -47,7 +47,6 @@ proc dict2tbltree {widget parent dict} {
         set newParent [$widget insert $parent end -text $key -values "l"]
         dict2tbltree $widget $newParent $keyValue
       } else {
-        puts "kv: $keyValue v: $value"
         $widget insert $parent end -text $key -values \{$keyValue\}
 
       }
@@ -82,7 +81,8 @@ grid .tree -sticky news
 
 
 # Daten aus dem Dict in das Treeview einfügen
-dict2tbltree .tree {} $data
+#dict2tbltree .tree {} $data
+insertDict .tree {} $data
 tvlib::band .tree
 tvlib::band_init .tree
 
