@@ -14,7 +14,7 @@ namespace eval tvlib {
   proc band_init {tree {color0 #FFFFFF} {color1 #F0F0F0}} {
     $tree tag configure band0 -background $color0
     $tree tag configure band1 -background $color1
-    bind $tree <<TVItemsChanges>> [list band $tree]
+    bind $tree <<TVItemsChanges>> [list [namespace current]::band $tree]
   }
 
   proc band_event {tree} {

@@ -3,7 +3,7 @@ package require Tk
 package require Ttk
 package require dicttool
 source treeview-lib.tcl
-namespace import tvlib::*
+
 
 proc checkFirstElementsEqual {listOfLists} {
   if {[llength $listOfLists] < "2"} {
