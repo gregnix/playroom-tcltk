@@ -1,5 +1,5 @@
 package require Tk
-
+package require ctext
 #https://wiki.tcl-lang.org/page/ttk%3A%3Atreeview+%2D+Different+bindings
 
 #   
@@ -27,10 +27,14 @@ proc band_event {tree} {
 
 
 proc show {args} {
-  .text insert end "args $args TreeviewSelect fired Current selection is '[ .t selection ]'\n"
+  lassign $args W X Y Raute a b c d  f h i k m o p s t w x y A B D E K M N P R S T
+  .text insert end "$args \n"
+  .text insert end "W: $W X: $X Y: $Y #: $Raute d: $d x: $x y: $y T: $T\n "
+  .text insert end "TreeviewSelect fired Current selection is '\[.t selection\]' [.t selection ]\n"
+  .text see end
 }
 
-text .text -width 200 
+ctext .text -width 200 
 #Bindungen und Selektion
 ttk::treeview .t
 
@@ -58,6 +62,7 @@ pack .t .b1 .b2 .b3 .b4 .b5 .b6 .b7 .b8 .b9 -side top
 
 set output "[array get ttk::treeview::State]\n"
 .text insert end $output
+.text insert end  "%W %X %Y %# %a %b %c %d  %f %h %i %k %m %o %p %s %t %w %x %y %A %B %D %E %K %M %N %P %R %S %T\n"
 
 
 
