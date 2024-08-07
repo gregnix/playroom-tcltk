@@ -5,57 +5,6 @@ package require dicttool
 source treeview-lib.tcl
 
 
-proc checkFirstElementsEqual {listOfLists} {
-  if {[llength $listOfLists] < "2"} {
-    return 0
-  }
-  set firstElement ""
-  foreach sublist $listOfLists {
-    lassign $sublist first _
-    if {$firstElement eq ""} {
-      set firstElement $first
-    } elseif {$firstElement ne $first} {
-      return 0
-    }
-  }
-  return 1
-}
-
-# Funktion zum Einfügen von Daten in das Treeview
-proc insertDict {tree parent data} {
-  foreach {key value} [dict get $data] {
-    if {[catch {dict get $value}]} {
-      $tree insert $parent end -text $key -values $value
-    } else {
-      set id [$tree insert $parent end -text $key -values ""]
-      insertDict $tree $id $value
-    }
-  }
-}
-proc dict2tbltree {widget parent dict} {
-  foreach {key value} $dict {
-    if {[dict exists $dict $key]} {
-      set keyValue [dict get $dict $key]
-      if { [checkFirstElementsEqual $keyValue] } {
-        $widget insert $parent end -text $key -values \{$keyValue\}
-        continue
-      }
-      if {[dict is_dict $keyValue] && [llength $keyValue] != "2"} {
-        set newParent [$widget insert $parent end -text $key -values "D"]
-        dict2tbltree $widget $newParent $keyValue
-      } elseif {[llength $keyValue] == "2" && [dict is_dict [lindex $value 1]] } {
-        set newParent [$widget insert $parent end -text $key -values "l"]
-        dict2tbltree $widget $newParent $keyValue
-      } else {
-        $widget insert $parent end -text $key -values \{$keyValue\}
-
-      }
-    }
-  }
-}
-
-
-
 # Daten-Setup
 #dict set data Example1 {person {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}} job {title "Developer" company "Works"}}
 #dict set data Example2 {person {name "Jane Doe" age 25 address {street "456 Elm St" city "Othertown"}} job {title "Designer" company "Creates"}}
@@ -80,8 +29,9 @@ grid .tree -sticky news
 
 
 # Daten aus dem Dict in das Treeview einfügen
-dict2tbltree .tree {} $data
-#insertDict .tree {} $data
+tvlib::dict2tbltree .tree {} $data
+
+#tvlib::insertDict .tree {} $data
 tvlib::band .tree
 tvlib::bandInit .tree
 

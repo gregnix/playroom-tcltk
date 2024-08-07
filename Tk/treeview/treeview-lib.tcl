@@ -1,40 +1,74 @@
 namespace eval tvlib {
-  proc band {tree {parent {}} {i 0} {j 0}} {
-    # u j not in use
-    if {0} {
-      if {$j} {
-        set j 0
-      } else {
-        set j 1
+  proc checkFirstElementsEqual {listOfLists} {
+    if {[llength $listOfLists] < "2"} {
+      return 0
+    }
+    set firstElement ""
+    foreach sublist $listOfLists {
+      lassign $sublist first _
+      if {$firstElement eq ""} {
+        set firstElement $first
+      } elseif {$firstElement ne $first} {
+        return 0
       }
     }
+    return 1
+  }
+
+  proc dict2tbltree {widget parent dict} {
+    foreach {key value} $dict {
+      if {[dict exists $dict $key]} {
+        set keyValue [dict get $dict $key]
+        if { [checkFirstElementsEqual $keyValue] } {
+          $widget insert $parent end -text $key -values \{$keyValue\}
+          continue
+        }
+        if {[dict is_dict $keyValue] && [llength $keyValue] != "2"} {
+          set newParent [$widget insert $parent end -text $key -values "D"]
+          dict2tbltree $widget $newParent $keyValue
+        } elseif {[llength $keyValue] == "2" && [dict is_dict [lindex $value 1]] } {
+          set newParent [$widget insert $parent end -text $key -values "l"]
+          dict2tbltree $widget $newParent $keyValue
+        } else {
+          $widget insert $parent end -text $key -values \{$keyValue\}
+
+        }
+      }
+    }
+  }
+
+  # Funktion zum Einfügen von Daten in das Treeview
+  # not in use
+  proc insertDict {tree parent data} {
+    foreach {key value} [dict get $data] {
+      if {[catch {dict get $value}]} {
+        $tree insert $parent end -text $key -values $value
+      } else {
+        set id [$tree insert $parent end -text $key -values ""]
+        insertDict $tree $id $value
+      }
+    }
+  }
+}
+
+# band
+namespace eval tvlib {
+  proc band {tree {parent {}} {i 0} } {
     foreach item [$tree children $parent] {
-      #set d [tvlib::itemdepth $tree $item]
-      #set e [expr {$d % 2}]
       set t [expr {$i % 2}]
-      #set u [expr {($i / 2) % 2}]
       $tree tag remove band0 $item
       $tree tag remove band1 $item
-      #$tree tag remove band00 $item
-      #$tree tag remove band10 $item
-      #$tree tag remove band10 $item
-      #$tree tag remove band11 $item
-      #puts "i $i t: $t u: $u j: $j [$tree item $item -text] band$t$j band$u$j d: $d  e: $e"
       $tree tag add band$t $item
-      #$tree tag add band$t $item
       incr i
-      set i [band $tree $item $i $j]
+      set i [band $tree $item $i]
     }
     return $i
   }
 
-  proc bandInit {tree {color0 #FFFFFF} {color1 #E0E0E0} {color2 #DDEEFF} {color3 #B0C4DE}} {
+  proc bandInit {tree {color0 #FFFFFF} {color1 #E0E0E0}} {
+    # {color0 #FFFFFF} {color1 #E0E0E0} {color2 #DDEEFF} {color3 #B0C4DE}
     $tree tag configure band0 -background $color0
     $tree tag configure band1 -background $color1
-    #$tree tag configure band00 -background $color0
-    #$tree tag configure band01 -background $color1
-    #$tree tag configure band10 -background $color2
-    #$tree tag configure band11 -background $color3
     bind $tree <<TVItemsChanges>> [list [namespace current]::band $tree]
   }
 
@@ -43,6 +77,7 @@ namespace eval tvlib {
   }
 }
 
+# helpers
 namespace eval tvlib {
   proc treesize {tree {p {}}} {
     set size 0

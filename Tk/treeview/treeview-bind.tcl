@@ -34,14 +34,16 @@ proc buttonbar {tree textw} {
   button $f.b2 -text "Delete Selected" -command {$tree delete [$tree selection]; tvlib::bandEvent $tree}
   button $f.b3 -text "Remove Selection" -command {$tree selection remove [$tree selection]; tvlib::bandEvent $tree}
   button $f.b4 -text "Add item" -command {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]"; tvlib::bandEvent $tree}
-  button $f.b5 -text "Set Focus 1" -command {$tree focus I001}
+  button $f.b5 -text "Set Focus I001" -command {$tree focus I001}
   button $f.b6 -text "Get Focus" -command {$textw insert end [$tree focus]\n}
-  button $f.b7 -text "Select add 4 and 5" -command { $tree selection add {I004 I005}}
-  button $f.b8 -text "Select toggle 4" -command { $tree selection toggle I004 }
-  button $f.b9 -text "Select 2" -command { $tree selection set I002 }
+  button $f.b7 -text "Select add I004 and I005" -command { $tree selection add {I004 I005}}
+  button $f.b8 -text "Select toggle I004" -command { $tree selection toggle I004 }
+  button $f.b9 -text "Select I002" -command { $tree selection set I002 }
   button $f.b10 -text "tree depth" -command {$textw insert end [tvlib::treedepth $tree]\n}
-  button $f.b11 -text "tree size" -command {$textw insert end [tvlib::treesize $tree]\n}
-  button $f.b12 -text "tree children {}" -command {$textw insert end [$tree children {}]\n}
+  button $f.b11 -text "item depth in tree" -command {$textw insert end [tvlib::itemdepth $tree  [$tree selection]]\n}
+  button $f.b12 -text "tree size" -command {$textw insert end [tvlib::treesize $tree]\n}
+  button $f.b13 -text "tree children {}" -command {$textw insert end [$tree children {}]\n}
+  button $f.b14 -text "tree children sel" -command {$textw insert end [$tree children [$tree selection]]\n}
 
   bind $tree <<TreeviewSelect>> [list show  %W %X %Y %# %a %b %c %d  %f %h %i %k %m %o %p %s %t %w %x %y %A %B %D %E %K %M %N %P %R %S %T]
   #pack {*}[winfo children .] -fill x -pady 2 -padx 2 -side top
@@ -89,7 +91,8 @@ set textw [ctext .text -width 200 ]
 ttk::frame .fr1
 set tree [createTV .fr1]
 
-dataTotree $tree 1
+#select 0 or 1 for exeample data
+dataTotree $tree 0
 
 #band
 tvlib::bandInit $tree
