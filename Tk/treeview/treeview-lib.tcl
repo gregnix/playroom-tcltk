@@ -1,3 +1,5 @@
+
+# import export dict and tree
 namespace eval tvlib {
   proc checkFirstElementsEqual {listOfLists} {
     if {[llength $listOfLists] < "2"} {
@@ -123,7 +125,7 @@ namespace eval tvlib {
   }
 }
 
-
+# keys
 namespace eval tvlib {
   proc collectKeys {dictVar {keysList {}}} {
     foreach {key value} [dict get $dictVar] {
@@ -187,8 +189,6 @@ namespace eval tvlib {
     }
     dict keys $dict
   }
-
-
 }
 
 

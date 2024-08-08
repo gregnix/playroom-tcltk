@@ -3,6 +3,11 @@
 + https://www.tcl-lang.org/man/tcl/TkCmd/ttk_treeview.htm
 + https://core.tcl-lang.org/tk/file?name=library/ttk/treeview.tcl
 + https://core.tcl-lang.org/tk/dir?ci=tip&name=tests/ttk
++ https://core.tcl-lang.org/tips/search?s=treeview&y=all
++ https://core.tcl-lang.org/tips/doc/trunk/tip/678.md
++ https://core.tcl-lang.org/tips/doc/trunk/tip/620.md
++ https://core.tcl-lang.org/tips/doc/trunk/tip/574.md
++ https://core.tcl-lang.org/tips/doc/trunk/tip/552.md
 
 ## tutorial
 + https://tkdocs.com/tutorial/tree.html
@@ -33,3 +38,9 @@
 ## bindtags
 + https://wiki.tcl-lang.org/page/bindtags
 + https://www.tcl-lang.org/man/tcl/TkCmd/bindtags.htm
+
+## tkinter
++ https://pythonassets.com/posts/treeview-in-tk-tkinter/
++ https://ttkbootstrap.readthedocs.io/en/version-0.5/widgets/treeview.html
++ https://docs.python.org/3/library/tkinter.ttk.html
++ https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/ttk-Treeview.html

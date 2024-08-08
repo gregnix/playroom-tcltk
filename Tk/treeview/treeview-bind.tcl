@@ -37,13 +37,18 @@ proc createTV {w} {
 proc createButton {w tree} {
   set frt [ttk::frame $w.frt]
   # combobox
-  set cbdatas [ttk::combobox $frt.cbdatas -values {table tree testtree 2 3 } -exportselection 0 -width 15]
+  set cbdatas [ttk::combobox $frt.cbdatas -values {table tree treegreat 2 3 } -exportselection 0 -width 15]
   $cbdatas current 1
-
   bind $cbdatas <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tree data]]
   cbComboSelected $cbdatas $tree data
 
-  pack $cbdatas -side left
+  #  $tree confgure -selectmode extended, browse, or none. 
+  set cbselectmode [ttk::combobox $frt.cbselectmode -values {extended browse none} -exportselection 0 -width 15]
+  $cbselectmode current 0
+  bind $cbselectmode <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tree selectmode]]
+  cbComboSelected $cbselectmode $tree selectmode
+  
+  pack $cbdatas $cbselectmode -side left
   pack $frt -side top -expand 0 -fill x
 
   return $cbdatas
@@ -60,6 +65,9 @@ proc cbComboSelected {w tree type} {
       tvlib::bandInit $tree
       tvlib::band $tree
       tvlib::bandEvent $tree
+    }
+    selectmode {
+      $tree configure -selectmode [$w get]
     }
   }
 
@@ -96,7 +104,8 @@ proc buttonbar {w tree textw} {
   button $cf.b21 -text "childrens P col k sel" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]\n}
   button $cf.b22 -text "childrens talis sel" -command {$textw insert end [tvlib::extractTails [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]]\n}
   button $cf.b23 -text "childrens heads sel" -command {$textw insert end [tvlib::extractHeads [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]]\n}
-  button $cf.b24 -text "tvtree2dict" -command {$textw insert end [tvlib::tvtree2dict $tree [$tree selection]]\n}
+  button $cf.b24 -text "tvtree2dict {}" -command {$textw insert end [tvlib::tvtree2dict $tree {}]\n}
+  button $cf.b25 -text "tvtree2dict sel" -command {$textw insert end [tvlib::tvtree2dict $tree [$tree selection]]\n}
 
   bind $tree <<TreeviewSelect>> [list show  %W %X %Y %# %a %b %c %d  %f %h %i %k %m %o %p %s %t %w %x %y %A %B %D %E %K %M %N %P %R %S %T]
 
@@ -114,7 +123,7 @@ proc testAddNodes {tree parent depth} {
   if {$depth <= 0} {
     return
   }
-  set numChildren [expr {1 + int(rand() * 11)}] ; # Zufällige Anzahl von Kindern
+  set numChildren [expr {1 + int(rand() * 11)}] 
   for {set i 0} {$i < $numChildren} {incr i} {
     set id [$tree insert $parent end -text "Node $i Depth $depth"]
     $tree item $id -values $id
@@ -125,7 +134,7 @@ proc testCreateTreeStruct {tree {depth 5} } {
   foreach txt {first second third fourth five} {
     set id [$tree insert {} end -text "$txt item" -open 1]
     $tree item $id -values $id
-    testAddNodes $tree $id $depth ; # Geben Sie hier die gewünschte Tiefe an
+    testAddNodes $tree $id $depth
   }
 }
 
@@ -159,7 +168,7 @@ proc dataTotree {tree select} {
       dict set data Example4 {person  {name "John Doe" age 30.8 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} {name "John Good"} {name "Jane Good"}} } job {title "Developer" company "Works"}}
       tvlib::dict2tvtree $tree {} $data
     }
-    testtree {
+    treegreat {
       testCreateTreeStruct  $tree 7
     }
   }
