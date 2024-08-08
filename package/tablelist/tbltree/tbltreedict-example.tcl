@@ -16,7 +16,7 @@ catch {source [file join $tablelist::library demos option_tile.tcl]}
 set dirname [file dirname [info script]]
 source [file join $dirname tbltreedict.tcl]
 source [file join $dirname tbltreemove.tcl]
-source [file join $dirname tbltreexml.tcl]
+#source [file join $dirname tbltreexml.tcl]
 source [file join $dirname tbltreehelpers.tcl]
 
 # callback for tbl, Double 1 or space

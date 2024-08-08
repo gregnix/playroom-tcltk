@@ -15,9 +15,7 @@ namespace eval tvlib {
     return 1
   }
 
-  proc dict2tbltree {widget parent dict} {
-    puts "w: $dict"
-    puts "W: [dict get $dict]"
+  proc dict2tvtree {widget parent dict} {
     foreach {key value} [dict get $dict] {
       if {[dict exists $dict $key]} {
         set keyValue [dict get $dict $key]
@@ -27,29 +25,37 @@ namespace eval tvlib {
         }
         if {[dict is_dict $keyValue] && [llength $keyValue] != "2"} {
           set newParent [$widget insert $parent end -text $key -values ""]
-          dict2tbltree $widget $newParent $keyValue
+          dict2tvtree $widget $newParent $keyValue
         } elseif {[llength $keyValue] == "2" && [dict is_dict [lindex $value 1]] } {
           set newParent [$widget insert $parent end -text $key -values ""]
-          dict2tbltree $widget $newParent $keyValue
+          dict2tvtree $widget $newParent $keyValue
         } else {
-          $widget insert $parent end -text $key -values \{$keyValue\}
+          #$widget insert $parent end -text $key -values \{$keyValue\}
+          $widget insert $parent end -text $key -values [list $keyValue]
 
         }
       }
     }
   }
 
-  # Funktion zum Einfügen von Daten in das Treeview
-  # not in use
-  proc insertDict {tree parent data} {
-    foreach {key value} [dict get $data] {
-      if {[catch {dict get $value}]} {
-        $tree insert $parent end -text $key -values $value
+  # Function to recursively convert a tree into a dictionary
+  proc tvtree2dict {tree node} {
+    set result {}
+    # Get the children of the current node
+    set children [$tree children $node]
+    foreach child $children {
+      # Get the text (key and value) of the current child
+      set key [$tree item $child -text]
+      set value [lindex [$tree item $child -values] 0]
+      # Check if the child itself has children
+      if {[$tree children $child] > 0} {
+        set childDict [tvtree2dict $tree $child]
+        dict set result $key $childDict
       } else {
-        set id [$tree insert $parent end -text $key -values ""]
-        insertDict $tree $id $value
+        dict set result $key $value
       }
     }
+    return $result
   }
 }
 

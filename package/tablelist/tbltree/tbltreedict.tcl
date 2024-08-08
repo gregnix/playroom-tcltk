@@ -51,7 +51,7 @@ namespace eval tbl {
 
    # Function to recursively display a dictionary in the tree
    proc dict2tbltree {widget parent dict} {
-      foreach {key value} $dict {
+      foreach {key value} [dict get $dict] {
          if {[dict exists $dict $key]} {
             set keyValue [dict get $dict $key]
             if { [checkFirstElementsEqual $keyValue] } {
