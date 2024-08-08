@@ -1,6 +1,7 @@
 package require Tk
 package require ctext
 package require scrollutil_tile
+package require dicttool
 
 source treeview-lib.tcl
 #https://wiki.tcl-lang.org/page/ttk%3A%3Atreeview+%2D+Different+bindings
@@ -69,13 +70,17 @@ proc buttonbar {w tree textw} {
   button $cf.b11 -text "item depth in tree" -command {$textw insert end [tvlib::itemdepth $tree  [$tree selection]]\n}
   button $cf.b12 -text "tree size" -command {$textw insert end [tvlib::treesize $tree]\n}
   button $cf.b13 -text "tree children {}" -command {$textw insert end [$tree children {}]\n}
-  button $cf.b14 -text "tree children sel" -command {$textw insert end [$tree children [$tree selection]]\n}
-
+  button $cf.b14 -text "childrens {}" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2dict $tree ]]\n}
+  button $cf.b15 -text "childrens point {}" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2dict $tree ]]\n}
+  button $cf.b16 -text "tree children sel" -command {$textw insert end [$tree children [$tree selection]]\n}
+  button $cf.b17 -text "childrens sel" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2dict $tree [$tree selection]]]\n}
+  button $cf.b18 -text "childrens Point sel" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]\n}
+  
   bind $tree <<TreeviewSelect>> [list show  %W %X %Y %# %a %b %c %d  %f %h %i %k %m %o %p %s %t %w %x %y %A %B %D %E %K %M %N %P %R %S %T]
 
   scrollutil::createWheelEventBindings all
   $sf autofillx true
-  $sf configure -height 400 -yscrollincrement 5
+  $sf configure -height 600 -yscrollincrement 5
 
   pack $sa -expand yes -fill both -padx 7p -pady 7p
   pack $f  -expand yes -fill both
@@ -113,17 +118,6 @@ proc show {args} {
   $textw see end
 }
 
-#Example datas in dict data, 2-4 differences in number of employees
-dict set data all {}
-dict set data Example1 {person {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}} job {title "Developer" company "Works"}}
-dict set data Example2 {person  {name "John Doe" age 30 address {street "123 Main St" city "Anytown"}  employees {{name "Alice Smith"} {name "Bob Smith"} {name "John Good"} {name "Jane Good"}}} job {title "Developer" company "Works"}}
-dict set data Example3 {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
-
-set employeeInfo {
-  12345-A {forenames "Joe" surname "Schmoe" street "147 Short Street" city "Springfield" phone "555-1234"}
-  98372-J {forenames "Anne" surname "Other" street "32995 Oakdale Way" city "Springfield" phone "555-8765"}
-}
-dict set data employeeInfo $employeeInfo
 
 
 ###################################

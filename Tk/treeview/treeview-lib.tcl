@@ -106,11 +106,67 @@ namespace eval tvlib {
     }
     return $depth
   }
-
-
+  proc tv2dict {tree {parent {}}} {
+    set data {}
+    foreach c [$tree children $parent] {
+      dict set data $c [tv2dict $tree $c]
+    }
+    return $data
+  }
 }
 
 
+namespace eval tvlib {
+  proc collectKeys {dictVar {keysList {}}} {
+    foreach {key value} $dictVar {
+      if { [checkFirstElementsEqual $value] } {
+        lappend keysList ${key}
+        continue
+      }
+      if {[dict is_dict $value] && [llength $value] != "2"} {
+        lappend keysList ${key}
+        set keysList [collectKeys $value  $keysList]
+      } elseif {[llength $value] == "2" && [dict is_dict [lindex $value 1]] } {
+        lappend keysList ${key}
+        set keysList [collectKeys $value  $keysList]
+      } else {
+        lappend keysList ${key}
+      }
+    }
+    return $keysList
+  }
+
+
+  proc collectKeysPoint {dictVar {prefix ""} {keysList {}}} {
+    foreach {key value} $dictVar {
+      if { [checkFirstElementsEqual $value] } {
+        lappend keysList ${prefix}${key}
+        continue
+      }
+      if {[dict is_dict $value] && [llength $value] != "2"} {
+        lappend keysList ${prefix}${key}
+        set keysList [collectKeysPoint $value "${prefix}${key}." $keysList]
+      } elseif {[llength $value] == "2" && [dict is_dict [lindex $value 1]] } {
+        lappend keysList ${prefix}${key}
+        set keysList [collectKeysPoint $value "${prefix}${key}." $keysList]
+      } else {
+        lappend keysList ${prefix}${key}
+      }
+    }
+    return $keysList
+  }
+
+  proc extractTails {keys} {
+    set tails {}
+    foreach key $keys {
+      set parts [split $key "."]
+      lappend tails [lindex $parts end]
+    }
+    return $tails
+  }
+
+
+}
 
 
 
