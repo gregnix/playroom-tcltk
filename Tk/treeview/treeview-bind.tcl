@@ -10,10 +10,14 @@ variable textw
 
 proc createTV {w} {
   set frt [ttk::frame $w.frt ]
-  set tree [::ttk::treeview $frt.tree -height 15 -show tree \
+  set tree [::ttk::treeview $frt.tree -height 15 -show {tree headings} \
+    -columns [list value] -displaycolumns [list value] \
     -yscroll [list $frt.vsb set] -xscroll [list $frt.hsb set] -selectmode browse]
   set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
   set hsb [::ttk::scrollbar $frt.hsb -orient horizontal -command [list $tree xview]]
+
+  $tree heading #0 -text Keys
+  $tree heading value -text "Values" -anchor center
 
   grid $frt -row 0 -column 0 -sticky nsew
 
@@ -29,26 +33,36 @@ proc createTV {w} {
   return $tree
 }
 
-# cb for selection example data and info window for tablelist options and commands
+# cb for selection example data
 proc createButton {w tree} {
   set frt [ttk::frame $w.frt]
   # combobox
-  set cbselection [ttk::combobox $frt.cbselection -values {0 1} -exportselection 0 -width 15]
-  $cbselection current 1
+  set cbdatas [ttk::combobox $frt.cbdatas -values {table 1 2 3 4 5} -exportselection 0 -width 15]
+  $cbdatas current 1
 
-  bind $cbselection <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tree ]]
-  cbComboSelected $cbselection $tree
+  bind $cbdatas <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tree data]]
+  cbComboSelected $cbdatas $tree data
 
-  pack $cbselection -side left
+  pack $cbdatas -side left
   pack $frt -side top -expand 0 -fill x
 
-  return $cbselection
+  return $cbdatas
 }
 
-proc cbComboSelected {w tree} {
-  $tree delete [$tree children {}]
-  dataTotree $tree [$w get]
-  tvlib::bandEvent $tree
+proc cbComboSelected {w tree type} {
+  switch $type {
+    data {
+      $tree delete [$tree children {}]
+      set wid [winfo parent [winfo parent $tree]]
+      destroy  [winfo parent $tree]
+      set tree  [createTV $wid]
+      dataTotree $tree [$w get]
+      tvlib::bandInit $tree
+      tvlib::band $tree
+      tvlib::bandEvent $tree
+    }
+  }
+
 }
 
 proc buttonbar {w tree textw} {
@@ -63,19 +77,26 @@ proc buttonbar {w tree textw} {
   button $cf.b4 -text "Add item" -command {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]"; tvlib::bandEvent $tree}
   button $cf.b5 -text "Set Focus I001" -command {$tree focus I001}
   button $cf.b6 -text "Get Focus" -command {$textw insert end [$tree focus]\n}
-  button $cf.b7 -text "Select add I004 and I005" -command { $tree selection add {I004 I005}}
-  button $cf.b8 -text "Select toggle I004" -command { $tree selection toggle I004 }
-  button $cf.b9 -text "Select I002" -command { $tree selection set I002 }
-  button $cf.b10 -text "tree depth" -command {$textw insert end [tvlib::treedepth $tree]\n}
-  button $cf.b11 -text "item depth in tree" -command {$textw insert end [tvlib::itemdepth $tree  [$tree selection]]\n}
-  button $cf.b12 -text "tree size" -command {$textw insert end [tvlib::treesize $tree]\n}
-  button $cf.b13 -text "tree children {}" -command {$textw insert end [$tree children {}]\n}
-  button $cf.b14 -text "childrens {}" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2dict $tree ]]\n}
-  button $cf.b15 -text "childrens point {}" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2dict $tree ]]\n}
-  button $cf.b16 -text "tree children sel" -command {$textw insert end [$tree children [$tree selection]]\n}
-  button $cf.b17 -text "childrens sel" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2dict $tree [$tree selection]]]\n}
-  button $cf.b18 -text "childrens Point sel" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]\n}
-  
+  button $cf.b7 -text "Get Focus Item" -command {$textw insert end "[$tree focus] index: [$tree index [$tree focus]] \
+  -tags [$tree item [$tree focus] -tags] -open [$tree item [$tree focus] -open] \
+  -text [$tree item [$tree focus] -text] -values [$tree item [$tree focus] -values]\n"}
+  button $cf.b8 -text "Select add I004 and I005" -command { $tree selection add {I004 I005}}
+  button $cf.b9 -text "Select toggle I004" -command { $tree selection toggle I004 }
+  button $cf.b10 -text "Select I002" -command { $tree selection set I002 }
+  button $cf.b11 -text "tree depth" -command {$textw insert end [tvlib::treedepth $tree]\n}
+  button $cf.b12 -text "item depth in tree" -command {$textw insert end [tvlib::itemdepth $tree  [$tree selection]]\n}
+  button $cf.b13 -text "tree size" -command {$textw insert end [tvlib::treesize $tree]\n}
+  button $cf.b14 -text "tree children {}" -command {$textw insert end [$tree children {}]\n}
+  button $cf.b15 -text "childrens col k {}" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2dict $tree ]]\n}
+  button $cf.b16 -text "childrens P col k {}" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2dict $tree ]]\n}
+  button $cf.b17 -text "childrens talis {}" -command {$textw insert end [tvlib::extractTails [tvlib::collectKeysPoint [tvlib::tv2dict $tree {}]]]\n}
+  button $cf.b18 -text "childrens heads {}" -command {$textw insert end [tvlib::extractHeads [tvlib::collectKeysPoint [tvlib::tv2dict $tree {}]]]\n}
+  button $cf.b19 -text "tree children sel" -command {$textw insert end [$tree children [$tree selection]]\n}
+  button $cf.b20 -text "childrens col k sel" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2dict $tree [$tree selection]]]\n}
+  button $cf.b21 -text "childrens P col k sel" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]\n}
+  button $cf.b22 -text "childrens talis sel" -command {$textw insert end [tvlib::extractTails [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]]\n}
+  button $cf.b23 -text "childrens heads sel" -command {$textw insert end [tvlib::extractHeads [tvlib::collectKeysPoint [tvlib::tv2dict $tree [$tree selection]]]]\n}
+
   bind $tree <<TreeviewSelect>> [list show  %W %X %Y %# %a %b %c %d  %f %h %i %k %m %o %p %s %t %w %x %y %A %B %D %E %K %M %N %P %R %S %T]
 
   scrollutil::createWheelEventBindings all
@@ -89,7 +110,7 @@ proc buttonbar {w tree textw} {
 
 proc dataTotree {tree select} {
   switch $select {
-    0 {
+    table {
       for {set i 1} {$i < 6} {incr i} {
         $tree insert {} end -text "Item # $i"
       }
@@ -105,7 +126,14 @@ proc dataTotree {tree select} {
         }
       }
     }
-
+    2 {
+      dict set data Example5 {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
+      tvlib::dict2tbltree $tree {} $data
+    }
+    3 {
+      dict set data Example4 {person  {name "John Doe" age 30.8 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} {name "John Good"} {name "Jane Good"}} } job {title "Developer" company "Works"}}
+      tvlib::dict2tbltree $tree {} $data
+    }
   }
 }
 proc show {args} {
@@ -114,7 +142,7 @@ proc show {args} {
   set tree $W
   $textw insert end "$args \n"
   $textw insert end "W: $W X: $X Y: $Y #: $Raute d: $d x: $x y: $y T: $T\n "
-  $textw insert end "TreeviewSelect fired Current selection is '\[$tree selection\]' [$tree selection ]\n"
+  $textw insert end "TreeviewSelect  Current selection is '\[$tree selection\]' [$tree selection ] :: focus:  [$tree focus]\n"
   $textw see end
 }
 

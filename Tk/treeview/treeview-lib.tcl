@@ -16,7 +16,9 @@ namespace eval tvlib {
   }
 
   proc dict2tbltree {widget parent dict} {
-    foreach {key value} $dict {
+    puts "w: $dict"
+    puts "W: [dict get $dict]"
+    foreach {key value} [dict get $dict] {
       if {[dict exists $dict $key]} {
         set keyValue [dict get $dict $key]
         if { [checkFirstElementsEqual $keyValue] } {
@@ -24,10 +26,10 @@ namespace eval tvlib {
           continue
         }
         if {[dict is_dict $keyValue] && [llength $keyValue] != "2"} {
-          set newParent [$widget insert $parent end -text $key -values "D"]
+          set newParent [$widget insert $parent end -text $key -values ""]
           dict2tbltree $widget $newParent $keyValue
         } elseif {[llength $keyValue] == "2" && [dict is_dict [lindex $value 1]] } {
-          set newParent [$widget insert $parent end -text $key -values "l"]
+          set newParent [$widget insert $parent end -text $key -values ""]
           dict2tbltree $widget $newParent $keyValue
         } else {
           $widget insert $parent end -text $key -values \{$keyValue\}
@@ -118,7 +120,7 @@ namespace eval tvlib {
 
 namespace eval tvlib {
   proc collectKeys {dictVar {keysList {}}} {
-    foreach {key value} $dictVar {
+    foreach {key value} [dict get $dictVar] {
       if { [checkFirstElementsEqual $value] } {
         lappend keysList ${key}
         continue
@@ -138,7 +140,7 @@ namespace eval tvlib {
 
 
   proc collectKeysPoint {dictVar {prefix ""} {keysList {}}} {
-    foreach {key value} $dictVar {
+    foreach {key value} [dict get $dictVar] {
       if { [checkFirstElementsEqual $value] } {
         lappend keysList ${prefix}${key}
         continue
@@ -163,6 +165,21 @@ namespace eval tvlib {
       lappend tails [lindex $parts end]
     }
     return $tails
+  }
+  proc extractHeads {keys} {
+    set heads {}
+    foreach key $keys {
+      set parts [split $key "."]
+      lappend heads [lindex $parts 0]
+    }
+    return [uniqueList2 $heads]
+  }
+  proc uniqueList2 {list} {
+    set dict {}
+    foreach item $list {
+      dict set dict $item ""
+    }
+    dict keys $dict
   }
 
 
