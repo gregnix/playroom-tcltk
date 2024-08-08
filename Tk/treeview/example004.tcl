@@ -63,24 +63,11 @@ testit .tree
 puts [tvlib::treedepth .tree {} 0]
 
 proc tv2dict {tree {parent {}}} {
-    set data {}
-    set data2 {}
-    set data3 {}
-    foreach c [$tree children $parent] {
-        set depth [tvlib::itemdepth $tree $c]
-        set index [$tree index $c]
-        dict set data2 $parent $c pos [list index $index depth $depth]
-        dict set data $parent  $c childs [tv2dict $tree $c]
-        set data3 [dict rmerge $data2 $data]
-    }
-    return $data3
+  set data {}
+  foreach c [$tree children $parent] {
+    dict set data $c [tv2dict $tree $c]
+  }
+  return $data
 }
-set ddd  [tv2dict .tree]
-puts [dict keys [dict get $ddd {}]]
-puts [dict keys [dict get $ddd {} I001]]
-puts [dict keys [dict get $ddd {} I001 pos]]
-puts [dict get $ddd {} I001 pos index]
-puts [dict get $ddd {} I001 pos depth]
-puts [dict keys [dict get $ddd {} I001 childs I001]]
 
-puts [dict print $ddd]
+

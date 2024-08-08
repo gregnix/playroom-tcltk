@@ -2,6 +2,7 @@
 
 package require Tk
 package require tablelist_tile
+package require dicttool
 set dirname [file dirname [info script]]
 source [file join $dirname tbltreedict.tcl]
 source [file join $dirname tbltreemove.tcl]
