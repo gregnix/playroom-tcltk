@@ -1,5 +1,6 @@
-
+#############################
 # import export dict and tree
+#############################
 namespace eval tvlib {
   proc checkFirstElementsEqual {listOfLists} {
     if {[llength $listOfLists] < "2"} {
@@ -61,7 +62,13 @@ namespace eval tvlib {
   }
 }
 
-# band
+##############
+# band stripe
+##############
+# see at:
+# https://wiki.tcl-lang.org/page/dgw%3A%3Atvmixins
+# https://chiselapp.com/user/dgroth/repository/tclcode/index
+# https://www.tcl.tk/man/tcl9.0/TkCmd/ttk_treeview.html#M100
 namespace eval tvlib {
   proc band {tree {parent {}} {i 0} } {
     foreach item [$tree children $parent] {
@@ -85,9 +92,12 @@ namespace eval tvlib {
   proc bandEvent {tree} {
     event generate $tree <<TVItemsChanges>> -data [$tree selection]
   }
+  
 }
 
-# helpers
+######################
+# treeview extra procs
+# ####################
 namespace eval tvlib {
   proc treesize {tree {p {}}} {
     set size 0
@@ -125,7 +135,9 @@ namespace eval tvlib {
   }
 }
 
-# keys
+#################
+# key extra procs
+#################
 namespace eval tvlib {
   proc collectKeys {dictVar {keysList {}}} {
     foreach {key value} [dict get $dictVar] {
@@ -191,8 +203,31 @@ namespace eval tvlib {
   }
 }
 
+###############
+# example datas
+###############
+namespace eval tvlib {
 
-
+  # uwo procs for test data for tree struct
+  proc testAddNodes {tree parent depth} {
+    if {$depth <= 0} {
+      return
+    }
+    set numChildren [expr {1 + int(rand() * 11)}]
+    for {set i 0} {$i < $numChildren} {incr i} {
+      set id [$tree insert $parent end -text "Node $i Depth $depth"]
+      $tree item $id -values $id
+      testAddNodes $tree $id [expr {$depth - 1}]
+    }
+  }
+  proc testCreateTreeStruct {tree {depth 5} } {
+    foreach txt {first second third fourth five} {
+      set id [$tree insert {} end -text "$txt item" -open 1]
+      $tree item $id -values $id
+      testAddNodes $tree $id $depth
+    }
+  }
+}
 
 
 

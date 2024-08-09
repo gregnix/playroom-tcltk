@@ -2,17 +2,23 @@ package require Tk
 package require ctext
 package require scrollutil_tile
 package require dicttool
+package require dgw::tvmixins
 
 source treeview-lib.tcl
 #https://wiki.tcl-lang.org/page/ttk%3A%3Atreeview+%2D+Different+bindings
+
+# with package dgw::tvmixins
+# for band 
+
+#20240809
 
 variable textw
 
 proc createTV {w} {
   set frt [ttk::frame $w.frt ]
-  set tree [::ttk::treeview $frt.tree -height 15 -show {tree headings} \
+  set tree [dgw::tvband [::ttk::treeview $frt.tree -height 15 -show {tree headings} \
     -columns [list value] -displaycolumns [list value] \
-    -yscroll [list $frt.vsb set] -xscroll [list $frt.hsb set] -selectmode browse]
+    -yscroll [list $frt.vsb set] -xscroll [list $frt.hsb set] -selectmode browse]]
   set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
   set hsb [::ttk::scrollbar $frt.hsb -orient horizontal -command [list $tree xview]]
 
@@ -62,9 +68,9 @@ proc cbComboSelected {w tree type} {
       destroy  [winfo parent $tree]
       set tree  [createTV $wid]
       dataTotree $tree [$w get]
-      tvlib::bandInit $tree
-      tvlib::band $tree
-      tvlib::bandEvent $tree
+#      tvlib::bandInit $tree
+#      tvlib::band $tree
+#      tvlib::bandEvent $tree
     }
     selectmode {
       $tree configure -selectmode [$w get]
@@ -80,9 +86,14 @@ proc buttonbar {w tree textw} {
   $sa setwidget $sf
   set cf [$sf contentframe]
   button $cf.b1 -text "Clear Selection" -command {$tree selection set ""}
-  button $cf.b2 -text "Delete Selected" -command {$tree delete [$tree selection]; tvlib::bandEvent $tree}
-  button $cf.b3 -text "Remove Selection" -command {$tree selection remove [$tree selection]; tvlib::bandEvent $tree}
-  button $cf.b4 -text "Add item" -command {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]"; tvlib::bandEvent $tree}
+#  button $cf.b2 -text "Delete Selected" -command {$tree delete [$tree selection]; tvlib::bandEvent $tree}
+#  button $cf.b3 -text "Remove Selection" -command {$tree selection remove [$tree selection]; tvlib::bandEvent $tree}
+#  button $cf.b4 -text "Add item" -command {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]"; tvlib::bandEvent $tree}
+  button $cf.b2 -text "Delete Selected" -command {$tree delete [$tree selection]}
+  button $cf.b3 -text "Remove Selection" -command {$tree selection remove [$tree selection]}
+  button $cf.b4 -text "Add item" -command {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]"}
+    
+ 
   button $cf.b5 -text "Set Focus I001" -command {$tree focus I001}
   button $cf.b6 -text "Get Focus" -command {$textw insert end [$tree focus]\n}
   button $cf.b7 -text "Get Focus Item" -command {$textw insert end "[$tree focus] index: [$tree index [$tree focus]] \
@@ -118,7 +129,25 @@ proc buttonbar {w tree textw} {
   pack {*}[winfo children $cf]  -fill x -pady 2 -padx 2 -side top
 }
 
-
+# test data for tree struct
+proc testAddNodes {tree parent depth} {
+  if {$depth <= 0} {
+    return
+  }
+  set numChildren [expr {1 + int(rand() * 11)}] 
+  for {set i 0} {$i < $numChildren} {incr i} {
+    set id [$tree insert $parent end -text "Node $i Depth $depth"]
+    $tree item $id -values $id
+    testAddNodes $tree $id [expr {$depth - 1}]
+  }
+}
+proc testCreateTreeStruct {tree {depth 5} } {
+  foreach txt {first second third fourth five} {
+    set id [$tree insert {} end -text "$txt item" -open 1]
+    $tree item $id -values $id
+    testAddNodes $tree $id $depth
+  }
+}
 
 proc dataTotree {tree select} {
   switch $select {
@@ -151,7 +180,7 @@ proc dataTotree {tree select} {
       tvlib::dict2tvtree $tree {} $data
     }
     treegreat {
-      tvlib::testCreateTreeStruct  $tree 7
+      testCreateTreeStruct  $tree 7
     }
   }
 }
@@ -182,8 +211,8 @@ set tree [createTV .fr1]
 #dataTotree $tree 0
 
 #band
-tvlib::bandInit $tree
-tvlib::band $tree
+#tvlib::bandInit $tree
+#tvlib::band $tree
 # event generate $tree <<TVItemsChanges>> -data [$tree selection]
 # tvlib::band_event $tree}
 
