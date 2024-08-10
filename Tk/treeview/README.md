@@ -39,6 +39,12 @@
 + https://wiki.tcl-lang.org/page/bindtags
 + https://www.tcl-lang.org/man/tcl/TkCmd/bindtags.htm
 
+## band striped
++ https://wiki.tcl-lang.org/page/dgw%3A%3Atvmixins
++ https://chiselapp.com/user/dgroth/repository/tclcode/index
++ https://wiki.tcl-lang.org/page/Tile+Table
++ https://www.tcl.tk/man/tcl9.0/TkCmd/ttk_treeview.html#M100
+
 ## tkinter
 + https://pythonassets.com/posts/treeview-in-tk-tkinter/
 + https://ttkbootstrap.readthedocs.io/en/version-0.5/widgets/treeview.html
