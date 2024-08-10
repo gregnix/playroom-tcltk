@@ -1,3 +1,12 @@
+package require struct::list
+#::struct::list flatten use in proc showVisibleItems
+package require dicttool 
+# dict is_dict use in procs dict2tvtree collectKeys collectKeysPoint
+
+# import export dict and tree
+# band stripe
+# treeview extra procs
+
 #############################
 # import export dict and tree
 #############################
@@ -42,21 +51,45 @@ namespace eval tvlib {
   }
 
   # Function to recursively convert a tree into a dictionary
+  # own interpretation with the same keys
   proc tvtree2dict {tree node} {
     set result {}
+    # for equal keys
+    set checkFEE 0
+    set checkkey ""
     # Get the children of the current node
     set children [$tree children $node]
     foreach child $children {
-      # Get the text (key and value) of the current child
       set key [$tree item $child -text]
+      if {($checkFEE eq "1") && ($key ne $checkkey)} {
+        puts "  ch if:  $checkkey k $key :: $checkFEE "
+        set checkFEE 0
+        set checkkey $key
+        set result [expandList $result]
+      }
       set value [lindex [$tree item $child -values] 0]
       # Check if the child itself has children
       if {[$tree children $child] > 0} {
         set childDict [tvtree2dict $tree $child]
         dict set result $key $childDict
       } else {
-        dict set result $key $value
+        if {[dict exists $result $key]} {
+          set tmplist [dict get $result $key]
+          lappend tmplist $value
+          dict set result $key $tmplist
+          if {!$checkFEE} {
+            set checkFEE 1
+            set checkkey $key
+          }
+        }  else {
+          dict set result $key $value
+        }
       }
+    }
+    if {($checkFEE eq "1")} {
+      set checkFEE 0
+      set checkkey $key
+      set result [expandList $result]
     }
     return $result
   }
@@ -65,9 +98,15 @@ namespace eval tvlib {
 ##############
 # band stripe
 ##############
-# see at:
+# tvlib::bandInit $tree
+# tvlib::band $tree
+## use event:
+# tvlib::band_event $tree
+# 
+# for band striped see at:
 # https://wiki.tcl-lang.org/page/dgw%3A%3Atvmixins
 # https://chiselapp.com/user/dgroth/repository/tclcode/index
+# https://wiki.tcl-lang.org/page/Tile+Table
 # https://www.tcl.tk/man/tcl9.0/TkCmd/ttk_treeview.html#M100
 namespace eval tvlib {
   proc band {tree {parent {}} {i 0} } {
@@ -83,7 +122,6 @@ namespace eval tvlib {
   }
 
   proc bandInit {tree {color0 #FFFFFF} {color1 #E0E0E0}} {
-    # {color0 #FFFFFF} {color1 #E0E0E0} {color2 #DDEEFF} {color3 #B0C4DE}
     $tree tag configure band0 -background $color0
     $tree tag configure band1 -background $color1
     bind $tree <<TVItemsChanges>> [list [namespace current]::band $tree]
@@ -92,12 +130,12 @@ namespace eval tvlib {
   proc bandEvent {tree} {
     event generate $tree <<TVItemsChanges>> -data [$tree selection]
   }
-  
+
 }
 
 ######################
 # treeview extra procs
-# ####################
+######################
 namespace eval tvlib {
   proc treesize {tree {p {}}} {
     set size 0
@@ -158,7 +196,7 @@ namespace eval tvlib {
     return $keysList
   }
 
-
+  # with full path
   proc collectKeysPoint {dictVar {prefix ""} {keysList {}}} {
     foreach {key value} [dict get $dictVar] {
       if { [checkFirstElementsEqual $value] } {
@@ -194,6 +232,8 @@ namespace eval tvlib {
     }
     return [uniqueList2 $heads]
   }
+  
+  # use in proc extractHeads
   proc uniqueList2 {list} {
     set dict {}
     foreach item $list {
@@ -201,14 +241,27 @@ namespace eval tvlib {
     }
     dict keys $dict
   }
+  
+  # use in proc tvtree2dict
+  proc expandList {inputList} {
+    set key [lindex $inputList 0]
+    set values [lindex $inputList 1]
+    set result {}
+
+    foreach value $values {
+      lappend result [list $key $value]
+    }
+    return $result
+  }
 }
 
 ###############
 # example datas
+# tvlib::testCreateTreeStruct $tree 4
 ###############
 namespace eval tvlib {
 
-  # uwo procs for test data for tree struct
+  # two procs for test data for tree struct
   proc testAddNodes {tree parent depth} {
     if {$depth <= 0} {
       return
@@ -229,6 +282,43 @@ namespace eval tvlib {
   }
 }
 
+######################
+# search and open node
+# set list [tvlib::showVisibleItems $tree "child 1"]
+######################
+namespace eval tvlib {
+  proc openParentNodes {tree item} {
+    set parent [$tree parent $item]
+    if {$parent ne ""} {
+      $tree item $parent -open true
+      openParentNodes $tree $parent
+    }
+  }
+  proc showVisibleItems {tree searchString} {
+    set resultList [list]
+    foreach item [$tree children {}] {
+      if {[string match $searchString [$tree item $item -text]]} {
+        openParentNodes $tree $item
+      } else {
+        $tree item $item -open false
+      }
+      lappend resultList [showVisibleChildren $tree $item $searchString]
+    }
+    return [::struct::list flatten -full $resultList]
+  }
 
+  proc showVisibleChildren {tree parent searchString} {
+    set resultList [list ]
+    foreach item [$tree children $parent] {
+      if {[string match $searchString [$tree item $item -text]]} {
+        lappend resultList $item
+        openParentNodes $tree $item
+      } else {
+        $tree item $item -open false
+      }
+      lappend resultList [showVisibleChildren $tree $item $searchString]
+    }
+    return $resultList
+  }
 
-
+}
