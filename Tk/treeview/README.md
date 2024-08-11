@@ -44,9 +44,11 @@
 + https://chiselapp.com/user/dgroth/repository/tclcode/index
 + https://wiki.tcl-lang.org/page/Tile+Table
 + https://www.tcl.tk/man/tcl9.0/TkCmd/ttk_treeview.html#M100
++ https://core.tcl-lang.org/tips/doc/trunk/tip/552.md
 
 ## tkinter
 + https://pythonassets.com/posts/treeview-in-tk-tkinter/
 + https://ttkbootstrap.readthedocs.io/en/version-0.5/widgets/treeview.html
 + https://docs.python.org/3/library/tkinter.ttk.html
 + https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/ttk-Treeview.html
++ https://tk-tutorial.readthedocs.io/en/latest/tree/tree.html

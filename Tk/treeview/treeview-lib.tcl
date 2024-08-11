@@ -1,14 +1,22 @@
+#! /usr/bin/env tclsh
+
+# 20240810
+#treeview-lib.tcl
+
 package require struct::list
 #::struct::list flatten use in proc showVisibleItems
-package require dicttool 
+package require dicttool
 # dict is_dict use in procs dict2tvtree collectKeys collectKeysPoint
 
-# import export dict and tree
-# band stripe
-# treeview extra procs
+# a. import export dict and tree
+# b. band stripe
+# c. treeview extra procs
+# d. extra key
+# e. example datas
+# f. search and open node
 
 #############################
-# import export dict and tree
+# a. import export dict and tree
 #############################
 namespace eval tvlib {
   proc checkFirstElementsEqual {listOfLists} {
@@ -32,7 +40,17 @@ namespace eval tvlib {
       if {[dict exists $dict $key]} {
         set keyValue [dict get $dict $key]
         if { [checkFirstElementsEqual $keyValue] } {
-          $widget insert $parent end -text $key -values \{$keyValue\}
+          set stdList [list]
+          set newList [list]
+          foreach sublist $keyValue {
+            if {[lindex $sublist 0] eq ":"} {
+              lappend newList [lindex $sublist 1]
+            } else {
+              lappend stdList [lindex $sublist 1]
+            }
+          }
+          $widget insert $parent end -text $key -values [list $newList]
+          #$widget insert $parent end -text $key -values [list $stdList]
           continue
         }
         if {[dict is_dict $keyValue] && [llength $keyValue] != "2"} {
@@ -96,13 +114,13 @@ namespace eval tvlib {
 }
 
 ##############
-# band stripe
+# b. band stripe
 ##############
 # tvlib::bandInit $tree
 # tvlib::band $tree
 ## use event:
 # tvlib::band_event $tree
-# 
+#
 # for band striped see at:
 # https://wiki.tcl-lang.org/page/dgw%3A%3Atvmixins
 # https://chiselapp.com/user/dgroth/repository/tclcode/index
@@ -134,7 +152,7 @@ namespace eval tvlib {
 }
 
 ######################
-# treeview extra procs
+# c. treeview extra procs
 ######################
 namespace eval tvlib {
   proc treesize {tree {p {}}} {
@@ -164,19 +182,20 @@ namespace eval tvlib {
     }
     return $depth
   }
-  proc tv2dict {tree {parent {}}} {
+  proc tv2list {tree {parent {}}} {
     set data {}
     foreach c [$tree children $parent] {
-      dict set data $c [tv2dict $tree $c]
+      dict set data $c [tv2list $tree $c]
     }
     return $data
   }
 }
 
 #################
-# key extra procs
+# d. key extra procs
 #################
 namespace eval tvlib {
+  #
   proc collectKeys {dictVar {keysList {}}} {
     foreach {key value} [dict get $dictVar] {
       if { [checkFirstElementsEqual $value] } {
@@ -196,7 +215,7 @@ namespace eval tvlib {
     return $keysList
   }
 
-  # with full path
+  # with full path with point
   proc collectKeysPoint {dictVar {prefix ""} {keysList {}}} {
     foreach {key value} [dict get $dictVar] {
       if { [checkFirstElementsEqual $value] } {
@@ -232,7 +251,7 @@ namespace eval tvlib {
     }
     return [uniqueList2 $heads]
   }
-  
+
   # use in proc extractHeads
   proc uniqueList2 {list} {
     set dict {}
@@ -241,7 +260,7 @@ namespace eval tvlib {
     }
     dict keys $dict
   }
-  
+
   # use in proc tvtree2dict
   proc expandList {inputList} {
     set key [lindex $inputList 0]
@@ -256,12 +275,18 @@ namespace eval tvlib {
 }
 
 ###############
-# example datas
+# d. example datas
 # tvlib::testCreateTreeStruct $tree 4
 ###############
 namespace eval tvlib {
+  variable exampleDatas
 
-  # two procs for test data for tree struct
+  # d.1 data dict for example datas
+  dict set exampleDatas abc12 {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
+  dict set exampleDatas person {person  {name "John Doe" age 30.8 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} {name "John Good"} {name "Jane Good"}} } job {title "Developer" company "Works"}}
+
+
+  # d.2 two procs for test data for tree struct
   proc testAddNodes {tree parent depth} {
     if {$depth <= 0} {
       return
@@ -280,13 +305,39 @@ namespace eval tvlib {
       testAddNodes $tree $id $depth
     }
   }
+  #https://wiki.tcl-lang.org/page/info
+  proc infotcltk {{ns ::} {all no}} {
+    dict lappend data namespace [list : $ns]
+    foreach child [namespace children $ns] {
+      if {{all} eq $all} {
+        list $child all
+      } {
+        dict lappend data namespace [list : $child]
+      }
+    }
+    set pat [set ns]::*
+    foreach proc [info procs $pat] {
+      dict lappend data  proc  [list : $proc]
+    }
+    foreach var [info vars $pat] {
+      if {[array exists $var]} {
+        dict lappend data  array $var [list {*}[array get $var]]
+      } {
+        dict lappend data variable $var [list [set $var]]
+      }
+    }
+    return $data
+  }
 }
 
 ######################
-# search and open node
-# set list [tvlib::showVisibleItems $tree "child 1"]
+# e. search and open node
+#
 ######################
 namespace eval tvlib {
+
+  # e.1 set list [tvlib::showVisibleItems $tree "child 1"]
+  # procs: openParentNodes showVisibleItems showVisibleChildren
   proc openParentNodes {tree item} {
     set parent [$tree parent $item]
     if {$parent ne ""} {
