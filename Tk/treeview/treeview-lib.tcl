@@ -77,8 +77,7 @@ namespace eval tvlib {
             $widget insert $nparent end -text [lindex $keyValue 0 ] -values [list $newkeyValue]
           } else {
             if {[string match {\{: *} $value]} {
-              puts $keyValue
-              $widget insert $parent end -text $key -values [string range $$keyValue 2 end-1]
+              $widget insert $parent end -text $key -values [string range $keyValue 2 end-1]
             } else {
               $widget insert $parent end -text $key -values [list $keyValue]
             }
@@ -387,8 +386,11 @@ namespace eval tvlib {
 
   proc listns {{parentns ::}} {
     set result [dict create]
+    dict set result commands  [listnscommands $parentns]
+    dict set result functions  [listnsfunctions $parentns]
     dict set result procs [listnsprocs $parentns]
     dict set result vars  [listnsvars $parentns]
+
     foreach ns [namespace children $parentns] {
       dict set result $ns [listns $ns]
     }
@@ -402,14 +404,53 @@ namespace eval tvlib {
     }
     return $result
   }
-  proc listnsvars {ns} {
+
+  proc listnscommands {ns} {
     set result ""
-    foreach var [lsort [info vars ${ns}::*]] {
-      lappend result [list ":" $var]
+    foreach command [lsort [info commands ${ns}::*]] {
+      lappend result [list ":" $command]
     }
     return $result
   }
+  proc listnsfunctions {ns} {
+    set result ""
+    foreach function [lsort [info functions ${ns}::*]] {
+      lappend result [list ":" $function]
+    }
+    return $result
+  }
+
+  proc listnsvars {ns} {
+    set result ""
+    set resultvars ""
+    set resultarray ""
+    set date ""
+    foreach var [lsort [info vars ${ns}::*]] {
+
+      if {[array exists $var]} {
+        lappend resultarray [list ":" $var]
+        dict lappend date array $var [list {*}[array get $var]]
+      } {
+        lappend resultvars [list ":" $var]
+        if {[catch {set $var} msg]} {
+          puts $var
+          dict lappend date variable $var [list catch_error]
+        } else {
+          dict lappend date variable $var [list $var]
+        }
+
+      }
+    }
+    dict set result array $resultarray
+    dict set result variable $resultvars
+    dict set data vars $date
+    #return $result
+    return $data
+  }
 }
+
+
+
 
 #########################
 # e. search and open node
