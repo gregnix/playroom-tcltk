@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-# 20240810
+# 20240812
 #treeview-lib.tcl
 
 package require struct::list
@@ -15,9 +15,9 @@ package require dicttool
 # e. example datas
 # f. search and open node
 
-#############################
+################################
 # a. import export dict and tree
-#############################
+################################
 namespace eval tvlib {
   proc checkFirstElementsEqual {listOfLists} {
     if {[llength $listOfLists] < "2"} {
@@ -35,6 +35,7 @@ namespace eval tvlib {
     return 1
   }
 
+  # special with key == ":" then list
   proc dict2tvtree {widget parent dict} {
     foreach {key value} [dict get $dict] {
       if {[dict exists $dict $key]} {
@@ -49,10 +50,15 @@ namespace eval tvlib {
               lappend stdList [lindex $sublist 1]
             }
           }
+          if {$stdList ne {}} {
+            puts $newList
+            set newList $stdList
+
+          }
           $widget insert $parent end -text $key -values [list $newList]
-          #$widget insert $parent end -text $key -values [list $stdList]
           continue
         }
+
         if {[dict is_dict $keyValue] && [llength $keyValue] != "2"} {
           set newParent [$widget insert $parent end -text $key -values ""]
           dict2tvtree $widget $newParent $keyValue
@@ -60,9 +66,26 @@ namespace eval tvlib {
           set newParent [$widget insert $parent end -text $key -values ""]
           dict2tvtree $widget $newParent $keyValue
         } else {
-          #$widget insert $parent end -text $key -values \{$keyValue\}
-          $widget insert $parent end -text $key -values [list $keyValue]
+          if {[lindex $keyValue 0] eq ":" } {
+            $widget insert $parent end -text $key -values [list [lrange $keyValue 1 end]]
+          } elseif {[lindex $keyValue 1 0 0] eq ":" } {
+            set nparent [$widget insert $parent end -text $key ]
+            set newkeyValue [list]
+            foreach val {*}[lrange $keyValue 1 end]  {
+              lappend newkeyValue [lindex $val 1]
+            }
+            $widget insert $nparent end -text [lindex $keyValue 0 ] -values [list $newkeyValue]
+          } else {
+            if {[string match {\{: *} $value]} {
+              puts $keyValue
+              $widget insert $parent end -text $key -values [string range $$keyValue 2 end-1]
+            } else {
+              $widget insert $parent end -text $key -values [list $keyValue]
+            }
 
+
+
+          }
         }
       }
     }
@@ -113,9 +136,9 @@ namespace eval tvlib {
   }
 }
 
-##############
+################
 # b. band stripe
-##############
+################
 # tvlib::bandInit $tree
 # tvlib::band $tree
 ## use event:
@@ -151,9 +174,9 @@ namespace eval tvlib {
 
 }
 
-######################
+#########################
 # c. treeview extra procs
-######################
+#########################
 namespace eval tvlib {
   proc treesize {tree {p {}}} {
     set size 0
@@ -191,9 +214,9 @@ namespace eval tvlib {
   }
 }
 
-#################
+####################
 # d. key extra procs
-#################
+####################
 namespace eval tvlib {
   #
   proc collectKeys {dictVar {keysList {}}} {
@@ -274,10 +297,10 @@ namespace eval tvlib {
   }
 }
 
-###############
+#####################################
 # d. example datas
 # tvlib::testCreateTreeStruct $tree 4
-###############
+#####################################
 namespace eval tvlib {
   variable exampleDatas
 
@@ -305,35 +328,92 @@ namespace eval tvlib {
       testAddNodes $tree $id $depth
     }
   }
+
   #https://wiki.tcl-lang.org/page/info
-  proc infotcltk {{ns ::} {all no}} {
-    dict lappend data namespace [list : $ns]
-    foreach child [namespace children $ns] {
-      if {{all} eq $all} {
-        list $child all
-      } {
-        dict lappend data namespace [list : $child]
+  # special with key == ":" then list
+  proc infotcltk {} {
+    lappend infodata hostname [info hostname]
+    lappend infodata library [info library]
+    lappend infodata nameofexecutable [info nameofexecutable]
+    lappend infodata patchlevel [info patchlevel]
+    lappend infodata sharedlibextension [info sharedlibextension]
+    lappend infodata tclversion [info tclversion]
+    dict set data info $infodata
+
+    dict set data tm [tcl::tm::path list]
+
+    #https://wiki.tcl-lang.org/page/Tcl+Package+User+Guide
+    foreach i [lsort [package names]] {
+      if {[string length [package provide $i]]} {
+        lappend loaded  $i [package present $i]
       }
     }
-    set pat [set ns]::*
-    foreach proc [info procs $pat] {
-      dict lappend data  proc  [list : $proc]
+    dict set data package loaded $loaded
+
+    foreach p [lsort [package names]] {
+      lappend allp $p [package versions $p]
     }
+    dict set data package all $allp
+
+    #namespace
+    dict set data namespace [listns]
+
+    set ns ::
+    set pat [set ns]::*
+
+    foreach proc [lsort [info procs $pat]] {
+      dict lappend data  procs  [list : $proc]
+    }
+
+    foreach command [lsort [info commands $pat]] {
+      dict lappend data commands  [list : $command]
+    }
+
+    foreach function [lsort [info functions $pat]] {
+      dict lappend data functions  [list : $function]
+    }
+
     foreach var [info vars $pat] {
       if {[array exists $var]} {
-        dict lappend data  array $var [list {*}[array get $var]]
+        dict lappend date array $var [list {*}[array get $var]]
       } {
-        dict lappend data variable $var [list [set $var]]
+        dict lappend date variable $var [list [set $var]]
       }
     }
+    dict set data vars $date
+
     return $data
+  }
+
+  proc listns {{parentns ::}} {
+    set result [dict create]
+    dict set result procs [listnsprocs $parentns]
+    dict set result vars  [listnsvars $parentns]
+    foreach ns [namespace children $parentns] {
+      dict set result $ns [listns $ns]
+    }
+    return $result
+  }
+
+  proc listnsprocs {ns} {
+    set result ""
+    foreach proc [lsort [info procs ${ns}::*]] {
+      lappend result [list ":" $proc]
+    }
+    return $result
+  }
+  proc listnsvars {ns} {
+    set result ""
+    foreach var [lsort [info vars ${ns}::*]] {
+      lappend result [list ":" $var]
+    }
+    return $result
   }
 }
 
-######################
+#########################
 # e. search and open node
-#
-######################
+#########################
 namespace eval tvlib {
 
   # e.1 set list [tvlib::showVisibleItems $tree "child 1"]

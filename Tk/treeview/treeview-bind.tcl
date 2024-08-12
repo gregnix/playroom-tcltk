@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240810
+#20240811
 
 package require Tk
 package require ctext
@@ -18,12 +18,12 @@ proc createCTW {w} {
   set frt [ttk::frame $w.frt ]
   set textw [ctext $frt.text -width 120 -yscrollcommand [list $frt.vsb set]]
   set vsb [ttk::scrollbar $frt.vsb -orient vertical -command [list $textw yview]]
-  
+
   pack $frt -side top -fill both -expand 1
-  
+
   pack $vsb -side right -fill y -expand 0
   pack $textw -expand 1 -fill both
-  
+
   return $textw
 }
 
@@ -46,13 +46,11 @@ proc createTV {w} {
     -yscrollcommand [list $frt.vsb set] -xscrollcommand [list $frt.hsb set] -selectmode browse]
   set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
   set hsb [::ttk::scrollbar $frt.hsb -orient horizontal -command [list $tree xview]]
-  
+
   $tree heading #0 -text Keys
   $tree heading value -text "Values" -anchor center
-  
-  #$tree column #0  -stretch 0
-  #$tree column 0  -stretch 0
-  
+
+  # problem with scrollbar vsb
   $tree column #0 -minwidth 40 -stretch 0
   $tree column value -minwidth 40 -stretch 0
 
@@ -82,7 +80,7 @@ proc createButton {w tree} {
 
   #  $tree confgure -selectmode extended, browse, or none.
   set cbselectmode [ttk::combobox $frt.cbselectmode -values {extended browse none} -exportselection 0 -width 15]
-  $cbselectmode current 0
+  $cbselectmode current 1
   bind $cbselectmode <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tree selectmode]]
   cbComboSelected $cbselectmode $tree selectmode
 
@@ -112,6 +110,15 @@ proc cbComboSelected {w tree type} {
   }
 }
 
+# simple callback for buttonbar
+proc cbbtnbar {tree cmds}  {
+  variable textw
+  foreach cmd [split $cmds ";"] {
+     eval [string trimleft $cmd]
+  }
+  $textw see end
+}
+
 proc buttonbar {w tree textw} {
   set f [ttk::frame $w.f]
 
@@ -121,39 +128,39 @@ proc buttonbar {w tree textw} {
   $sa setwidget $sf
   set cf [$sf contentframe]
 
-  button $cf.b1 -text "Clear Selection" -command {$tree selection set ""}
-  button $cf.b2 -text "Delete Selected" -command {$tree delete [$tree selection]; tvlib::bandEvent $tree}
-  button $cf.b3 -text "Remove Selection" -command {$tree selection remove [$tree selection]}
-  button $cf.b4 -text "Add item" -command {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]";\
-  $tree item [lindex [$tree children {}] end] -values [lindex [$tree children {}] end]; tvlib::bandEvent $tree}
-  button $cf.b5 -text "Set Focus I001" -command {$tree focus I001}
-  button $cf.b6 -text "Get Focus" -command {$textw insert end [$tree focus]\n}
-  button $cf.b7 -text "Get Focus Item and info" -command {$textw insert end "[$tree focus] index: [$tree index [$tree focus]] \
+  button $cf.b1 -text "Clear Selection" -command [list cbbtnbar $tree {$tree selection set ""}]
+  button $cf.b2 -text "Delete Selected" -command [list cbbtnbar $tree {$tree delete [$tree selection]; tvlib::bandEvent $tree}]
+  button $cf.b3 -text "Remove Selection" -command [list cbbtnbar $tree {$tree selection remove [$tree selection]}]
+  button $cf.b4 -text "Add item" -command [list cbbtnbar $tree {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]";\
+  $tree item [lindex [$tree children {}] end] -values [lindex [$tree children {}] end]; tvlib::bandEvent $tree}]
+  button $cf.b5 -text "Set Focus I001" -command [list cbbtnbar $tree {$tree focus I001}]
+  button $cf.b6 -text "Get Focus" -command  [list cbbtnbar $tree {$textw insert end [$tree focus]\n}]
+  button $cf.b7 -text "Get Focus Item and info" -command [list cbbtnbar $tree {$textw insert end "[$tree focus] index: [$tree index [$tree focus]] \
   -tags [$tree item [$tree focus] -tags] -open [$tree item [$tree focus] -open] \
-  -text [$tree item [$tree focus] -text] -values [$tree item [$tree focus] -values]\n"}
-  button $cf.b8 -text "Select add I004  I005 and see I004" -command { $tree selection add {I004 I005};$tree see I004}
-  button $cf.b9 -text "Select toggle I004" -command { $tree selection toggle I004}
-  button $cf.b10 -text "Select I005 and see" -command { $tree selection set I005;$tree see I005 }
-  button $cf.b11 -text "tree depth" -command {$textw insert end [tvlib::treedepth $tree]\n}
-  button $cf.b12 -text "item depth in tree" -command {$textw insert end [tvlib::itemdepth $tree  [$tree selection]]\n}
-  button $cf.b13 -text "tree size" -command {$textw insert end [tvlib::treesize $tree]\n}
-  button $cf.b14 -text "tree children {}" -command {$textw insert end [$tree children {}]\n}
-  button $cf.b15 -text "childrens col k {}" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2list $tree ]]\n}
-  button $cf.b16 -text "childrens P col k {}" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2list $tree ]]\n}
-  button $cf.b17 -text "childrens tails {}" -command {$textw insert end [tvlib::extractTails [tvlib::collectKeysPoint [tvlib::tv2list $tree {}]]]\n}
-  button $cf.b18 -text "childrens heads {}" -command {$textw insert end [tvlib::extractHeads [tvlib::collectKeysPoint [tvlib::tv2list $tree {}]]]\n}
-  button $cf.b19 -text "tree children sel" -command {$textw insert end [$tree children [$tree selection]]\n}
-  button $cf.b20 -text "childrens col k sel" -command {$textw insert end [tvlib::collectKeys [tvlib::tv2list $tree [$tree selection]]]\n}
-  button $cf.b21 -text "childrens P col k sel" -command {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2list $tree [$tree selection]]]\n}
-  button $cf.b22 -text "childrens tails sel" -command {$textw insert end [tvlib::extractTails [tvlib::collectKeysPoint [tvlib::tv2list $tree [$tree selection]]]]\n}
-  button $cf.b23 -text "childrens heads sel" -command {$textw insert end [tvlib::extractHeads [tvlib::collectKeysPoint [tvlib::tv2list $tree [$tree selection]]]]\n}
-  button $cf.b24 -text "tvtree2dict {}" -command {$textw insert end [tvlib::tvtree2dict $tree {}]\n}
-  button $cf.b25 -text "tvtree2dict sel" -command {$textw insert end [tvlib::tvtree2dict $tree [$tree selection]]\n}
-  button $cf.b26 -text "search and sel child 1" -command {$textw insert end [tvlib::showVisibleItems $tree "child 1"];\
-  $tree selection set "";$tree selection add [tvlib::showVisibleItems $tree "child 1"]\n}
-  button $cf.b27 -text "search and sel grandchild 3" -command {$textw insert end [tvlib::showVisibleItems $tree "grandchild 3"];\
-  $tree selection set "";$tree selection add [tvlib::showVisibleItems $tree "grandchild 3"]\n}
-  button $cf.b28 -text "ctext delete 3.0 end" -command {$textw delete 4.0 end}
+  -text [$tree item [$tree focus] -text] -values [$tree item [$tree focus] -values]\n"}]
+  button $cf.b8 -text "Select add I004  I005 and see I004" -command [list cbbtnbar $tree { $tree selection add {I004 I005};$tree see I004}]
+  button $cf.b9 -text "Select toggle I004" -command [list cbbtnbar $tree { $tree selection toggle I004}]
+  button $cf.b10 -text "Select I005 and see" -command [list cbbtnbar $tree { $tree selection set I005;$tree see I005 }]
+  button $cf.b11 -text "tree depth" -command [list cbbtnbar $tree {$textw insert end [tvlib::treedepth $tree]\n}]
+  button $cf.b12 -text "item depth in tree" -command [list cbbtnbar $tree {$textw insert end [tvlib::itemdepth $tree  [$tree selection]]\n}]
+  button $cf.b13 -text "tree size" -command [list cbbtnbar $tree {$textw insert end [tvlib::treesize $tree]\n}]
+  button $cf.b14 -text "tree children {}" -command [list cbbtnbar $tree {$textw insert end [$tree children {}]\n}]
+  button $cf.b15 -text "childrens col k {}" -command [list cbbtnbar $tree {$textw insert end [tvlib::collectKeys [tvlib::tv2list $tree ]]\n}]
+  button $cf.b16 -text "childrens P col k {}" -command [list cbbtnbar $tree {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2list $tree ]]\n}]
+  button $cf.b17 -text "childrens tails {}" -command [list cbbtnbar $tree {$textw insert end [tvlib::extractTails [tvlib::collectKeysPoint [tvlib::tv2list $tree {}]]]\n}]
+  button $cf.b18 -text "childrens heads {}" -command [list cbbtnbar $tree {$textw insert end [tvlib::extractHeads [tvlib::collectKeysPoint [tvlib::tv2list $tree {}]]]\n}]
+  button $cf.b19 -text "tree children sel" -command [list cbbtnbar $tree {$textw insert end [$tree children [$tree selection]]\n}]
+  button $cf.b20 -text "childrens col k sel" -command [list cbbtnbar $tree {$textw insert end [tvlib::collectKeys [tvlib::tv2list $tree [$tree selection]]]\n}]
+  button $cf.b21 -text "childrens P col k sel" -command [list cbbtnbar $tree {$textw insert end [tvlib::collectKeysPoint [tvlib::tv2list $tree [$tree selection]]]\n}]
+  button $cf.b22 -text "childrens tails sel" -command [list cbbtnbar $tree {$textw insert end [tvlib::extractTails [tvlib::collectKeysPoint [tvlib::tv2list $tree [$tree selection]]]]\n}]
+  button $cf.b23 -text "childrens heads sel" -command [list cbbtnbar $tree {$textw insert end [tvlib::extractHeads [tvlib::collectKeysPoint [tvlib::tv2list $tree [$tree selection]]]]\n}]
+  button $cf.b24 -text "tvtree2dict {}" -command [list cbbtnbar $tree {$textw insert end [tvlib::tvtree2dict $tree {}]\n}]
+  button $cf.b25 -text "tvtree2dict sel" -command [list cbbtnbar $tree {$textw insert end [tvlib::tvtree2dict $tree [$tree selection]]\n}]
+  button $cf.b26 -text "search and sel child 1" -command [list cbbtnbar $tree {$textw insert end [tvlib::showVisibleItems $tree "child 1"];\
+  $tree selection set "";$tree selection add [tvlib::showVisibleItems $tree "child 1"]\n}]
+  button $cf.b27 -text "search and sel grandchild 3" -command [list cbbtnbar $tree {$textw insert end [tvlib::showVisibleItems $tree "grandchild 3"];\
+  $tree selection set "";$tree selection add [tvlib::showVisibleItems $tree "grandchild 3"]\n}]
+  button $cf.b28 -text "ctext delete 3.0 end" -command [list cbbtnbar $tree {$textw delete 4.0 end}]
 
   # as info
   bind $tree <<TreeviewSelect>> [list show  %W %X %Y %# %d %x %y  %T]
@@ -239,6 +246,7 @@ proc dataTotree {tree select} {
 proc show {args} {
   variable textw
   variable listboxw
+
   lassign $args W X Y Raute d  x y T rest
   set tree $W
   $listboxw delete 0 end
@@ -253,51 +261,47 @@ proc show {args} {
   $textw see end
 }
 
+# main gui
+proc mainGui {} {
+  # ctext widget for info display
+  variable textw
+  variable listboxw
 
+  ttk::frame .fr1
+  set tree [createTV .fr1]
 
+  #band stripes
+  tvlib::bandInit $tree
+  tvlib::band $tree
+  # event generate $tree <<TVItemsChanges>> -data [$tree selection]
+  # use:
+  # tvlib::band_event $tree
+
+  ttk::frame .fr2
+  # ctext as info text
+  set textw [createCTW .fr2]
+
+  ttk::frame .fr3
+  set listboxw [createLB .fr3]
+  pack .fr2 .fr3 -side right -expand 1 -fill both
+
+  ttk::frame .frbtn
+  # combobox for example data und select -selectmode  tree
+  createButton .frbtn $tree
+  ttk::frame .frbar
+  # buttons for cmds
+  buttonbar .frbar $tree $textw
+
+  pack .frbtn .fr1  .frbar -side top -expand 1 -fill both
+
+  set output "[array get ttk::treeview::State]\n"
+  $textw insert end $output
+  $textw insert end  "%W %X %Y %#  %d  %x %y  %T\n\n"
+
+}
 
 ###################################
 #main
 ###################################
-
-
-ttk::frame .fr1
-set tree [createTV .fr1]
-
-#band stripes
-tvlib::bandInit $tree
-tvlib::band $tree
-# event generate $tree <<TVItemsChanges>> -data [$tree selection]
-# use:
-# tvlib::band_event $tree
-
-# ctext as info text
-set textw [ctext .text -width 150 ]
-
-
-ttk::frame .fr2
-set textw [createCTW .fr2]
-
-ttk::frame .fr3
-set listboxw [createLB .fr3]
-pack .fr2 .fr3 -side right -expand 1 -fill both
-
-ttk::frame .frbtn
-# combobox for example data und select -selectmode  tree
-createButton .frbtn $tree
-ttk::frame .frbar
-# buttons for cmds
-buttonbar .frbar $tree $textw
-
-pack .frbtn .fr1  .frbar -side top -expand 1 -fill both
-#pack $tree -side top -expand 1  -fill both
-
-
-set output "[array get ttk::treeview::State]\n"
-$textw insert end $output
-$textw insert end  "%W %X %Y %#  %d  %x %y  %T\n\n"
-
-
-
-
+mainGui
 

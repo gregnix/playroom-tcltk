@@ -1,37 +1,25 @@
 #!/usr/bin/env tclsh
 
-package require Tk
-package require Ttk
-package require scrollutil
+# Prozedur, die rekursiv alle Namespaces auflistet und dabei die Prozeduren jedes Namespaces als Wert speichert
+proc listns {{parentns ::}} {
+    set result [dict create]
+    
+    # Füge die Prozeduren des aktuellen Namespaces hinzu
+    dict set result procs [listnsprocs $parentns]
 
-# Hauptfenster erstellen
-set root [tk::toplevel .top]
-wm title $root "Scrollable Frame Example"
+    # Rekursive Suche nach Child-Namespaces
+    foreach ns [namespace children $parentns] {
+        dict set result $ns [listns $ns]
+    }
 
-# Scrollarea und Scrollableframe erstellen
-set sa [scrollutil::scrollarea $root.sa]
-set sf [scrollutil::scrollableframe $sa.sf -width 400 -height 300 -yscrollincrement 20]
-
-# Scrollableframe in Scrollarea setzen
-$sa setwidget $sf
-
-# Contentframe aus Scrollableframe bekommen
-set cf [$sf contentframe]
-
-# Contentframe mit Widgets füllen
-for {set i 1} {$i <= 30} {incr i} {
-    ttk::label $cf.lbl$i -text "Label $i"
-    grid $cf.lbl$i -row $i -column 0 -padx 10 -pady 5 -sticky w
+    return $result
 }
 
-# Automatische Anpassung der Breite des Scrollableframes
-$sf autofillx true
+# Prozedur, die alle Prozeduren eines Namespaces auflistet
+proc listnsprocs {ns} {
+    return [info procs ${ns}::*]
+}
 
-# Scrollableframe konfigurieren
-$sf configure -height 300 -yscrollincrement 20
-
-# Scrollarea packen
-pack $sa -expand yes -fill both
-
-# Haupt-Event-Loop starten (dies wird automatisch vom Tcl-Interpreter verwaltet)
-scrollutil::createWheelEventBindings all
+# Beispielhafte Ausgabe des Dictionarys
+puts [dict get [listns] procs]  ;# Gibt die Prozeduren im globalen Namespace aus
+puts [listns]
