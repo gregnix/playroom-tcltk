@@ -1,7 +1,9 @@
 #! /usr/bin/env tclsh
 
-# 20240812
+# 20240813
 #treeview-lib.tcl
+
+#https://core.tcl-lang.org/tk/tktview/2a6c62afd9
 
 package require struct::list
 #::struct::list flatten use in proc showVisibleItems
@@ -14,6 +16,7 @@ package require dicttool
 # d. extra key
 # e. example datas
 # f. search and open node
+# g. creates a new treeview configured as a table with new, update ,upsert
 
 ################################
 # a. import export dict and tree
@@ -389,7 +392,7 @@ namespace eval tvlib {
     dict set result commands  [listnscommands $parentns]
     dict set result functions  [listnsfunctions $parentns]
     dict set result procs [listnsprocs $parentns]
-    dict set result vars  [listnsvars $parentns]
+    dict set result vars [listnsvars $parentns]
 
     foreach ns [namespace children $parentns] {
       dict set result $ns [listns $ns]
@@ -421,29 +424,29 @@ namespace eval tvlib {
   }
 
   proc listnsvars {ns} {
-    set result ""
-    set resultvars ""
-    set resultarray ""
+    #set result ""
+    #set resultvars ""
+    #set resultarray ""
     set date ""
     foreach var [lsort [info vars ${ns}::*]] {
 
       if {[array exists $var]} {
-        lappend resultarray [list ":" $var]
-        dict lappend date array $var [list {*}[array get $var]]
+        #lappend resultarray [list ":" $var]
+        dict set date array $var [list {*}[array get $var]]
       } {
-        lappend resultvars [list ":" $var]
+        #lappend resultvars [list ":" $var]
         if {[catch {set $var} msg]} {
-          puts $var
-          dict lappend date variable $var [list catch_error]
+          puts "catch error: proc listnsvar :: $var"
+          dict set date variable $var [list catch_error]
         } else {
-          dict lappend date variable $var [list $var]
+          dict set date variable $var [list ":" [list [set $var]]]
         }
 
       }
     }
-    dict set result array $resultarray
-    dict set result variable $resultvars
-    dict set data vars $date
+    #dict set result array $resultarray
+    #dict set result variable $resultvars
+    dict set data variablen $date
     #return $result
     return $data
   }
@@ -493,4 +496,337 @@ namespace eval tvlib {
     return $resultList
   }
 
+}
+
+namespace eval tvlib {
+  # g. use of ttk::treeview to build a table
+  # proc newTable
+  # creates a new treeview configured as a table
+  # new Row, Rows, Cell, Cells
+  # update Row, Rows, Cell, Cells
+  # upsert Row, Rows, Cell, Cells
+  # delete Row, Rows, cell, Cells
+
+  proc newTable {w colnames} {
+    set frt [ttk::frame $w.frt]
+    # create the tree showing headings only, and define column names
+    set tree [ttk::treeview $frt.tree -show headings -columns $colnames\
+    -yscrollcommand [list $frt.vsb set] -selectmode browse]
+    set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
+
+    # set the text display for columns headers
+    foreach colname $colnames {
+      $tree heading $colname -text $colname
+    }
+    pack $frt -expand 1 -fill both
+
+    pack $vsb -expand 0 -fill y -side right
+    pack $tree -expand 1 -fill both
+    return $tree
+  }
+
+  proc addRow {t {values ""}} {
+    set item [$t insert {} end]
+    foreach col [$t cget -columns] val $values {
+      $t set $item $col $val
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+
+  proc addRows {t {valueslist ""}} {
+    foreach values $valueslist {
+      set item [$t insert {} end]
+      foreach col [$t cget -columns] val $values {
+        $t set $item $col $val
+      }
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+  proc addCell {t col value {pos end}} {
+    set item [$t insert {} $pos]
+    $t set $item $col $val
+    event generate $t <<TVItemsChanges>>
+  }
+  proc addCells {t col values {pos end}} {
+    set item [lindex [$t children {}] $pos]
+    set index [$t index $item]
+    foreach val $values {
+      set item [$t insert {} $index]
+      $t set $item $col $val
+      incr index
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+  proc updateRow {t values index} {
+    set item [lindex [$t children {}] $index]
+    if { $item eq "" } {
+      return 0
+    }
+    foreach col [$t cget -columns] val $values {
+      $t set $item $col $val
+    }
+    return 1
+  }
+
+  proc updateRows {t values index} {
+    foreach val $values {
+      updateRow $t $val $index
+      incr index
+    }
+  }
+  proc updateCell {t col value index} {
+    set item [lindex [$t children {}] $index]
+    if { $item eq "" } {
+      return 0
+    }
+    $t set $item $col $value
+    return 1
+  }
+
+  proc updateCells {t col values index} {
+    foreach val $values {
+      updateCell $t $col $val $index
+      incr index
+    }
+  }
+  proc upsertRow {t values index} {
+    set items [$t children {}]
+    if {$index < [llength $items]} {
+      set item [lindex $items $index]
+      foreach col [$t cget -columns] val $values {
+        $t set $item $col $val
+      }
+    } else {
+      while {[llength $items] <= $index} {
+        set item [$t insert {} end]
+        lappend items $item
+      }
+      foreach col [$t cget -columns] val $values {
+        $t set $item $col $val
+      }
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+
+  proc upsertRows {t valueslist index} {
+    foreach values $valueslist {
+      set items [$t children {}]
+      if {$index < [llength $items]} {
+        set item [lindex $items $index]
+        foreach col [$t cget -columns] val $values {
+          $t set $item $col $val
+        }
+      } else {
+        while {[llength $items] <= $index} {
+          set item [$t insert {} end]
+          lappend items $item
+        }
+        foreach col [$t cget -columns] val $values {
+          $t set $item $col $val
+        }
+      }
+      incr index
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+
+  proc upsertCell {t col value index} {
+    set items [$t children {}]
+    if {$index < [llength $items]} {
+      set item [lindex $items $index]
+      $t set $item $col $value
+    } else {
+      while {[llength $items] <= $index} {
+        set item [$t insert {} end]
+        lappend items $item
+      }
+      $t set $item $col $value
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+
+  proc upsertCells {t col values index} {
+    foreach value $values {
+      set items [$t children {}]
+      if {$index < [llength $items]} {
+        set item [lindex $items $index]
+        $t set $item $col $value
+      } else {
+        while {[llength $items] <= $index} {
+          set item [$t insert {} end]
+          lappend items $item
+        }
+        $t set $item $col $value
+      }
+      incr index
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+
+  proc deleteAllRows {t} {
+    foreach item [$t children {}] {
+      $t delete $item
+    }
+  }
+
+  proc deleteRow {t index} {
+    set item [lindex [$t children {}] $index]
+    if { $item eq "" } {
+      return 0
+    }
+    $t delete $item
+    event generate $t <<TVItemsChanges>>
+    return 1
+  }
+
+  proc deleteRows {t indices} {
+    set items [$t children {}]
+    set sortedIndices [lsort -integer -decreasing $indices]
+    foreach index $sortedIndices {
+      if {$index < [llength $items]} {
+        set item [lindex $items $index]
+        $t delete $item
+      }
+    }
+    event generate $t <<TVItemsChanges>>
+  }
+
+  proc deleteCell {t col  index} {
+    return [updateCell $t $col "" $index]
+  }
+
+  proc deleteCells {t col indices} {
+    set items [$t children {}]
+    foreach index $indices {
+      if {$index < [llength $items]} {
+        set item [lindex $items $index]
+        $t set $item $col ""
+      }
+    }
+  }
+  proc getRow {t index} {
+    set item [lindex [$t children {}] $index]
+    if { $item ne "" } {
+      set rowData {}
+      foreach col [$t cget -columns] {
+        lappend rowData  [$t set $item $col]
+      }
+      return  $rowData
+    }
+    return
+  }
+  proc getAllRows {t} {
+    set rowsData {}
+    foreach item [$t children {}] {
+      set rowData {}
+      foreach col [$t cget -columns] {
+        lappend rowData [$t set $item $col]
+      }
+      lappend rowsData $rowData
+    }
+    return $rowsData
+  }
+  proc getRows {t indices} {
+    set rowsData {}
+    set items [$t children {}]
+
+    foreach index $indices {
+      if {$index < [llength $items]} {
+        set item [lindex $items $index]
+        set rowData {}
+        foreach col [$t cget -columns] {
+          lappend rowData [$t set $item $col]
+        }
+        lappend rowsData $rowData
+      }
+    }
+
+    return $rowsData
+  }
+
+  proc getCell {t col index} {
+    set item [lindex [$t children {}] $index]
+    if { $item ne "" } {
+      return [$t set $item $col]
+    }
+    return ""
+  }
+  proc getAllCells {t col} {
+    set cellsData {}
+    foreach item [$t children {}] {
+      lappend cellsData [$t set $item $col]
+    }
+    return $cellsData
+  }
+  proc getCells {t col indices} {
+    set cellsData {}
+    set items [$t children {}]
+
+    foreach index $indices {
+      if {$index < [llength $items]} {
+        set item [lindex $items $index]
+        lappend cellsData [$t set $item $col]
+      }
+    }
+
+    return $cellsData
+  }
+
+  # example data for table
+  proc generateLargeList {numEntries numColumns} {
+    set largeList {}
+
+    for {set i 1} {$i <= $numEntries} {incr i} {
+      set entry [list]
+      for {set j 1} {$j <= $numColumns} {incr j} {
+        lappend entry "Item_${i}_${j}"
+      }
+      lappend largeList $entry
+    }
+
+    return $largeList
+  }
+}
+
+#The dictionary is constructed in such a way that each node stores
+#the entire "tree extent" of its children.
+#This allows the global index to be calculated efficiently.
+namespace eval tvlib {
+  proc buildChildCountDict {tree} {
+    set childCountDict {}
+    foreach item [$tree children {}] {
+      set count [countChildren $tree $item]
+      dict set childCountDict $item $count
+    }
+    return $childCountDict
+  }
+
+  proc countChildren {tree item} {
+    set count 1  ;# Zählt sich selbst
+    foreach child [$tree children $item] {
+      incr count [countChildren $tree $child]
+    }
+    return $count
+  }
+  proc getGlobalIndexFromDict {tree targetItem childCountDict} {
+    set target [$tree parent $targetItem]
+    puts $target
+    set index 0
+    return [recursiveIndexSearch $tree {} $target $childCountDict $index]
+  }
+
+  proc recursiveIndexSearch {tree parent targetItem childCountDict idx} {
+    foreach item [$tree children $parent] {
+      if {$item eq $targetItem} {
+        return $idx
+      }
+      incr idx
+      set result [recursiveIndexSearch $tree $item $targetItem $childCountDict $idx]
+      if {$result != -1} {
+        return $result
+      }
+      incr idx [expr {[dict get $childCountDict $item] - 1}]
+    }
+    return -1 ;# Item nicht gefunden
+  }
 }
