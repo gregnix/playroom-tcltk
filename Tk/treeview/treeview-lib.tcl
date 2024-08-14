@@ -791,14 +791,25 @@ namespace eval tvlib {
 #The dictionary is constructed in such a way that each node stores
 #the entire "tree extent" of its children.
 #This allows the global index to be calculated efficiently.
-namespace eval tvlib {
+namespace eval {tvlib} {
+  variable rowsparentidx
+  set rowsparentidx {}
+
   proc buildChildCountDict {tree} {
-    set childCountDict {}
-    foreach item [$tree children {}] {
+    variable rowsparentidx
+    set rowsparentidx [addChildrenToDict $tree {}]
+    return 1
+  }
+
+  proc addChildrenToDict {tree parent {depth 1}} {
+    set dictRef {}
+    set childDepth [expr {$depth + 1}]
+    foreach item [$tree children $parent] {
       set count [countChildren $tree $item]
-      dict set childCountDict $item $count
+      dict set dictRef $depth $item  count $count
+      dict set dictRef $depth $item  child [addChildrenToDict $tree $item $childDepth]
     }
-    return $childCountDict
+    return $dictRef
   }
 
   proc countChildren {tree item} {
@@ -808,25 +819,158 @@ namespace eval tvlib {
     }
     return $count
   }
-  proc getGlobalIndexFromDict {tree targetItem childCountDict} {
-    set target [$tree parent $targetItem]
-    puts $target
-    set index 0
-    return [recursiveIndexSearch $tree {} $target $childCountDict $index]
+  proc keysrowsidx {} {
+    variable rowsparentidx
+    set keys [dict keys [dict get $rowsparentidx 0]]
+    return $keys
   }
 
-  proc recursiveIndexSearch {tree parent targetItem childCountDict idx} {
-    foreach item [$tree children $parent] {
+}
+
+namespace eval tvlib {
+  proc findRowFromDict {tree item} {
+    variable rowsparentidx
+
+    set index 0
+    set depth 1
+    return [getItemIndexFromDict $rowsparentidx $item $index $depth]
+  }
+
+  proc getItemIndexFromDict {dictRef targetItem index depth} {
+    # Hole alle Keys (Items) auf der aktuellen Tiefe
+    set items [dict keys [dict get $dictRef $depth]]
+
+    foreach item $items {
       if {$item eq $targetItem} {
-        return $idx
+        return $index ;# Wenn das Ziel-Item gefunden ist, gib den aktuellen Index zurück
       }
-      incr idx
-      set result [recursiveIndexSearch $tree $item $targetItem $childCountDict $idx]
-      if {$result != -1} {
-        return $result
+      incr index ;# Zählt das aktuelle Item selbst
+
+      # Zähle die Kinder dieses Items hinzu
+      set childCount [dict get $dictRef $depth $item count]
+      set childDict [dict get $dictRef $depth $item child]
+
+      if {[dict size $childDict] > 0} {
+        # Rekursiv durchlaufen der Kinder
+        set index [getItemIndexFromDict $childDict $targetItem $index [expr {$depth + 1}]]
+
+        if {$index != -1} {
+          return $index ;# Rückgabe, wenn das Ziel-Item gefunden wurde
+        }
       }
-      incr idx [expr {[dict get $childCountDict $item] - 1}]
     }
-    return -1 ;# Item nicht gefunden
+    return -1 ;# Wenn das Ziel-Item nicht gefunden wurde
   }
 }
+
+# Beispiel zur Nutzung
+# set row [tvlib::findRowFromDict $tree "I005"]
+# puts "Der globale Index von I005 ist $row"
+namespace eval tvlib {
+  variable rowsparentidx
+  
+  proc sumCount {items depth} {
+    variable rowsparentidx
+    set sum 0
+    foreach item $items {
+      set sum [expr {$sum + [dict get $rowsparentidx $depth $item count]}]
+    }
+    return $sum
+  }
+  # Initialisiere das Resultat mit dem Index oder Item
+  proc findRowFromDict {tree item} {
+    variable rowsparentidx
+    if  {[$tree children $item] eq ""} {
+      set result [$tree index $item]
+    } else {
+      set result $item
+    }
+    set index 0
+    set currentItem $item
+
+    # Schleife, um von `item` zu seinem Parent hochzuwandern
+    while { $currentItem ne "" } {
+      set parent [$tree parent $currentItem]
+      #   set index [searchItemInDict $rowsparentidx $currentItem $parent 0 $index]
+      lappend result $parent
+      set currentItem $parent
+    }
+    set result [lrange $result 0 end-1]
+    set currentItem [lindex $result end]
+    while { $currentItem ne "" } {
+      set prev [$tree prev $currentItem]
+      #   set index [searchItemInDict $rowsparentidx $currentItem $parent 0 $index]
+      lappend prevroot $prev
+      set currentItem $prev
+    }
+    set sum [sumCount [lrange $prevroot 0 end-1] 1]
+    puts "item: $item"
+    puts "prevroot: $prevroot :: $sum "
+    puts "result $result\n"
+    puts [dict get $rowsparentidx 1 [lindex $result end]]\n
+    #puts [dict get $rowsparentidx 1 [lindex $result end] child 2 [lindex $result end-1]]\n
+    puts \n\n
+    set dvar $rowsparentidx
+    dict for {key value} $rowsparentidx {
+      if {$key eq $item} {
+        puts "if fertig $item"
+      } else {
+        puts "if fertig $item"
+      }
+        puts "ex [dict exists $dvar $key]"
+      while {[dict exists $dvar $key]} {
+        
+        dict for {key value} $rowsparentidx {
+  
+          if {$key eq $item} {
+            puts "if 2fertig:: k: $key ::: i: $item"
+            set key -1
+          } else {
+            puts "el 2fertig:: k: $key ::: i: $item"
+            set key -1
+          }
+          puts "item: $item\n"
+          puts "Key: $key - Value: $value"
+          
+         #set dvar [dict get $dvar $key]
+        }
+        incr key
+      }
+      
+    }
+    return $result
+  }
+
+
+  proc searchItemInDict {dictRef targetItem parent depth index} {
+    # Hole alle Keys (Items) auf der aktuellen Tiefe
+    set items [dict keys [dict get $dictRef $depth]]
+
+    foreach item $items {
+      if {$item eq $targetItem} {
+        return $index ;# Wenn das Ziel-Item gefunden ist, gib den aktuellen Index zurück
+      }
+
+      # Zähle die Kinder dieses Items hinzu
+      set childCount [dict get $dictRef $depth $item count]
+      set childDict [dict get $dictRef $depth $item child]
+
+      incr index ;# Zählt das aktuelle Item selbst
+
+      if {[dict size $childDict] > 0} {
+        # Rekursiv durchlaufen der Kinder
+        set index [searchItemInDict $childDict $targetItem $item [expr {$depth + 1}] $index]
+        if {$index != -1} {
+          return $index ;# Rückgabe, wenn das Ziel-Item gefunden wurde
+        }
+      }
+    }
+
+    return -1 ;# Wenn das Ziel-Item nicht gefunden wurde
+  }
+}
+
+# Beispiel zur Nutzung
+# set row [tvlib::findRowFromDict $tree "I005"]
+# puts "Der globale Index von I005 ist $row"
+
