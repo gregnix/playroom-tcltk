@@ -795,9 +795,9 @@ namespace eval {tvlib} {
   variable rowsparentidx
   set rowsparentidx {}
 
-  proc buildChildCountDict {tree} {
+  proc buildChildCountDict {tree {depth 1}} {
     variable rowsparentidx
-    set rowsparentidx [addChildrenToDict $tree {}]
+    set rowsparentidx [addChildrenToDict $tree {} $depth]
     return 1
   }
 
@@ -807,7 +807,7 @@ namespace eval {tvlib} {
     foreach item [$tree children $parent] {
       set count [countChildren $tree $item]
       dict set dictRef $depth $item  count $count
-      dict set dictRef $depth $item  child [addChildrenToDict $tree $item $childDepth]
+      dict set dictRef $depth $item  cdepth [addChildrenToDict $tree $item $childDepth]
     }
     return $dictRef
   }
