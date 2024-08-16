@@ -1,27 +1,29 @@
 #! /usr/bin/env tclsh
 
-# 20240813
-#treeview-lib.tcl
+# 20240816
+# treeview-lib.tcl
 
-#https://core.tcl-lang.org/tk/tktview/2a6c62afd9
+# https://core.tcl-lang.org/tk/tktview/2a6c62afd9
 
 package require struct::list
-#::struct::list flatten use in proc showVisibleItems
+# ::struct::list flatten is used in the proc showVisibleItems
 package require dicttool
-# dict is_dict use in procs dict2tvtree collectKeys collectKeysPoint
+# dict is_dict is used in the procs dict2tvtree, collectKeys, and collectKeysPoint
 
-# a. import export dict and tree
-# b. band stripe
-# c. treeview extra procs
-# d. extra key
-# e. example datas
-# f. search and open node
-# g. creates a new treeview configured as a table with new, update ,upsert
+# a. Import and export of dict and tree structures
+# b. Band (stripe) functionality for treeview rows
+# c. Additional treeview utility procs
+# d. Additional key management procs
+# e. Example data
+# f. Searching and opening nodes in treeview
+# g. Creating a new treeview configured as a table with options for adding, updating, and upserting data
 
 ################################
-# a. import export dict and tree
+# a. Import and export of dict and tree structures
 ################################
 namespace eval tvlib {
+
+  # Checks if the first elements of all sublists are equal
   proc checkFirstElementsEqual {listOfLists} {
     if {[llength $listOfLists] < "2"} {
       return 0
@@ -38,7 +40,8 @@ namespace eval tvlib {
     return 1
   }
 
-  # special with key == ":" then list
+  # Converts a dictionary into a tree structure
+  # Special case: if the key is ":", the value is treated as a list
   proc dict2tvtree {widget parent dict} {
     foreach {key value} [dict get $dict] {
       if {[dict exists $dict $key]} {
@@ -56,7 +59,6 @@ namespace eval tvlib {
           if {$stdList ne {}} {
             puts $newList
             set newList $stdList
-
           }
           $widget insert $parent end -text $key -values [list $newList]
           continue
@@ -84,20 +86,17 @@ namespace eval tvlib {
             } else {
               $widget insert $parent end -text $key -values [list $keyValue]
             }
-
-
-
           }
         }
       }
     }
   }
 
-  # Function to recursively convert a tree into a dictionary
-  # own interpretation with the same keys
+  # Recursively converts a tree structure into a dictionary
+  # Uses custom interpretation with the same keys
   proc tvtree2dict {tree node} {
     set result {}
-    # for equal keys
+    # To handle equal keys
     set checkFEE 0
     set checkkey ""
     # Get the children of the current node
@@ -124,7 +123,7 @@ namespace eval tvlib {
             set checkFEE 1
             set checkkey $key
           }
-        }  else {
+        } else {
           dict set result $key $value
         }
       }
@@ -139,19 +138,21 @@ namespace eval tvlib {
 }
 
 ################
-# b. band stripe
+# b. Band (stripe) functionality for treeview rows
 ################
 # tvlib::bandInit $tree
 # tvlib::band $tree
-## use event:
+## Use event:
 # tvlib::band_event $tree
 #
-# for band striped see at:
+# For striped bands, see at:
 # https://wiki.tcl-lang.org/page/dgw%3A%3Atvmixins
 # https://chiselapp.com/user/dgroth/repository/tclcode/index
 # https://wiki.tcl-lang.org/page/Tile+Table
 # https://www.tcl.tk/man/tcl9.0/TkCmd/ttk_treeview.html#M100
 namespace eval tvlib {
+
+  # Recursively apply alternating background colors to rows
   proc band {tree {parent {}} {i 0} } {
     foreach item [$tree children $parent] {
       set t [expr {$i % 2}]
@@ -164,22 +165,25 @@ namespace eval tvlib {
     return $i
   }
 
+  # Initialize banding with specific colors
   proc bandInit {tree {color0 #FFFFFF} {color1 #E0E0E0}} {
     $tree tag configure band0 -background $color0
     $tree tag configure band1 -background $color1
     bind $tree <<TVItemsChanges>> [list [namespace current]::band $tree]
   }
 
+  # Trigger a banding event
   proc bandEvent {tree} {
     event generate $tree <<TVItemsChanges>> -data [$tree selection]
   }
-
 }
 
 #########################
-# c. treeview extra procs
+# c. Additional treeview utility procs
 #########################
 namespace eval tvlib {
+
+  # Recursively calculates the total number of nodes in the tree
   proc treesize {tree {p {}}} {
     set size 0
     foreach c [$tree children $p] {
@@ -189,6 +193,7 @@ namespace eval tvlib {
     return $size
   }
 
+  # Recursively calculates the depth of the tree
   proc treedepth {tree {parent {}} {depth 0}} {
     set max $depth
     foreach item [$tree children $parent] {
@@ -199,6 +204,8 @@ namespace eval tvlib {
     }
     return $max
   }
+
+  # Calculates the depth of a specific item in the tree
   proc itemdepth {tree item} {
     set depth 0
     while {$item ne ""} {
@@ -207,6 +214,8 @@ namespace eval tvlib {
     }
     return $depth
   }
+
+  # Converts the tree structure into a nested dictionary
   proc tv2list {tree {parent {}}} {
     set data {}
     foreach c [$tree children $parent] {
@@ -217,10 +226,11 @@ namespace eval tvlib {
 }
 
 ####################
-# d. key extra procs
+# d. Additional key management procs
 ####################
 namespace eval tvlib {
-  #
+
+  # Recursively collect all keys from a dictionary
   proc collectKeys {dictVar {keysList {}}} {
     foreach {key value} [dict get $dictVar] {
       if { [checkFirstElementsEqual $value] } {
@@ -240,7 +250,7 @@ namespace eval tvlib {
     return $keysList
   }
 
-  # with full path with point
+  # Recursively collect all keys from a dictionary with full paths using dots
   proc collectKeysPoint {dictVar {prefix ""} {keysList {}}} {
     foreach {key value} [dict get $dictVar] {
       if { [checkFirstElementsEqual $value] } {
@@ -260,6 +270,7 @@ namespace eval tvlib {
     return $keysList
   }
 
+  # Extract the last parts (tails) of the keys separated by dots
   proc extractTails {keys} {
     set tails {}
     foreach key $keys {
@@ -268,6 +279,8 @@ namespace eval tvlib {
     }
     return $tails
   }
+
+  # Extract the first parts (heads) of the keys separated by dots
   proc extractHeads {keys} {
     set heads {}
     foreach key $keys {
@@ -277,7 +290,7 @@ namespace eval tvlib {
     return [uniqueList2 $heads]
   }
 
-  # use in proc extractHeads
+  # Returns a list of unique elements (used in extractHeads)
   proc uniqueList2 {list} {
     set dict {}
     foreach item $list {
@@ -286,7 +299,8 @@ namespace eval tvlib {
     dict keys $dict
   }
 
-  # use in proc tvtree2dict
+  # Expands a list by separating the key-value pairs
+  # Used in tvtree2dict
   proc expandList {inputList} {
     set key [lindex $inputList 0]
     set values [lindex $inputList 1]
@@ -300,18 +314,17 @@ namespace eval tvlib {
 }
 
 #####################################
-# d. example datas
-# tvlib::testCreateTreeStruct $tree 4
+# e. Example data
+# Usage: tvlib::testCreateTreeStruct $tree 4
 #####################################
 namespace eval tvlib {
   variable exampleDatas
 
-  # d.1 data dict for example datas
+  # e.1 Example data dictionary
   dict set exampleDatas abc12 {a1 {b11 {a11 {b1111 c1 b1112 c1}} b12 {a12 {b1211 c1 b1212 c1}}} a2 {b21 {a21 {b2111 c1 b2112 c1}} b22 {a22 {b2211 c1 b2212 c1}}}}
   dict set exampleDatas person {person  {name "John Doe" age 30.8 address {street "123 Main St" city "Anytown"}  employees {  {name "Alice Smith" } {name "Bob Smith"} {name "John Good"} {name "Jane Good"}} } job {title "Developer" company "Works"}}
 
-
-  # d.2 two procs for test data for tree struct
+  # e.2 Two procs for generating test data for tree structures
   proc testAddNodes {tree parent depth} {
     if {$depth <= 0} {
       return
@@ -323,6 +336,7 @@ namespace eval tvlib {
       testAddNodes $tree $id [expr {$depth - 1}]
     }
   }
+
   proc testCreateTreeStruct {tree {depth 5} } {
     foreach txt {first second third fourth five} {
       set id [$tree insert {} end -text "$txt item" -open 1]
@@ -331,8 +345,7 @@ namespace eval tvlib {
     }
   }
 
-  #https://wiki.tcl-lang.org/page/info
-  # special with key == ":" then list
+  # Collects and returns Tcl/Tk environment information in a dictionary
   proc infotcltk {} {
     lappend infodata hostname [info hostname]
     lappend infodata library [info library]
@@ -344,7 +357,6 @@ namespace eval tvlib {
 
     dict set data tm [tcl::tm::path list]
 
-    #https://wiki.tcl-lang.org/page/Tcl+Package+User+Guide
     foreach i [lsort [package names]] {
       if {[string length [package provide $i]]} {
         lappend loaded  $i [package present $i]
@@ -357,28 +369,28 @@ namespace eval tvlib {
     }
     dict set data package all $allp
 
-    #namespace
+    # Add namespace information to the data dictionary
     dict set data namespace [listns]
 
     set ns ::
     set pat [set ns]::*
 
     foreach proc [lsort [info procs $pat]] {
-      dict lappend data  procs  [list : $proc]
+      dict lappend data procs [list : $proc]
     }
 
     foreach command [lsort [info commands $pat]] {
-      dict lappend data commands  [list : $command]
+      dict lappend data commands [list : $command]
     }
 
     foreach function [lsort [info functions $pat]] {
-      dict lappend data functions  [list : $function]
+      dict lappend data functions [list : $function]
     }
 
     foreach var [info vars $pat] {
       if {[array exists $var]} {
         dict lappend date array $var [list {*}[array get $var]]
-      } {
+      } else {
         dict lappend date variable $var [list [set $var]]
       }
     }
@@ -387,10 +399,26 @@ namespace eval tvlib {
     return $data
   }
 
+  # Generate example data for the table with a specified number of entries and columns
+  proc generateLargeList {numEntries numColumns} {
+    set largeList {}
+    for {set i 1} {$i <= $numEntries} {incr i} {
+      set entry [list]
+      for {set j 1} {$j <= $numColumns} {incr j} {
+        lappend entry "Item_${i}_${j}"
+      }
+      lappend largeList $entry
+    }
+    return $largeList
+  }
+  
+  
+  
+  # Recursively lists namespaces, commands, functions, and variables
   proc listns {{parentns ::}} {
     set result [dict create]
-    dict set result commands  [listnscommands $parentns]
-    dict set result functions  [listnsfunctions $parentns]
+    dict set result commands [listnscommands $parentns]
+    dict set result functions [listnsfunctions $parentns]
     dict set result procs [listnsprocs $parentns]
     dict set result vars [listnsvars $parentns]
 
@@ -400,6 +428,7 @@ namespace eval tvlib {
     return $result
   }
 
+  # List procedures in the specified namespace
   proc listnsprocs {ns} {
     set result ""
     foreach proc [lsort [info procs ${ns}::*]] {
@@ -408,6 +437,7 @@ namespace eval tvlib {
     return $result
   }
 
+  # List commands in the specified namespace
   proc listnscommands {ns} {
     set result ""
     foreach command [lsort [info commands ${ns}::*]] {
@@ -415,6 +445,8 @@ namespace eval tvlib {
     }
     return $result
   }
+
+  # List functions in the specified namespace
   proc listnsfunctions {ns} {
     set result ""
     foreach function [lsort [info functions ${ns}::*]] {
@@ -423,45 +455,32 @@ namespace eval tvlib {
     return $result
   }
 
+  # List variables in the specified namespace, including arrays
   proc listnsvars {ns} {
-    #set result ""
-    #set resultvars ""
-    #set resultarray ""
     set date ""
     foreach var [lsort [info vars ${ns}::*]] {
-
       if {[array exists $var]} {
-        #lappend resultarray [list ":" $var]
         dict set date array $var [list {*}[array get $var]]
-      } {
-        #lappend resultvars [list ":" $var]
+      } else {
         if {[catch {set $var} msg]} {
           puts "catch error: proc listnsvar :: $var"
           dict set date variable $var [list catch_error]
         } else {
           dict set date variable $var [list ":" [list [set $var]]]
         }
-
       }
     }
-    #dict set result array $resultarray
-    #dict set result variable $resultvars
     dict set data variablen $date
-    #return $result
     return $data
   }
 }
 
-
-
-
 #########################
-# e. search and open node
+# f. Searching and opening nodes in treeview
 #########################
 namespace eval tvlib {
 
-  # e.1 set list [tvlib::showVisibleItems $tree "child 1"]
-  # procs: openParentNodes showVisibleItems showVisibleChildren
+  # Open all parent nodes of the specified item
   proc openParentNodes {tree item} {
     set parent [$tree parent $item]
     if {$parent ne ""} {
@@ -469,6 +488,8 @@ namespace eval tvlib {
       openParentNodes $tree $parent
     }
   }
+
+  # Find and return a list of all visible items matching the search string
   proc showVisibleItems {tree searchString} {
     set resultList [list]
     foreach item [$tree children {}] {
@@ -482,6 +503,7 @@ namespace eval tvlib {
     return [::struct::list flatten -full $resultList]
   }
 
+  # Recursively search for matching visible children
   proc showVisibleChildren {tree parent searchString} {
     set resultList [list ]
     foreach item [$tree children $parent] {
@@ -495,26 +517,22 @@ namespace eval tvlib {
     }
     return $resultList
   }
-
 }
 
+#########################
+# g. Creating a new treeview configured as a table
+#########################
 namespace eval tvlib {
-  # g. use of ttk::treeview to build a table
-  # proc newTable
-  # creates a new treeview configured as a table
-  # new Row, Rows, Cell, Cells
-  # update Row, Rows, Cell, Cells
-  # upsert Row, Rows, Cell, Cells
-  # delete Row, Rows, cell, Cells
 
+  # Create a new treeview widget configured as a table
   proc newTable {w colnames} {
     set frt [ttk::frame $w.frt]
-    # create the tree showing headings only, and define column names
+    # Create the treeview with headings only, and define column names
     set tree [ttk::treeview $frt.tree -show headings -columns $colnames\
     -yscrollcommand [list $frt.vsb set] -selectmode browse]
     set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
 
-    # set the text display for columns headers
+    # Set the text display for column headers
     foreach colname $colnames {
       $tree heading $colname -text $colname
     }
@@ -525,6 +543,7 @@ namespace eval tvlib {
     return $tree
   }
 
+  # Add a new row to the table
   proc addRow {t {values ""}} {
     set item [$t insert {} end]
     foreach col [$t cget -columns] val $values {
@@ -533,6 +552,7 @@ namespace eval tvlib {
     event generate $t <<TVItemsChanges>>
   }
 
+  # Add multiple rows to the table
   proc addRows {t {valueslist ""}} {
     foreach values $valueslist {
       set item [$t insert {} end]
@@ -542,11 +562,15 @@ namespace eval tvlib {
     }
     event generate $t <<TVItemsChanges>>
   }
+
+  # Add a single cell to the table
   proc addCell {t col value {pos end}} {
     set item [$t insert {} $pos]
     $t set $item $col $val
     event generate $t <<TVItemsChanges>>
   }
+
+  # Add multiple cells to the table
   proc addCells {t col values {pos end}} {
     set item [lindex [$t children {}] $pos]
     set index [$t index $item]
@@ -557,6 +581,8 @@ namespace eval tvlib {
     }
     event generate $t <<TVItemsChanges>>
   }
+
+  # Update a specific row in the table
   proc updateRow {t values index} {
     set item [lindex [$t children {}] $index]
     if { $item eq "" } {
@@ -568,12 +594,15 @@ namespace eval tvlib {
     return 1
   }
 
+  # Update multiple rows in the table
   proc updateRows {t values index} {
     foreach val $values {
       updateRow $t $val $index
       incr index
     }
   }
+
+  # Update a specific cell in the table
   proc updateCell {t col value index} {
     set item [lindex [$t children {}] $index]
     if { $item eq "" } {
@@ -583,12 +612,15 @@ namespace eval tvlib {
     return 1
   }
 
+  # Update multiple cells in the table
   proc updateCells {t col values index} {
     foreach val $values {
       updateCell $t $col $val $index
       incr index
     }
   }
+
+  # Insert or update a specific row in the table
   proc upsertRow {t values index} {
     set items [$t children {}]
     if {$index < [llength $items]} {
@@ -608,6 +640,7 @@ namespace eval tvlib {
     event generate $t <<TVItemsChanges>>
   }
 
+  # Insert or update multiple rows in the table
   proc upsertRows {t valueslist index} {
     foreach values $valueslist {
       set items [$t children {}]
@@ -630,6 +663,7 @@ namespace eval tvlib {
     event generate $t <<TVItemsChanges>>
   }
 
+  # Insert or update a specific cell in the table
   proc upsertCell {t col value index} {
     set items [$t children {}]
     if {$index < [llength $items]} {
@@ -645,6 +679,7 @@ namespace eval tvlib {
     event generate $t <<TVItemsChanges>>
   }
 
+  # Insert or update multiple cells in the table
   proc upsertCells {t col values index} {
     foreach value $values {
       set items [$t children {}]
@@ -663,12 +698,14 @@ namespace eval tvlib {
     event generate $t <<TVItemsChanges>>
   }
 
+  # Delete all rows in the table
   proc deleteAllRows {t} {
     foreach item [$t children {}] {
       $t delete $item
     }
   }
 
+  # Delete a specific row in the table
   proc deleteRow {t index} {
     set item [lindex [$t children {}] $index]
     if { $item eq "" } {
@@ -679,6 +716,7 @@ namespace eval tvlib {
     return 1
   }
 
+  # Delete multiple rows in the table based on their indices
   proc deleteRows {t indices} {
     set items [$t children {}]
     set sortedIndices [lsort -integer -decreasing $indices]
@@ -691,10 +729,12 @@ namespace eval tvlib {
     event generate $t <<TVItemsChanges>>
   }
 
-  proc deleteCell {t col  index} {
+  # Delete a specific cell in the table
+  proc deleteCell {t col index} {
     return [updateCell $t $col "" $index]
   }
 
+  # Delete multiple cells in the table based on their indices
   proc deleteCells {t col indices} {
     set items [$t children {}]
     foreach index $indices {
@@ -704,6 +744,8 @@ namespace eval tvlib {
       }
     }
   }
+
+  # Retrieve data from a specific row in the table
   proc getRow {t index} {
     set item [lindex [$t children {}] $index]
     if { $item ne "" } {
@@ -715,6 +757,8 @@ namespace eval tvlib {
     }
     return
   }
+
+  # Retrieve data from all rows in the table
   proc getAllRows {t} {
     set rowsData {}
     foreach item [$t children {}] {
@@ -726,10 +770,11 @@ namespace eval tvlib {
     }
     return $rowsData
   }
+
+  # Retrieve data from multiple rows based on their indices
   proc getRows {t indices} {
     set rowsData {}
     set items [$t children {}]
-
     foreach index $indices {
       if {$index < [llength $items]} {
         set item [lindex $items $index]
@@ -740,10 +785,10 @@ namespace eval tvlib {
         lappend rowsData $rowData
       }
     }
-
     return $rowsData
   }
 
+  # Retrieve data from a specific cell in the table
   proc getCell {t col index} {
     set item [lindex [$t children {}] $index]
     if { $item ne "" } {
@@ -751,6 +796,8 @@ namespace eval tvlib {
     }
     return ""
   }
+
+  # Retrieve data from all cells in a specific column
   proc getAllCells {t col} {
     set cellsData {}
     foreach item [$t children {}] {
@@ -758,49 +805,93 @@ namespace eval tvlib {
     }
     return $cellsData
   }
+
+  # Retrieve data from multiple cells based on their indices
   proc getCells {t col indices} {
     set cellsData {}
     set items [$t children {}]
-
     foreach index $indices {
       if {$index < [llength $items]} {
         set item [lindex $items $index]
         lappend cellsData [$t set $item $col]
       }
     }
-
     return $cellsData
   }
+  
+}
 
-  # example data for table
-  proc generateLargeList {numEntries numColumns} {
-    set largeList {}
+# helper procs
+################################
+namespace eval tvlib {
 
-    for {set i 1} {$i <= $numEntries} {incr i} {
-      set entry [list]
-      for {set j 1} {$j <= $numColumns} {incr j} {
-        lappend entry "Item_${i}_${j}"
-      }
-      lappend largeList $entry
+  # Expand all nodes in the tree
+  proc expandAll {tree item} {
+    # Expand the specified item
+    $tree item $item -open true
+
+    # Loop through all children of the item
+    foreach child [$tree children $item] {
+      # Recursive call to expand all children
+      expandAll $tree $child
     }
+  }
 
-    return $largeList
+  # Collapse all nodes in the tree
+  proc collapseAll {tree item} {
+    # Collapse the specified item
+    $tree item $item -open false
+
+    # Loop through all children of the item
+    foreach child [$tree children $item] {
+      # Recursive call to collapse all children
+      collapseAll $tree $child
+    }
+  }
+
+  # Check if the specified item is a leaf (no children)
+  proc isLeaf {tree item} {
+    if {[llength [$tree children $item]] == 0} {
+      return 1
+    } else {
+      return 0
+    }
+  }
+
+  # Find the previous non-leaf item relative to the specified item
+  proc findPreviousNonLeaf {tree item} {
+    set prevItem [$tree prev $item]
+    set abst 1
+    while {$prevItem ne ""} {
+      incr abst
+      if {![isLeaf $tree $prevItem]} {
+        return [list $prevItem $abst]
+      }
+      set prevItem [$tree prev $prevItem]
+    }
+    if {$prevItem eq "" } {
+      set prevItem [$tree parent $item]
+    }
+    return [list $prevItem $abst]
   }
 }
 
-#The dictionary is constructed in such a way that each node stores
-#the entire "tree extent" of its children.
-#This allows the global index to be calculated efficiently.
+
+# The dictionary is constructed in such a way that each node stores
+# the entire "tree extent" of its children.
+# This allows the global index to be calculated efficiently.
 namespace eval {tvlib} {
   variable rowsparentidx
   set rowsparentidx {}
 
+  # Build a dictionary that stores the child count for each node
   proc buildChildCountDict {tree {depth 1}} {
     variable rowsparentidx
     set rowsparentidx [addChildrenToDict $tree {} $depth]
     return 1
   }
 
+  # Recursively add child nodes and their counts to the dictionary
   proc addChildrenToDict {tree parent {depth 1}} {
     set dictRef {}
     set childDepth [expr {$depth + 1}]
@@ -812,165 +903,104 @@ namespace eval {tvlib} {
     return $dictRef
   }
 
+  # Count the number of children for a given item
   proc countChildren {tree item} {
-    set count 1  ;# Zählt sich selbst
+    set count 1  ;# Counts itself
     foreach child [$tree children $item] {
       incr count [countChildren $tree $child]
     }
     return $count
   }
+
+  # Get the keys from the rowsparentidx dictionary at depth 0
   proc keysrowsidx {} {
     variable rowsparentidx
     set keys [dict keys [dict get $rowsparentidx 0]]
     return $keys
   }
-
 }
 
-namespace eval tvlib {
-  proc findRowFromDict {tree item} {
-    variable rowsparentidx
 
-    set index 0
-    set depth 1
-    return [getItemIndexFromDict $rowsparentidx $item $index $depth]
-  }
-
-  proc getItemIndexFromDict {dictRef targetItem index depth} {
-    # Hole alle Keys (Items) auf der aktuellen Tiefe
-    set items [dict keys [dict get $dictRef $depth]]
-
-    foreach item $items {
-      if {$item eq $targetItem} {
-        return $index ;# Wenn das Ziel-Item gefunden ist, gib den aktuellen Index zurück
-      }
-      incr index ;# Zählt das aktuelle Item selbst
-
-      # Zähle die Kinder dieses Items hinzu
-      set childCount [dict get $dictRef $depth $item count]
-      set childDict [dict get $dictRef $depth $item child]
-
-      if {[dict size $childDict] > 0} {
-        # Rekursiv durchlaufen der Kinder
-        set index [getItemIndexFromDict $childDict $targetItem $index [expr {$depth + 1}]]
-
-        if {$index != -1} {
-          return $index ;# Rückgabe, wenn das Ziel-Item gefunden wurde
-        }
-      }
-    }
-    return -1 ;# Wenn das Ziel-Item nicht gefunden wurde
-  }
-}
-
-# Beispiel zur Nutzung
-# set row [tvlib::findRowFromDict $tree "I005"]
-# puts "Der globale Index von I005 ist $row"
 namespace eval tvlib {
   variable rowsparentidx
-  
-  proc sumCount {items depth} {
+
+  # Calculate the row index based on the items and their depth
+  proc rowindexCount {items depth} {
     variable rowsparentidx
-    set sum 0
+    set rowindex 0
     foreach item $items {
-      set sum [expr {$sum + [dict get $rowsparentidx $depth $item count]}]
+      set rowindex [expr {$rowindex + [dict get $rowsparentidx $depth $item count]}]
     }
-    return $sum
+    return $rowindex
   }
-  # Initialisiere das Resultat mit dem Index oder Item
-  proc findRowFromDict {tree item} {
+  
+  proc findRowFromDict {tree item {rowindex 0}} {
     variable rowsparentidx
-    if  {[$tree children $item] eq ""} {
+    set rowindex 0
+      
+    if {[tvlib::isLeaf $tree $item] } {
+      # Find the previous non-leaf item and adjust the item and rowindex
+      set previousNonLeafList [tvlib::findPreviousNonLeaf $tree $item]
+      set item [lindex $previousNonLeafList 0]
+      set rowindex  [expr {$rowindex + [lindex $previousNonLeafList 1]}]
+      }
+    
+    if {[$tree children $item] eq ""} {
       set result [$tree index $item]
+      set  rowindex  [expr {$rowindex +  [$tree index $item]}]
     } else {
       set result $item
     }
     set index 0
     set currentItem $item
 
-    # Schleife, um von `item` zu seinem Parent hochzuwandern
+   # Traverse upwards to find all parent nodes
     while { $currentItem ne "" } {
       set parent [$tree parent $currentItem]
-      #   set index [searchItemInDict $rowsparentidx $currentItem $parent 0 $index]
       lappend result $parent
       set currentItem $parent
     }
     set result [lrange $result 0 end-1]
     set currentItem [lindex $result end]
+
+   # Find previous siblings at the same depth
+    set prevroot [list]
     while { $currentItem ne "" } {
       set prev [$tree prev $currentItem]
-      #   set index [searchItemInDict $rowsparentidx $currentItem $parent 0 $index]
       lappend prevroot $prev
       set currentItem $prev
     }
-    set sum [sumCount [lrange $prevroot 0 end-1] 1]
-    puts "item: $item"
-    puts "prevroot: $prevroot :: $sum "
-    puts "result $result\n"
-    puts [dict get $rowsparentidx 1 [lindex $result end]]\n
-    #puts [dict get $rowsparentidx 1 [lindex $result end] child 2 [lindex $result end-1]]\n
-    puts \n\n
-    set dvar $rowsparentidx
-    dict for {key value} $rowsparentidx {
-      if {$key eq $item} {
-        puts "if fertig $item"
-      } else {
-        puts "if fertig $item"
-      }
-        puts "ex [dict exists $dvar $key]"
-      while {[dict exists $dvar $key]} {
-        
-        dict for {key value} $rowsparentidx {
-  
-          if {$key eq $item} {
-            puts "if 2fertig:: k: $key ::: i: $item"
-            set key -1
+    
+    # Calculate the row index based on previous siblings
+    set rowindex [expr {$rowindex + [rowindexCount [lrange $prevroot 0 end-1] 1]}]
+    
+    
+    # Look up the depth-based dictionary and adjust the row index
+    set dvar [dict get $rowsparentidx 1 [lindex $result end] cdepth]
+    if {$item in [dict keys [dict get $rowsparentidx 1]]} {
+      set key -10
+
+    } else {
+      set key 2
+    }
+    
+    # Traverse the dictionary to accumulate row counts
+    while {[dict exists $dvar $key]} {
+      dict for {key value} $dvar {
+        foreach  k  [dict keys [dict get $value]] {
+          if {$k eq $item} {
+            set rowindex [expr {$rowindex + 1}]
+            set key -10
+            break
           } else {
-            puts "el 2fertig:: k: $key ::: i: $item"
-            set key -1
+            set rowindex [expr {$rowindex + [dict get $value $k count]}]
+            set key -10
+
           }
-          puts "item: $item\n"
-          puts "Key: $key - Value: $value"
-          
-         #set dvar [dict get $dvar $key]
         }
-        incr key
-      }
-      
-    }
-    return $result
-  }
-
-
-  proc searchItemInDict {dictRef targetItem parent depth index} {
-    # Hole alle Keys (Items) auf der aktuellen Tiefe
-    set items [dict keys [dict get $dictRef $depth]]
-
-    foreach item $items {
-      if {$item eq $targetItem} {
-        return $index ;# Wenn das Ziel-Item gefunden ist, gib den aktuellen Index zurück
-      }
-
-      # Zähle die Kinder dieses Items hinzu
-      set childCount [dict get $dictRef $depth $item count]
-      set childDict [dict get $dictRef $depth $item child]
-
-      incr index ;# Zählt das aktuelle Item selbst
-
-      if {[dict size $childDict] > 0} {
-        # Rekursiv durchlaufen der Kinder
-        set index [searchItemInDict $childDict $targetItem $item [expr {$depth + 1}] $index]
-        if {$index != -1} {
-          return $index ;# Rückgabe, wenn das Ziel-Item gefunden wurde
-        }
+        #incr key
       }
     }
-
-    return -1 ;# Wenn das Ziel-Item nicht gefunden wurde
+    return $rowindex
   }
 }
-
-# Beispiel zur Nutzung
-# set row [tvlib::findRowFromDict $tree "I005"]
-# puts "Der globale Index von I005 ist $row"
-

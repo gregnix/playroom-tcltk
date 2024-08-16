@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240813
+#20240816
 
 # treeview-lib-example.tcl
 
@@ -14,74 +14,8 @@ source treeview-lib.tcl
 
 namespace eval tvlib {
   variable rowsparentidx
+
   
-  proc findRowFromDict {tree item} {
-    variable rowsparentidx
-    puts $rowsparentidx
-    puts \n\n
-    puts [dict keys [dict get $rowsparentidx 1]]
-    puts [lindex [dict keys [dict get $rowsparentidx 1]]1 0]
-    puts [dict get $rowsparentidx 1 [lindex [dict keys [dict get $rowsparentidx 1]]1 0]]
-    puts \n\n
-    if  {[$tree children $item] eq ""} {
-      set result [$tree index $item]
-    } else {
-      set result $item
-    }
-    set index 0
-    set currentItem $item
-
-    # Schleife, um von `item` zu seinem Parent hochzuwandern
-    while { $currentItem ne "" } {
-      set parent [$tree parent $currentItem]
-      #   set index [searchItemInDict $rowsparentidx $currentItem $parent 0 $index]
-      lappend result $parent
-      set currentItem $parent
-    }
-    set result [lrange $result 0 end-1]
-    set currentItem [lindex $result end]
-    # schleife vorgänger in gleicher tiefe 1
-    while { $currentItem ne "" } {
-      set prev [$tree prev $currentItem]
-      #   set index [searchItemInDict $rowsparentidx $currentItem $parent 0 $index]
-      lappend prevroot $prev
-      set currentItem $prev
-    }
-    
-    set sum [sumCount [lrange $prevroot 0 end-1] 1]
-    puts "item: $item"
-    puts "prevroot: $prevroot :: $sum "
-    puts "result $result\n"
-    puts [dict get $rowsparentidx 1 [lindex $result end]]\n
-    #puts [dict get $rowsparentidx 1 [lindex $result end] child 2 [lindex $result end-1]]\n
-    puts \n\n
-    set dvar $rowsparentidx
-    set d1 0
-    set key 1
-    while {[dict exists $dvar $key]} {
-      set d2 0
-      set d3 0
-      dict for {key value} $rowsparentidx {
-        incr d1; incr d2; incr d3
-        puts "dfor1 ::: k: $key ::: i: $item :::[dict keys [dict get $value]] ::::"
-        if {$key eq $item} {
-          #puts "if 2fertig:: k: $key ::: i: $item :::[dict keys [dict get $value]]"
-          #set key -1
-        } else {
-          #puts "el 2fertig:: k: $key ::: i: $item ::: [dict keys [dict get $value]]"
-          #set key -1
-        }
-        #puts "item: $item\n"
-        #puts "Key: $key - Value: $value"
-
-        #set dvar [dict get $dvar $key]
-        incr key 
-      }
-      
-    }
-    puts "d1: $d1 d2: $d2 d3: $d3 key: $key"
-    return $result
-  }
 }
 
 
@@ -239,12 +173,14 @@ proc buttonbar {w tree textw} {
 
   button $cf.b28 -text "search and \nsel Node 1 Depth 5" -command [list cbbtnbar $tree {$textw insert end [tvlib::showVisibleItems $tree "Node 1 Depth 5"];\
  $tree selection set "";$tree selection add [tvlib::showVisibleItems $tree "Node 1 Depth 5"]\n}]
-  button $cf.b29 -text "getRow sel" -command [list cbbtnbar $tree {$textw insert end [tvlib::getGlobalIndex $tree [$tree selection]]\n}]
   button $cf.b30 -text "BuildChildCountDict" -command [list cbbtnbar $tree {$textw insert end [tvlib::buildChildCountDict $tree]\n}]
-  button $cf.b31 -text "keys" -command [list cbbtnbar $tree {$textw insert end [tvlib::keysrowsidx]\n}]
   button $cf.b32 -text "Find Index" -command [list cbbtnbar $tree {$textw insert end [tvlib::findRowFromDict $tree [$tree selection]]\n}]
   button $cf.b33 -text "index sel" -command [list cbbtnbar $tree {$textw insert end [$tree index [$tree selection]]\n}]
   button $cf.b34 -text "ctext clean" -command [list cbbtnbar $tree {$textw delete 4.0 end}]
+  button $cf.b35 -text "expandAll {}" -command [list cbbtnbar $tree {tvlib::expandAll $tree {}}]
+  button $cf.b36 -text "collapseAll {}" -command [list cbbtnbar $tree {tvlib::collapseAll $tree {}}]
+  button $cf.b37 -text "expandAll sel" -command [list cbbtnbar $tree {tvlib::expandAll $tree [$tree selection]}]
+  button $cf.b38 -text "collapseAll sel" -command [list cbbtnbar $tree {tvlib::collapseAll $tree [$tree selection]}]
 
   # as info
   bind $tree <<TreeviewSelect>> [list show  %W %X %Y %# %d %x %y  %T]
@@ -273,24 +209,42 @@ proc buttonbar {w tree textw} {
 
 # mini docu
 proc buttonbartooltip {cf} {
-
-  tooltip::tooltip $cf.b4 "example table, item"
-  tooltip::tooltip $cf.b8 "item"
-  tooltip::tooltip $cf.b9 "item"
-  tooltip::tooltip $cf.b10 "item"
-  tooltip::tooltip $cf.b13 "count items"
-  tooltip::tooltip $cf.b15 "all keys from parent {} as list "
-  tooltip::tooltip $cf.b16 "all keys from parent {} as a linked list with a dot separator"
-  tooltip::tooltip $cf.b17 "all keys from parent {} from  a linked list with a dot separator"
-  tooltip::tooltip $cf.b18 "all parent keys from parent {} from  a linked list with a dot separator"
-  tooltip::tooltip $cf.b20 "all keys from parent sel as list "
-  tooltip::tooltip $cf.b21 "all keys from parent sel as a linked list with a dot separator"
-  tooltip::tooltip $cf.b22 "all keys from parent sel from  a linked list with a dot separator"
-  tooltip::tooltip $cf.b23 "all parent keys from parent sel from  a linked list with a dot separator"
-  tooltip::tooltip $cf.b24 "export tree as dict from {}"
-  tooltip::tooltip $cf.b25 "export tree as dict from sel"
-  tooltip::tooltip $cf.b26 "example tree search item -text"
-  tooltip::tooltip $cf.b27 "example tree search item -text"
+    tooltip::tooltip $cf.b1 "Clear the current selection in the treeview"
+    tooltip::tooltip $cf.b2 "Delete the selected item(s) from the treeview"
+    tooltip::tooltip $cf.b3 "Remove the selected item(s) from the selection list"
+    tooltip::tooltip $cf.b4 "Add a new item to the treeview"
+    tooltip::tooltip $cf.b5 "Set focus to the item with ID 'I001'"
+    tooltip::tooltip $cf.b6 "Get the ID of the currently focused item and display it in the text widget"
+    tooltip::tooltip $cf.b7 "Get detailed information about the focused item"
+    tooltip::tooltip $cf.b8 "Select items 'I004' and 'I005' and scroll to 'I004'"
+    tooltip::tooltip $cf.b9 "Toggle the selection of item 'I004'"
+    tooltip::tooltip $cf.b10 "Select item 'I005' and scroll to it"
+    tooltip::tooltip $cf.b11 "Calculate and display the depth of the tree"
+    tooltip::tooltip $cf.b12 "Calculate and display the depth of the selected item in the tree"
+    tooltip::tooltip $cf.b13 "Count and display the total number of items in the tree"
+    tooltip::tooltip $cf.b14 "Display the children of the root node (parent {})"
+    tooltip::tooltip $cf.b15 "List all keys from the root node (parent {})"
+    tooltip::tooltip $cf.b16 "List all keys from the root node (parent {}) with dot-separated paths"
+    tooltip::tooltip $cf.b17 "Extract and display the tail keys from the root node (parent {})"
+    tooltip::tooltip $cf.b18 "Extract and display the head keys from the root node (parent {})"
+    tooltip::tooltip $cf.b19 "Display the children of the selected node"
+    tooltip::tooltip $cf.b20 "List all keys from the selected node with dot-separated paths"
+    tooltip::tooltip $cf.b21 "List all keys from the selected node with dot-separated paths"
+    tooltip::tooltip $cf.b22 "Extract and display the tail keys from the selected node"
+    tooltip::tooltip $cf.b23 "Extract and display the head keys from the selected node"
+    tooltip::tooltip $cf.b24 "Export the entire tree as a dictionary from the root"
+    tooltip::tooltip $cf.b25 "Export the tree as a dictionary from the selected node"
+    tooltip::tooltip $cf.b26 "Search for 'child 1' and select the matching items"
+    tooltip::tooltip $cf.b27 "Search for 'grandchild 3' and select the matching items"
+    tooltip::tooltip $cf.b28 "Search for 'Node 1 Depth 5' and select the matching items"
+    tooltip::tooltip $cf.b30 "Build a child count dictionary for the tree"
+    tooltip::tooltip $cf.b32 "Find and display the global index of the selected item"
+    tooltip::tooltip $cf.b33 "Display the index of the selected item within its parent"
+    tooltip::tooltip $cf.b34 "Clear the text widget content from line 4 onwards"
+    tooltip::tooltip $cf.b35 "Expand all nodes in the treeview"
+    tooltip::tooltip $cf.b36 "Collapse all nodes in the treeview"
+    tooltip::tooltip $cf.b37 "Expand all nodes under the selected item"
+    tooltip::tooltip $cf.b38 "Collapse all nodes under the selected item"
 }
 
 #
@@ -315,26 +269,33 @@ proc dataTotree {tree select} {
           }
         }
       }
+      tvlib::expandAll $tree {}
+      tvlib::buildChildCountDict $tree
     }
     abc12 {
       # d.1 data dict for example datas
       tvlib::dict2tvtree $tree {} [dict get $tvlib::exampleDatas abc12]
+      tvlib::buildChildCountDict $tree
     }
     person {
       # d.1 data dict for example datas
       tvlib::dict2tvtree $tree {} [dict get $tvlib::exampleDatas person]
+      tvlib::buildChildCountDict $tree
     }
     treegreat {
       # d.2 test data creator
       tvlib::testCreateTreeStruct $tree 7
+      tvlib::buildChildCountDict $tree
     }
     treemedium {
       # d.2 test data creator
       tvlib::testCreateTreeStruct $tree 6
+      tvlib::buildChildCountDict $tree
     }
     info  {
       # d.2 test data creator
       tvlib::dict2tvtree $tree {} [tvlib::infotcltk]
+      tvlib::buildChildCountDict $tree
     }
   }
 }
@@ -342,6 +303,7 @@ proc dataTotree {tree select} {
 proc show {args} {
   variable textw
   variable tvbox
+  variable table
 
   lassign $args W X Y Raute d  x y T rest
   set tree $W
@@ -353,8 +315,10 @@ proc show {args} {
   tvlib::bandInit $tvbox
   tvlib::band $tvbox
 
-  $textw insert end "\n$args :: $rest\n"
-  $textw insert end "W: $W X: $X Y: $Y #: $Raute d: $d x: $x y: $y T: $T\n "
+  tvlib::addRow $table [list  $W  $X $Y  $Raute $d $x $y $T]
+  
+  #$textw insert end "\n$args :: $rest\n"
+  #$textw insert end "W: $W X: $X Y: $Y #: $Raute d: $d x: $x y: $y T: $T\n "
   $textw insert end "TreeviewSelect  Current selection is '\[\$tree selection\]' [$tree selection ] :: focus:  [$tree focus]\n"
   $textw see end
 }
@@ -364,6 +328,7 @@ proc mainGui {} {
   # ctext widget for info display
   variable textw
   variable tvbox
+  variable table
 
   set pwh [ttk::panedwindow .pwh -orient horizontal ]
   set fh1 [ttk::frame $pwh.fh1]
@@ -388,6 +353,8 @@ proc mainGui {} {
   # ctext as info text
   ttk::frame $fh3.fr3
   set textw [createCTW $fh3.fr3]
+  
+  set table [tvlib::newTable $fh3 [list W X Y Raute d x y T ]]
 
   pack $fh2.fr2 $fh3.fr3 -side right -expand 1 -fill both
 
@@ -418,7 +385,7 @@ proc mainGui {} {
 
   set output "[array get ttk::treeview::State]\n"
   $textw insert end $output
-  $textw insert end  "%W %X %Y %#  %d  %x %y  %T\n\n"
+  
 }
 
 ###################################
