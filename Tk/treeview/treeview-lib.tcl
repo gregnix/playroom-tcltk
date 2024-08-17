@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-# 20240816
+# 20240817
 # treeview-lib.tcl
 
 # https://core.tcl-lang.org/tk/tktview/2a6c62afd9
@@ -16,13 +16,14 @@ package require dicttool
 # d. Additional key management procs
 # e. Example data
 # f. Searching and opening nodes in treeview
-# g. Creating a new treeview configured as a table with options for adding, updating, and upserting data
+# g. Creating a new treeview configured as a table with options for adding, updating, upserting data etc.
+# h. helper procs exppandAll, collapseAll, isLeaf
+# i. global indeex
 
 ################################
 # a. Import and export of dict and tree structures
 ################################
 namespace eval tvlib {
-
   # Checks if the first elements of all sublists are equal
   proc checkFirstElementsEqual {listOfLists} {
     if {[llength $listOfLists] < "2"} {
@@ -30,7 +31,11 @@ namespace eval tvlib {
     }
     set firstElement ""
     foreach sublist $listOfLists {
-      lassign $sublist first _
+      if {[string is list $sublist]} {
+        lassign $sublist first _
+      } else {
+        set first $sublist
+      }
       if {$firstElement eq ""} {
         set firstElement $first
       } elseif {$firstElement ne $first} {
@@ -411,9 +416,9 @@ namespace eval tvlib {
     }
     return $largeList
   }
-  
-  
-  
+
+
+
   # Recursively lists namespaces, commands, functions, and variables
   proc listns {{parentns ::}} {
     set result [dict create]
@@ -525,17 +530,37 @@ namespace eval tvlib {
 namespace eval tvlib {
 
   # Create a new treeview widget configured as a table
-  proc newTable {w colnames} {
+  # colname anchor minwidth stretch width
+  proc newTable {w cols} {
+    # colsnames for create treeview widget
+    foreach col $cols {
+      lassign $col colname anchor minwidth stretch width
+      lappend colnames $colname
+    }
     set frt [ttk::frame $w.frt]
     # Create the treeview with headings only, and define column names
     set tree [ttk::treeview $frt.tree -show headings -columns $colnames\
     -yscrollcommand [list $frt.vsb set] -selectmode browse]
     set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
 
-    # Set the text display for column headers
-    foreach colname $colnames {
+    # Set the text display for column headers and options for columns
+    foreach col $cols {
+      lassign $col colname anchor minwidth stretch width
       $tree heading $colname -text $colname
+      if {$anchor ne {} } {
+        $tree column $colname -anchor $anchor
+      }
+      if {$minwidth ne {} } {
+        $tree column $colname -minwidth $minwidth
+      }
+      if {$stretch ne {} } {
+        $tree column $colname -stretch $stretch
+      }
+      if {$width ne {} } {
+        $tree column $colname -width $width
+      }
     }
+
     pack $frt -expand 1 -fill both
 
     pack $vsb -expand 0 -fill y -side right
@@ -818,10 +843,10 @@ namespace eval tvlib {
     }
     return $cellsData
   }
-  
+
 }
 
-# helper procs
+# h. helper procs
 ################################
 namespace eval tvlib {
 
@@ -876,7 +901,7 @@ namespace eval tvlib {
   }
 }
 
-
+# i. global index
 # The dictionary is constructed in such a way that each node stores
 # the entire "tree extent" of its children.
 # This allows the global index to be calculated efficiently.
@@ -889,6 +914,11 @@ namespace eval {tvlib} {
     variable rowsparentidx
     set rowsparentidx [addChildrenToDict $tree {} $depth]
     return 1
+  }
+
+  proc getDict {} {
+    variable rowsparentidx
+    return $rowsparentidx
   }
 
   # Recursively add child nodes and their counts to the dictionary
@@ -918,11 +948,8 @@ namespace eval {tvlib} {
     set keys [dict keys [dict get $rowsparentidx 0]]
     return $keys
   }
-}
 
 
-namespace eval tvlib {
-  variable rowsparentidx
 
   # Calculate the row index based on the items and their depth
   proc rowindexCount {items depth} {
@@ -933,18 +960,18 @@ namespace eval tvlib {
     }
     return $rowindex
   }
-  
+
   proc findRowFromDict {tree item {rowindex 0}} {
     variable rowsparentidx
     set rowindex 0
-      
+
     if {[tvlib::isLeaf $tree $item] } {
       # Find the previous non-leaf item and adjust the item and rowindex
       set previousNonLeafList [tvlib::findPreviousNonLeaf $tree $item]
       set item [lindex $previousNonLeafList 0]
       set rowindex  [expr {$rowindex + [lindex $previousNonLeafList 1]}]
-      }
-    
+    }
+
     if {[$tree children $item] eq ""} {
       set result [$tree index $item]
       set  rowindex  [expr {$rowindex +  [$tree index $item]}]
@@ -954,7 +981,7 @@ namespace eval tvlib {
     set index 0
     set currentItem $item
 
-   # Traverse upwards to find all parent nodes
+    # Traverse upwards to find all parent nodes
     while { $currentItem ne "" } {
       set parent [$tree parent $currentItem]
       lappend result $parent
@@ -963,18 +990,18 @@ namespace eval tvlib {
     set result [lrange $result 0 end-1]
     set currentItem [lindex $result end]
 
-   # Find previous siblings at the same depth
+    # Find previous siblings at the same depth
     set prevroot [list]
     while { $currentItem ne "" } {
       set prev [$tree prev $currentItem]
       lappend prevroot $prev
       set currentItem $prev
     }
-    
+
     # Calculate the row index based on previous siblings
     set rowindex [expr {$rowindex + [rowindexCount [lrange $prevroot 0 end-1] 1]}]
-    
-    
+
+
     # Look up the depth-based dictionary and adjust the row index
     set dvar [dict get $rowsparentidx 1 [lindex $result end] cdepth]
     if {$item in [dict keys [dict get $rowsparentidx 1]]} {
@@ -983,7 +1010,7 @@ namespace eval tvlib {
     } else {
       set key 2
     }
-    
+
     # Traverse the dictionary to accumulate row counts
     while {[dict exists $dvar $key]} {
       dict for {key value} $dvar {

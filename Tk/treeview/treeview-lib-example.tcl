@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-#20240816
+#20240817
 
 # treeview-lib-example.tcl
 
@@ -11,12 +11,6 @@ package require tooltip
 
 # procs with namespace tvlib:: and example datas
 source treeview-lib.tcl
-
-namespace eval tvlib {
-  variable rowsparentidx
-
-  
-}
 
 
 # ctext widget for info display
@@ -74,7 +68,7 @@ proc createButton {w tree} {
   set frt [ttk::frame $w.frt]
   # combobox for example datas
   set cbdatas [ttk::combobox $frt.cbdatas -values {table tree treemedium treegreat abc12 person info} -exportselection 0 -width 15]
-  $cbdatas current 1
+  $cbdatas current 5
   bind $cbdatas <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tree data]]
   cbComboSelected $cbdatas $tree data
 
@@ -174,6 +168,7 @@ proc buttonbar {w tree textw} {
   button $cf.b28 -text "search and \nsel Node 1 Depth 5" -command [list cbbtnbar $tree {$textw insert end [tvlib::showVisibleItems $tree "Node 1 Depth 5"];\
  $tree selection set "";$tree selection add [tvlib::showVisibleItems $tree "Node 1 Depth 5"]\n}]
   button $cf.b30 -text "BuildChildCountDict" -command [list cbbtnbar $tree {$textw insert end [tvlib::buildChildCountDict $tree]\n}]
+  button $cf.b31 -text "rowsparentidx" -command [list cbbtnbar $tree {$textw insert end  [tvlib::getDict]\n}]
   button $cf.b32 -text "Find Index" -command [list cbbtnbar $tree {$textw insert end [tvlib::findRowFromDict $tree [$tree selection]]\n}]
   button $cf.b33 -text "index sel" -command [list cbbtnbar $tree {$textw insert end [$tree index [$tree selection]]\n}]
   button $cf.b34 -text "ctext clean" -command [list cbbtnbar $tree {$textw delete 4.0 end}]
@@ -209,42 +204,43 @@ proc buttonbar {w tree textw} {
 
 # mini docu
 proc buttonbartooltip {cf} {
-    tooltip::tooltip $cf.b1 "Clear the current selection in the treeview"
-    tooltip::tooltip $cf.b2 "Delete the selected item(s) from the treeview"
-    tooltip::tooltip $cf.b3 "Remove the selected item(s) from the selection list"
-    tooltip::tooltip $cf.b4 "Add a new item to the treeview"
-    tooltip::tooltip $cf.b5 "Set focus to the item with ID 'I001'"
-    tooltip::tooltip $cf.b6 "Get the ID of the currently focused item and display it in the text widget"
-    tooltip::tooltip $cf.b7 "Get detailed information about the focused item"
-    tooltip::tooltip $cf.b8 "Select items 'I004' and 'I005' and scroll to 'I004'"
-    tooltip::tooltip $cf.b9 "Toggle the selection of item 'I004'"
-    tooltip::tooltip $cf.b10 "Select item 'I005' and scroll to it"
-    tooltip::tooltip $cf.b11 "Calculate and display the depth of the tree"
-    tooltip::tooltip $cf.b12 "Calculate and display the depth of the selected item in the tree"
-    tooltip::tooltip $cf.b13 "Count and display the total number of items in the tree"
-    tooltip::tooltip $cf.b14 "Display the children of the root node (parent {})"
-    tooltip::tooltip $cf.b15 "List all keys from the root node (parent {})"
-    tooltip::tooltip $cf.b16 "List all keys from the root node (parent {}) with dot-separated paths"
-    tooltip::tooltip $cf.b17 "Extract and display the tail keys from the root node (parent {})"
-    tooltip::tooltip $cf.b18 "Extract and display the head keys from the root node (parent {})"
-    tooltip::tooltip $cf.b19 "Display the children of the selected node"
-    tooltip::tooltip $cf.b20 "List all keys from the selected node with dot-separated paths"
-    tooltip::tooltip $cf.b21 "List all keys from the selected node with dot-separated paths"
-    tooltip::tooltip $cf.b22 "Extract and display the tail keys from the selected node"
-    tooltip::tooltip $cf.b23 "Extract and display the head keys from the selected node"
-    tooltip::tooltip $cf.b24 "Export the entire tree as a dictionary from the root"
-    tooltip::tooltip $cf.b25 "Export the tree as a dictionary from the selected node"
-    tooltip::tooltip $cf.b26 "Search for 'child 1' and select the matching items"
-    tooltip::tooltip $cf.b27 "Search for 'grandchild 3' and select the matching items"
-    tooltip::tooltip $cf.b28 "Search for 'Node 1 Depth 5' and select the matching items"
-    tooltip::tooltip $cf.b30 "Build a child count dictionary for the tree"
-    tooltip::tooltip $cf.b32 "Find and display the global index of the selected item"
-    tooltip::tooltip $cf.b33 "Display the index of the selected item within its parent"
-    tooltip::tooltip $cf.b34 "Clear the text widget content from line 4 onwards"
-    tooltip::tooltip $cf.b35 "Expand all nodes in the treeview"
-    tooltip::tooltip $cf.b36 "Collapse all nodes in the treeview"
-    tooltip::tooltip $cf.b37 "Expand all nodes under the selected item"
-    tooltip::tooltip $cf.b38 "Collapse all nodes under the selected item"
+  tooltip::tooltip $cf.b1 {Clear the current selection in the treeview}
+  tooltip::tooltip $cf.b2 "Delete the selected item(s) from the treeview"
+  tooltip::tooltip $cf.b3 "Remove the selected item(s) from the selection list"
+  tooltip::tooltip $cf.b4 "Add a new item to the treeview"
+  tooltip::tooltip $cf.b5 {Set focus to the item with ID 'I001'}
+  tooltip::tooltip $cf.b6 "Get the ID of the currently focused item and display it in the text widget"
+  tooltip::tooltip $cf.b7 "Get detailed information about the focused item"
+  tooltip::tooltip $cf.b8 "Select items 'I004' and 'I005' and scroll to 'I004'"
+  tooltip::tooltip $cf.b9 "Toggle the selection of item 'I004'"
+  tooltip::tooltip $cf.b10 "Select item 'I005' and scroll to it"
+  tooltip::tooltip $cf.b11 "Calculate and display the depth of the tree"
+  tooltip::tooltip $cf.b12 "Calculate and display the depth of the selected item in the tree"
+  tooltip::tooltip $cf.b13 "Count and display the total number of items in the tree"
+  tooltip::tooltip $cf.b14 {Display the children of the root node (parent {})}
+  tooltip::tooltip $cf.b15 {List all keys from the root node (parent {})}
+  tooltip::tooltip $cf.b16 {List all keys from the root node (parent {}) with dot-separated paths}
+  tooltip::tooltip $cf.b17 {Extract and display the tail keys from the root node (parent {})}
+  tooltip::tooltip $cf.b18 {Extract and display the head keys from the root node (parent {})}
+  tooltip::tooltip $cf.b19 {Display the children of the selected node}
+  tooltip::tooltip $cf.b20 {List all keys from the selected node with dot-separated paths}
+  tooltip::tooltip $cf.b21 {List all keys from the selected node with dot-separated paths}
+  tooltip::tooltip $cf.b22 {Extract and display the tail keys from the selected node}
+  tooltip::tooltip $cf.b23 {Extract and display the head keys from the selected node}
+  tooltip::tooltip $cf.b24 {Export the entire tree as a dictionary from the root}
+  tooltip::tooltip $cf.b25 {Export the tree as a dictionary from the selected node}
+  tooltip::tooltip $cf.b26 {Search for 'child 1' and select the matching items}
+  tooltip::tooltip $cf.b27 {Search for 'grandchild 3' and select the matching items}
+  tooltip::tooltip $cf.b28 {Search for 'Node 1 Depth 5' and select the matching items}
+  tooltip::tooltip $cf.b30 {Build a child count dictionary for the tree}
+  tooltip::tooltip $cf.b32 {Find and display the global index of the selected item"}
+    tooltip::tooltip $cf.b33 {Display the index of the selected item within its parent}
+    tooltip::tooltip $cf.b34 {Clear the text widget content from line 4 onwards}
+    tooltip::tooltip $cf.b35 {Expand all nodes in the treeview}
+    tooltip::tooltip $cf.b36 {Collapse all nodes in the treeview}
+    tooltip::tooltip $cf.b37 {Expand all nodes under the selected item"}
+  tooltip::tooltip $cf.b38 {Collapse all nodes under the selected item}
+
 }
 
 #
@@ -316,7 +312,7 @@ proc show {args} {
   tvlib::band $tvbox
 
   tvlib::addRow $table [list  $W  $X $Y  $Raute $d $x $y $T]
-  
+
   #$textw insert end "\n$args :: $rest\n"
   #$textw insert end "W: $W X: $X Y: $Y #: $Raute d: $d x: $x y: $y T: $T\n "
   $textw insert end "TreeviewSelect  Current selection is '\[\$tree selection\]' [$tree selection ] :: focus:  [$tree focus]\n"
@@ -348,13 +344,18 @@ proc mainGui {} {
 
   # treeview box for value list from treeview
   ttk::frame $fh2.fr2
-  set tvbox [tvlib::newTable $fh2.fr2 Value]
+
+  # colname anchor minwidth stretch width
+  set tvbox [tvlib::newTable $fh2.fr2 [list {Value w 200 1 200}]]
 
   # ctext as info text
   ttk::frame $fh3.fr3
   set textw [createCTW $fh3.fr3]
-  
-  set table [tvlib::newTable $fh3 [list W X Y Raute d x y T ]]
+
+  # colname anchor minwidth stretch width
+  set table [tvlib::newTable $fh3 [list {W w 20 1 300} {X e 20 1 80} {Y e 20 1 80} {Raute center 20 1 80} {x e 20 1 80} {y e 20 1 80} {d e 20 1 80} {T n 20 1 80}] ]
+  tvlib::bandInit $table
+  tvlib::band $table
 
   pack $fh2.fr2 $fh3.fr3 -side right -expand 1 -fill both
 
@@ -385,7 +386,7 @@ proc mainGui {} {
 
   set output "[array get ttk::treeview::State]\n"
   $textw insert end $output
-  
+
 }
 
 ###################################
