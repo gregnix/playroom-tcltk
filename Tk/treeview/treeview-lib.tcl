@@ -537,7 +537,7 @@ namespace eval tvlib {
 
   # Create a new treeview widget configured as a table
   # colname anchor minwidth stretch width
- # Create a new treeview widget configured as a table
+  # Create a new treeview widget configured as a table
   # colname anchor minwidth stretch width
   proc newTable {w cols {default 0}} {
     if {$default}  {
@@ -593,8 +593,8 @@ namespace eval tvlib {
         }
       }
     }
-    
-    #parent pack or grid 
+
+    #parent pack or grid
     set wtmp $w
     set manager [winfo manager $wtmp]
     while {[winfo manager $wtmp] ni [list pack grid]} {
@@ -621,7 +621,7 @@ namespace eval tvlib {
     return $tree
   }
 
-   proc newTree {w cols {default 0}} {
+  proc newTree {w cols {default 0}} {
     # Standardoptions
     if {$default}  {
       set myOptionsDefault [dict create anchor w minwidth 20 stretch 1 width 200]
@@ -649,7 +649,7 @@ namespace eval tvlib {
       dict set colsOptions $colname $myOptions
       lappend colnames $colname
     }
-    set key [lindex $colnames 0]  
+    set key [lindex $colnames 0]
     set colnames [lrange $colnames 1 end]
     # Frame und Scrollbars erstellen
     set frt [ttk::frame $w.frt]
@@ -679,15 +679,15 @@ namespace eval tvlib {
     }
     # for tree
     $tree heading #0 -text $key
-    
-    # #parent pack or grid 
+
+    # #parent pack or grid
     set wtmp $w
     set manager [winfo manager $wtmp]
     while {[winfo manager $wtmp] ni [list pack grid]} {
       set wtmp [winfo parent $wtmp]
       set manager [winfo manager $wtmp]
     }
-    
+
     switch $manager {
       pack {
         pack $frt -expand 1 -fill both
@@ -703,7 +703,7 @@ namespace eval tvlib {
         grid rowconfigure $frt 0 -weight 1
       }
     }
-    
+
     return $tree
   }
 
@@ -1170,4 +1170,50 @@ namespace eval {tvlib} {
     }
     return $rowindex
   }
+}
+
+namespace eval tvlib {
+ proc sortColumn {tree col descending} {
+    # Get all items in the treeview
+    set items [$tree children {}]
+    
+    # Retrieve the values for the specified column and sort them
+    set sortedItems [lsort -index 1 -dictionary [lmap item $items {list [$tree set $item $col] $item}]]
+
+    # Reverse the sort order if descending is true
+    if {$descending} {
+        set sortedItems [lreverse $sortedItems]
+    }
+
+    # Reorder the items in the treeview based on the sorted values
+    foreach {value item} $sortedItems {
+        if {[$tree exists $item]} {
+            # Only move the item if it exists
+            $tree move $item {} end
+        } else {
+            puts "Item $item not found"
+        }
+    }
+    
+    # Toggle the sort order
+    return [expr {!$descending}]
+}
+
+
+  proc sortTreeview {tree col} {
+    # Keep track of the sort order for each column
+    variable sortOrder
+    if {[info exists sortOrder($col)]} {
+      set descending $sortOrder($col)
+    } else {
+      set descending 0
+    }
+
+    # Sort the column
+    set descending [sortColumn $tree $col $descending]
+
+    # Save the new sort order
+    set sortOrder($col) $descending
+  }
+
 }

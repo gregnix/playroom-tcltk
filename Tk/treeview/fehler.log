@@ -1,0 +1,8 @@
+Item 3 I00B not found
+Item 3 I00B not found
+    while executing
+"$tree move $item {} end"
+    (procedure "tvlib::sortColumn" line 15)
+    invoked from within
+"tvlib::sortColumn .fr.frt.tree col1 0"
+    ("after" script)

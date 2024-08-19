@@ -22,14 +22,22 @@ source treeview-lib.tcl
 #update
 #after delay
 
-set delay 1000
-set delay2 2000
+set delay 10000
+set delay2 20000
 
-set table [tvlib::newTable . [list col1 col2]]
+
+ttk::frame .fr 
+pack .fr -side top -expand 1 -fill both
+
+set table [tvlib::newTable .fr [list col1 col2]]
 tvlib::bandInit $table
 tvlib::band $table
 tvlib::bandEvent $table
 $table configure -height 50
+
+$table heading col1 -text "Column 1" -command [list tvlib::sortColumn .tree col1 0]
+$table heading col2 -text "Column 2" -command [list tvlib::sortColumn .tree col2 0]
+
 
 # -- set values for all columns
 tvlib::addRow $table [list 1]
