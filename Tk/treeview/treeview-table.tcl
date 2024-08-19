@@ -18,15 +18,19 @@ source treeview-lib.tcl
 # delete Row, Rows, Cell, Cells
 # -- create a new table
 
-set delay 100
-set delay2 100
+# "pseudo play" the display with
+#update
+#after delay
+
+set delay 1000
+set delay2 2000
 
 set table [tvlib::newTable . [list col1 col2]]
 tvlib::bandInit $table
 tvlib::band $table
 tvlib::bandEvent $table
-
 $table configure -height 50
+
 # -- set values for all columns
 tvlib::addRow $table [list 1]
 tvlib::addRow $table [list 2]
@@ -80,36 +84,95 @@ tvlib::upsertCells $table 1 [list 0 1 2 3 4 5 6 7 8 9 10 11 12] 0
 
 for {set i 0} { $i <= 12} {incr i} {
   update
-  after $delay2
+  after $delay
   tvlib::upsertCell $table 0 $i $i
-  
+
   update
-  after $delay2
+  after $delay
   tvlib::deleteCell $table 1  $i
 }
 
 
 for {set i 0} { $i <= 12} {incr i} {
   update
-  after $delay2
+  after $delay
   tvlib::updateCell $table 1 [expr {[tvlib::getCell $table 0  $i] *2}] $i
-  puts  $i
-} 
-
-
+}
 
 set datas2 [tvlib::getAllRows $table]
 
 update
-after 1000
+after $delay2
 tvlib::deleteAllRows $table
 
-after 1000
+after $delay2
 tvlib::addRows $table $datas2
-
 
 puts [tvlib::getAllCells $table 1]
 puts [tvlib::getCells $table 1 [list 2 4 6] ]
 
-tvlib::addRows $table [tvlib::generateLargeList 1000000 2]
+#########################
+# tests  with large lists
+# use 1
 
+if {0} {
+  puts "delete: [time {tvlib::deleteAllRows $table} 1]"
+  update
+  puts "addRows f: [time {tvlib::addRows $table [tvlib::generateLargeList 1000000 2]} 1]"
+
+  #
+
+  set data3  [tvlib::generateLargeList 1000000 2]
+  puts "delete AR: [time {tvlib::deleteAllRows $table} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  puts "delete AR: [time {tvlib::deleteAllRows $table} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  puts "delete AR: [time {tvlib::deleteAllRows $table} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  puts "delete TV: [time {$table delete [$table children {}]} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  destroy [winfo parent $table]
+  update
+  puts "Number two"
+  set table [tvlib::newTable . [list col1 col2]]
+  tvlib::bandInit $table
+  tvlib::band $table
+  tvlib::bandEvent $table
+  $table configure -height 50
+
+  update
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  puts "delete TV: [time {$table delete [$table children {}]} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  puts "delete AR: [time {tvlib::deleteAllRows $table} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  update
+  puts "Number three"
+
+  puts "delete Wi: [time {
+destroy [winfo parent $table]
+set table [tvlib::newTable . [list col1 col2]]
+tvlib::bandInit $table
+tvlib::band $table
+tvlib::bandEvent $table
+$table configure -height 50
+} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+
+  puts "delete Wi: [time {
+destroy [winfo parent $table]
+set table [tvlib::newTable . [list col1 col2]]
+tvlib::bandInit $table
+tvlib::band $table
+tvlib::bandEvent $table
+$table configure -height 50
+} 1]"
+  puts "addRows d: [time {tvlib::addRows $table $data3} 1]"
+}

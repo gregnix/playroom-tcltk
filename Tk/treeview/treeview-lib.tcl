@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-# 20240817
+# 20240819
 # treeview-lib.tcl
 
 # https://core.tcl-lang.org/tk/tktview/2a6c62afd9
@@ -114,11 +114,16 @@ namespace eval tvlib {
         set checkkey $key
         set result [expandList $result]
       }
-      set value [lindex [$tree item $child -values] 0]
+
+      #set value [lindex [$tree item $child -values] 0]
+      set value [concat {*}[$tree item $child -values]]
       # Check if the child itself has children
       if {[$tree children $child] > 0} {
         set childDict [tvtree2dict $tree $child]
         dict set result $key $childDict
+        if {$value ne ""} {
+          dict lappend result $key $value
+        }
       } else {
         if {[dict exists $result $key]} {
           set tmplist [dict get $result $key]
@@ -140,6 +145,7 @@ namespace eval tvlib {
     }
     return $result
   }
+
 }
 
 ################
@@ -531,42 +537,176 @@ namespace eval tvlib {
 
   # Create a new treeview widget configured as a table
   # colname anchor minwidth stretch width
-  proc newTable {w cols} {
-    # colsnames for create treeview widget
+ # Create a new treeview widget configured as a table
+  # colname anchor minwidth stretch width
+  proc newTable {w cols {default 0}} {
+    if {$default}  {
+      set myOptionsDefault [dict create anchor e minwidth 20 stretch 1 width 200]
+    } else {
+      set myOptionsDefault [dict create anchor {} minwidth {} stretch {} width {}]
+    }
+    set colsOptions {}
+
     foreach col $cols {
-      lassign $col colname anchor minwidth stretch width
+      set myOptions $myOptionsDefault
+      lassign $col colname newAnchor newMinwidth newStretch newWidth
+      if {$newAnchor ne {}} {
+        dict set myOptions anchor $newAnchor
+      }
+      if {$newMinwidth ne {}} {
+        dict set myOptions minwidth $newMinwidth
+      }
+      if {$newStretch ne {}} {
+        dict set myOptions stretch $newStretch
+      }
+      if {$newWidth ne {}} {
+        dict set myOptions width $newWidth
+      }
+      dict set colsOptions $colname $myOptions
       lappend colnames $colname
     }
-    set frt [ttk::frame $w.frt]
-    # Create the treeview with headings only, and define column names
-    set tree [ttk::treeview $frt.tree -show headings -columns $colnames\
-    -yscrollcommand [list $frt.vsb set] -selectmode browse]
-    set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
 
-    # Set the text display for column headers and options for columns
-    foreach col $cols {
-      lassign $col colname anchor minwidth stretch width
-      $tree heading $colname -text $colname
-      if {$anchor ne {} } {
-        $tree column $colname -anchor $anchor
-      }
-      if {$minwidth ne {} } {
-        $tree column $colname -minwidth $minwidth
-      }
-      if {$stretch ne {} } {
-        $tree column $colname -stretch $stretch
-      }
-      if {$width ne {} } {
-        $tree column $colname -width $width
+    set frt [ttk::frame $w.frt]
+    #set frt $w
+
+    set tree [ttk::treeview $frt.tree  -show headings -columns $colnames \
+    -yscrollcommand [list $frt.vsb set] -xscrollcommand [list $frt.hsb set]  -selectmode browse]
+    set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
+    set hsb [::ttk::scrollbar $frt.hsb -orient horizontal -command [list $tree xview]]
+
+    set font [::ttk::style lookup [$tree cget -style] -font]
+    foreach colname $colnames {
+      set myOptions [dict get $colsOptions $colname]
+      dict with myOptions {
+        $tree heading $colname -text $colname
+        if {$anchor ne {}} {
+          $tree column $colname -anchor $anchor
+        }
+        if {$minwidth ne {}} {
+          $tree column $colname -minwidth $minwidth
+        }
+        if {$stretch ne {}} {
+          $tree column $colname -stretch $stretch
+        }
+        if {$width ne {}} {
+          $tree column $colname -width $width
+        }
       }
     }
+    
+    #parent pack or grid 
+    set wtmp $w
+    set manager [winfo manager $wtmp]
+    while {[winfo manager $wtmp] ni [list pack grid]} {
+      set wtmp [winfo parent $wtmp]
+      set manager [winfo manager $wtmp]
+    }
 
-    pack $frt -expand 1 -fill both
-
-    pack $vsb -expand 0 -fill y -side right
-    pack $tree -expand 1 -fill both
+    switch $manager {
+      pack {
+        pack $frt -expand 1 -fill both
+        pack $vsb -expand 0 -fill y -side right
+        pack $tree -expand 1 -fill both
+        pack $hsb -expand 0 -fill x
+      }
+      grid {
+        #pack $frt -expand 1 -fill both
+        grid $frt -sticky nsew
+        grid $tree $vsb -sticky nsew
+        grid $hsb     -sticky nsew
+        grid column $frt 0 -weight 1
+        grid row    $frt 0 -weight 1
+      }
+    }
     return $tree
   }
+
+   proc newTree {w cols {default 0}} {
+    # Standardoptions
+    if {$default}  {
+      set myOptionsDefault [dict create anchor w minwidth 20 stretch 1 width 200]
+    } else {
+      set myOptionsDefault [dict create anchor {} minwidth {} stretch {} width {}]
+    }
+    set colsOptions {}
+
+    # Konfiguration der Spaltenoptionen
+    foreach col $cols {
+      set myOptions $myOptionsDefault
+      lassign $col colname newAnchor newMinwidth newStretch newWidth
+      if {$newAnchor ne {}} {
+        dict set myOptions anchor $newAnchor
+      }
+      if {$newMinwidth ne {}} {
+        dict set myOptions minwidth $newMinwidth
+      }
+      if {$newStretch ne {}} {
+        dict set myOptions stretch $newStretch
+      }
+      if {$newWidth ne {}} {
+        dict set myOptions width $newWidth
+      }
+      dict set colsOptions $colname $myOptions
+      lappend colnames $colname
+    }
+    set key [lindex $colnames 0]  
+    set colnames [lrange $colnames 1 end]
+    # Frame und Scrollbars erstellen
+    set frt [ttk::frame $w.frt]
+    set tree [ttk::treeview $frt.tree -show {tree headings} -columns $colnames \
+    -yscrollcommand [list $frt.vsb set] -xscrollcommand [list $frt.hsb set] -selectmode browse]
+    set vsb [::ttk::scrollbar $frt.vsb -orient vertical -command [list $tree yview]]
+    set hsb [::ttk::scrollbar $frt.hsb -orient horizontal -command [list $tree xview]]
+
+    # Spalten- und Überschriftenoptionen konfigurieren
+    foreach colname $colnames {
+      set myOptions [dict get $colsOptions $colname]
+      dict with myOptions {
+        $tree heading $colname -text $colname
+        if {$anchor ne {}} {
+          $tree column $colname -anchor $anchor
+        }
+        if {$minwidth ne {}} {
+          $tree column $colname -minwidth $minwidth
+        }
+        if {$stretch ne {}} {
+          $tree column $colname -stretch $stretch
+        }
+        if {$width ne {}} {
+          $tree column $colname -width $width
+        }
+      }
+    }
+    # for tree
+    $tree heading #0 -text $key
+    
+    # #parent pack or grid 
+    set wtmp $w
+    set manager [winfo manager $wtmp]
+    while {[winfo manager $wtmp] ni [list pack grid]} {
+      set wtmp [winfo parent $wtmp]
+      set manager [winfo manager $wtmp]
+    }
+    
+    switch $manager {
+      pack {
+        pack $frt -expand 1 -fill both
+        pack $vsb -expand 0 -fill y -side right
+        pack $tree -expand 1 -fill both
+        pack $hsb -expand 0 -fill x
+      }
+      grid {
+        grid $frt -sticky nsew
+        grid $tree $vsb -sticky nsew
+        grid $hsb -sticky nsew
+        grid columnconfigure $frt 0 -weight 1
+        grid rowconfigure $frt 0 -weight 1
+      }
+    }
+    
+    return $tree
+  }
+
 
   # Add a new row to the table
   proc addRow {t {values ""}} {
