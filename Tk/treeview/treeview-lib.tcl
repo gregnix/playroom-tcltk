@@ -1172,48 +1172,32 @@ namespace eval {tvlib} {
   }
 }
 
+# https://wiki.tcl-lang.org/page/Multi%2Dcolumn+Listbox+with+Button
+# j. sorting
 namespace eval tvlib {
- proc sortColumn {tree col descending} {
-    # Get all items in the treeview
-    set items [$tree children {}]
-    
-    # Retrieve the values for the specified column and sort them
-    set sortedItems [lsort -index 1 -dictionary [lmap item $items {list [$tree set $item $col] $item}]]
-
-    # Reverse the sort order if descending is true
-    if {$descending} {
-        set sortedItems [lreverse $sortedItems]
-    }
-
-    # Reorder the items in the treeview based on the sorted values
-    foreach {value item} $sortedItems {
-        if {[$tree exists $item]} {
-            # Only move the item if it exists
-            $tree move $item {} end
-        } else {
-            puts "Item $item not found"
-        }
-    }
-    
-    # Toggle the sort order
-    return [expr {!$descending}]
-}
-
-
-  proc sortTreeview {tree col} {
-    # Keep track of the sort order for each column
-    variable sortOrder
-    if {[info exists sortOrder($col)]} {
-      set descending $sortOrder($col)
+  proc sortColumn {tree col direction {sortMethod "-dictionary"}} {
+    if {$col eq "#0"} {
+      # Sort by -text for column #0 (tree structure)
+      set sortData [lmap row [$tree children {}] {list [$tree item $row -text] $row}]
     } else {
-      set descending 0
+      # Sort by -values for other columns
+      set sortData [lmap row [$tree children {}] {list [$tree set $row $col] $row}]
     }
 
-    # Sort the column
-    set descending [sortColumn $tree $col $descending]
+    set dir [expr {$direction ? "-decreasing" : "-increasing"}]
 
-    # Save the new sort order
-    set sortOrder($col) $descending
+    # Apply the sorting method passed as argument
+    set sortedData [lsort {*}$sortMethod -index 0 $dir $sortData]
+
+    # Rearrange the order of rows in the treeview
+    set r -1
+    foreach rinfo $sortedData {
+      $tree move [lindex $rinfo 1] {} [incr r]
+    }
+
+    # Switch sorting direction
+    set cmd [list [namespace current]::sortColumn $tree $col [expr {!$direction}] $sortMethod]
+    $tree heading $col -command $cmd
+    tvlib::bandEvent $tree
   }
-
 }

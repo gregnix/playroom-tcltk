@@ -2,11 +2,52 @@
 
 package require Tk
 
-# 20240813
+# 20240819
 # treeview-table.tcl
 
 # procs with namespace tvlib
 source treeview-lib.tcl
+# Bearbeitbare Zelle hinzufügen
+proc editCell {tree item col x y} {
+    # Wert der Zelle abrufen
+    set cellValue [$tree set $item $col]
+
+    # Ein entry-Widget direkt über der Zelle erstellen
+    entry .editEntry -textvariable cellValue -width [string length $cellValue]
+    .editEntry place -x $x -y $y -anchor nw
+
+    # Ereignisse binden, um Änderungen zu speichern oder abzubrechen
+    bind .editEntry <Return> [list finishEdit $tree $item $col .editEntry]
+    bind .editEntry <FocusOut> [list finishEdit $tree $item $col .editEntry]
+
+    # Den Fokus auf das entry-Widget setzen
+    .editEntry selection range 0 end
+    focus .editEntry
+}
+
+# Änderungen speichern und entry-Widget zerstören
+proc finishEdit {tree item col entryWidget} {
+    # Zelle im treeview aktualisieren
+    $tree set $item $col [$entryWidget get]
+
+    # entry-Widget zerstören
+    destroy $entryWidget
+}
+
+# Doppelklick-Ereignis binden
+bind .tree <Double-1> {
+    set col [%W identify column %x %y]
+    set item [%W identify row %x %y]
+    set bbox [%W bbox $item $col]
+    if {$bbox ne ""} {
+        editCell %W $item $col [lindex $bbox 0] [lindex $bbox 1]
+    }
+}
+
+# Das bereits bestehende Skript
+
+# fügen Sie Ihren bestehenden Code hier ein...
+
 
 # from https://wiki.tcl-lang.org/page/ttk::treeview
 # g. use of ttk::treeview to build a table
@@ -22,8 +63,8 @@ source treeview-lib.tcl
 #update
 #after delay
 
-set delay 10000
-set delay2 20000
+set delay 1000
+set delay2 2000
 
 
 ttk::frame .fr 
@@ -33,7 +74,7 @@ set table [tvlib::newTable .fr [list col1 col2]]
 tvlib::bandInit $table
 tvlib::band $table
 tvlib::bandEvent $table
-$table configure -height 50
+$table configure -height 20
 
 $table heading col1 -text "Column 1" -command [list tvlib::sortColumn .tree col1 0]
 $table heading col2 -text "Column 2" -command [list tvlib::sortColumn .tree col2 0]

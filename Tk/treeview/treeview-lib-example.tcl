@@ -55,7 +55,7 @@ proc createButton {w tree} {
   dict set allTVWidgets searchWord [ttk::entry $frt.search]
   set searchWord [dict get $allTVWidgets searchWord]
   tooltip::tooltip $searchWord "Entry for search"
-  
+
   pack $cbdatas $cbselectmode $cbthemen  $searchWord -side left
   pack $frt -side top -expand 0 -fill x
 
@@ -85,16 +85,22 @@ proc cbComboSelected {w tree type} {
   }
 }
 
-# simple callback for buttonbar
-# llength args 1: cmds
-# llength args 2: textw cmds, textw for info display
+# Simple callback for handling button bar actions
+# When the length of args is:
+# 1: Executes the provided commands in the context of the tree widget.
+# 2: Executes the commands and displays the output in the provided text widget.
+# 3: Executes the commands, uses a specific treeview widget, and displays the output in the text widget.
 proc cbbtnbar {tree args }  {
-variable allTVWidgets
-set buttoncmd [dict get $allTVWidgets buttoncmd]
-$buttoncmd delete 1.0 end
-$buttoncmd insert end   "[lindex [dict get [info frame 1] cmd] 0]\n"
-$buttoncmd insert end   [lindex [dict get [info frame -1] cmd] end]
-   switch  [llength $args]  {
+  variable allTVWidgets
+  set buttoncmd [dict get $allTVWidgets buttoncmd]
+  
+  # for info display
+  $buttoncmd delete 1.0 end
+  # Insert the first and last commands from the stack frame into the display widget
+  $buttoncmd insert end "[lindex [dict get [info frame 1] cmd] 0]\n\n"
+  $buttoncmd insert end [join [split [lindex [dict get [info frame -1] cmd] end] ";"] "\n"]
+
+  switch  [llength $args]  {
     1 {
       set cmds {*}$args
       foreach cmd [split $cmds ";"] {
@@ -117,7 +123,7 @@ $buttoncmd insert end   [lindex [dict get [info frame -1] cmd] end]
       foreach cmd [split $cmds ";"] {
         $textw insert end "[eval [string trimleft $cmd]]\n"
       }
-      $textw see end 
+      $textw see end
     }
   }
 }
@@ -130,24 +136,24 @@ proc searchResult {values} {
   $searchresultbox delete [$searchresultbox children {}]
   tvlib::addCells $searchresultbox 0 $values 0
   tvlib::addCells $searchresultbox 0 $values 0
-  
+
   foreach item [$searchresultbox children {}] {
-      set treeitem [$searchresultbox set $item #1]
-      set cellsData [$tree item $treeitem -text]
-      $searchresultbox set $item #2 $cellsData
-    }
+    set treeitem [$searchresultbox set $item #1]
+    set cellsData [$tree item $treeitem -text]
+    $searchresultbox set $item #2 $cellsData
+  }
 }
 
 proc buttonbar {w tree textw } {
   variable allTVWidgets
- 
+
   set tvbox [dict get $allTVWidgets tvbox]
   set table [dict get $allTVWidgets table]
   set searchWord [dict get $allTVWidgets searchWord]
 
   set f [ttk::frame $w.f]
   set cf [ttk::frame $f.cf]
-      
+
   # for command:
   # [list cbbtnbar $tree { cmds }]
   # [list cbbtnbar $tree  textw { cmds }]
@@ -161,18 +167,18 @@ proc buttonbar {w tree textw } {
   $tvwid column #0;$tvwid column #1;$tvwid column #2;$tvwid column #3;$tvwid column #4;$tvwid column #5;$tvwid column #6;$tvwid column #7; \
   $tvwid heading #0;$tvwid heading #1;$tvwid heading #2;$tvwid heading #3;$tvwid heading #4;$tvwid heading #5;$tvwid heading #6;$tvwid heading #7}]
   ttk::button $cf.b104 -text "ctext clean" -command [list cbbtnbar $tree [list $textw delete 1.0 end]]
-  
+
   ttk::button $cf.b110 -text "Set Focus I001" -command [list cbbtnbar $tree {$tree focus I001}]
   ttk::button $cf.b111 -text "Get Focus" -command  [list cbbtnbar $tree $textw {$tree focus}]
   ttk::button $cf.b112 -text "Get Focus Item \nand info" -command [list cbbtnbar $tree $textw {set ouput "[$tree focus] index: [$tree index [$tree focus]] \
   -tags [$tree item [$tree focus] -tags] -open [$tree item [$tree focus] -open] \
   -text [$tree item [$tree focus] -text] -values [$tree item [$tree focus] -values]"}]
-  
+
   ttk::button $cf.b120 -text "expandAll {}" -command [list cbbtnbar $tree {tvlib::expandAll $tree {}}]
   ttk::button $cf.b121 -text "collapseAll {}" -command [list cbbtnbar $tree {tvlib::collapseAll $tree {}}]
   ttk::button $cf.b122 -text "expandAll sel" -command [list cbbtnbar $tree {tvlib::expandAll $tree [$tree selection]}]
   ttk::button $cf.b123 -text "collapseAll sel" -command [list cbbtnbar $tree {tvlib::collapseAll $tree [$tree selection]}]
-  
+
   ttk::button $cf.b130 -text "Clear Selection" -command [list cbbtnbar $tree {$tree selection set ""}]
   ttk::button $cf.b131 -text "Delete Selected" -command [list cbbtnbar $tree {$tree delete [$tree selection]; tvlib::bandEvent $tree}]
   ttk::button $cf.b132 -text "Remove Selection" -command [list cbbtnbar $tree {$tree selection remove [$tree selection]}]
@@ -181,7 +187,7 @@ proc buttonbar {w tree textw } {
   ttk::button $cf.b135 -text "Select Item 'Entry' \nand see" -command [list cbbtnbar $tree $textw $searchWord { $tree selection set [$tvwid get];$tree see [$tvwid get]}]
   ttk::button $cf.b140 -text "Add item" -command [list cbbtnbar $tree {$tree insert {} end -text "Item  # [expr {[tvlib::treesize $tree] +1}]";\
   $tree item [lindex [$tree children {}] end] -values [lindex [$tree children {}] end]; tvlib::bandEvent $tree}]
-  
+
   ttk::button $cf.b201 -text "tree depth" -command [list cbbtnbar $tree $textw {tvlib::treedepth $tree}]
   ttk::button $cf.b202 -text "item depth in tree" -command [list cbbtnbar $tree $textw {tvlib::itemdepth $tree [$tree selection]}]
   ttk::button $cf.b203 -text "tree size" -command [list cbbtnbar $tree $textw {tvlib::treesize $tree}]
@@ -206,7 +212,7 @@ proc buttonbar {w tree textw } {
   ttk::button $cf.b251 -text "rowsparentidx" -command [list cbbtnbar $tree $textw {tvlib::getDict}]
   ttk::button $cf.b252 -text "Find Index sel" -command [list cbbtnbar $tree $textw {tvlib::findRowFromDict $tree [$tree selection]}]
   ttk::button $cf.b253 -text "index sel" -command [list cbbtnbar $tree $textw {$tree index [$tree selection]}]
-   
+
   set font [::ttk::style lookup [$tree cget -style] -font]
   ttk::style configure AnotherButton.TButton -font "$font 9"
 
@@ -244,16 +250,16 @@ proc buttonbartooltip {cf} {
   tooltip::tooltip $cf.b102 "Displays information about the 'tvbox' widget."
   tooltip::tooltip $cf.b103 "Displays information about the 'table' widget."
   tooltip::tooltip $cf.b104 "Clears the entire content of the text widget."
-  
+
   tooltip::tooltip $cf.b110 "Sets focus on the item with ID 'I001'."
   tooltip::tooltip $cf.b111 "Retrieves the ID of the currently focused item and displays it in the text widget."
   tooltip::tooltip $cf.b112 "Gets detailed information about the focused item and displays it."
-  
+
   tooltip::tooltip $cf.b120 "Expands all nodes in the treeview."
   tooltip::tooltip $cf.b121 "Collapses all nodes in the treeview."
   tooltip::tooltip $cf.b122 "Expands all nodes under the selected item."
   tooltip::tooltip $cf.b123 "Collapses all nodes under the selected item."
-  
+
   tooltip::tooltip $cf.b130 "Clears the current selection in the treeview."
   tooltip::tooltip $cf.b131 "Deletes the selected item(s) from the treeview."
   tooltip::tooltip $cf.b132 "Removes the selected item(s) from the selection list."
@@ -261,7 +267,7 @@ proc buttonbartooltip {cf} {
   tooltip::tooltip $cf.b134 "Toggles the selection of an item."
   tooltip::tooltip $cf.b135 "Selects an item and scrolls to it."
   tooltip::tooltip $cf.b140 "Adds a new item to the treeview."
-  
+
   tooltip::tooltip $cf.b201 "Calculates and displays the depth of the treeview."
   tooltip::tooltip $cf.b202 "Calculates and displays the depth of the selected item in the treeview."
   tooltip::tooltip $cf.b203 "Counts and displays the total number of items in the treeview."
@@ -393,15 +399,15 @@ proc cbsrb {args} {
 proc show {args} {
   variable textw
   variable allTVWidgets
-    
+
   set table [dict get $allTVWidgets table]
   set tvbox [dict get $allTVWidgets tvbox]
-   
+
   lassign $args W X Y Raute d  x y T rest
   set tree $W
 
   set values [list]
-  # only column values, 
+  # only column values,
   set values [lindex [$tree item [$tree focus] -values] 0]
 
   # tv listboox data
@@ -421,7 +427,7 @@ proc mainGui {} {
   variable textw
   variable allTVWidgets
 
-  
+
   ### ________________________  _________________________ ###
 
   set pwv1 [ttk::panedwindow .pwv1 -orient vertical -width 1800]
@@ -468,22 +474,22 @@ proc mainGui {} {
   #$nb  hide $nb.f2
   $nb  hide $nb.f3
   $nb  hide $nb.f4
-  
-  
+
+
   dict set allTVWidgets buttoncmd  [createCTW $nb.f2]
-  
-  
+
+
   dict set allTVWidgets table [tvlib::newTable $nb.f5 \
   [list {W w 20 1 300} {X e 20 1 80} {Y e 20 1 80} {Raute center 20 1 80} {x e 20 1 80} {y e 20 1 80} {d e 20 1 80} {T n 20 0 80}] ]
   set table [dict get $allTVWidgets table]
   tvlib::bandInit $table
   tvlib::band $table
   $table configure -height 5
-    
+
   dict set allTVWidgets treeinfo [tvlib::newTree $nb.f1 [list widget achor minwidth stretch width id]]
   dict set allTVWidgets configure [tvlib::newTree $nb.f3 [list widget achor minwidth stretch width id]]
   dict set allTVWidgets column [tvlib::newTable $nb.f4 [list widget achor minwidth stretch width id]]
-  
+
   pack $fh2.fr2  $fh3.fr3 $fh3.fr3.frti -side right -expand 1 -fill both
   # treeview and buttonbar
   set ftr [ttk::frame $fv1.ftr]
@@ -492,7 +498,7 @@ proc mainGui {} {
   ttk::frame $ftr.fr1
   dict set allTVWidgets tree [tvlib::newTree  $ftr.fr1 [list Keys Values Rowidx]]
   set tree [dict get $allTVWidgets tree]
-  
+
   # combobox for example data und select -selectmode  tree
   ttk::frame $ftr.frbtn
   createButton $ftr.frbtn $tree
@@ -501,10 +507,10 @@ proc mainGui {} {
   dict set allTVWidgets searchresultbox [tvlib::newTable  $fv2.frsrb [list {result w 40 1 100} {keys w 40 300}]]
   set searchresultbox [dict get $allTVWidgets searchresultbox]
   bind $searchresultbox <<TreeviewSelect>> [list cbsrb  %W %X %Y %# %d  %x %y %T]
-  
+
   # button bars for cmds
   ttk::frame $fv11.frbar
-  buttonbar $fv11.frbar $tree $textw 
+  buttonbar $fv11.frbar $tree $textw
 
   pack $ftr.frbtn -side top -expand 0 -fill x
   pack $ftr.fr1 $fv11.frbar -side top -expand 1 -fill both
