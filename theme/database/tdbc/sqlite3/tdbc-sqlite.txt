@@ -1,0 +1,12 @@
+tdbc::sqlite
+
+After installing the SQLite3 driver:
+
+[code]
+package require tdbc::sqlite3
+tdbc::sqlite3::connection create db10 "/path/to/mydatabase.sqlite3"
+
+#memory
+package require tdbc::sqlite3
+tdbc::sqlite3::connection create db11 :memory:
+[/code]
