@@ -19,7 +19,7 @@ Contents
 * [Actual](#actual)
 * [Collections](#collections)
 * [Tablelist](#tablelist)
-* [ttk::treeview](#ttk::treeview)
+* [treeview](#treeview)
 * [Wrapper](#wrapper)
 
 ## Actual
@@ -48,7 +48,7 @@ Contents
 * https://wiki.tcl-lang.org/page/tablelist
 * [listbox](https://www.tcl.tk/man/tcl/TkCmd/listbox.htm)
 
-## ttk::treeview
+## treeview
 * [ttk::treeview](https://github.com/gregnix/playroom-tcltk/tree/main/Tk/treeview)
 ## Wrapper
 * https://wiki.tcl-lang.org/page/tclexecomp
