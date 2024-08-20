@@ -356,6 +356,24 @@ namespace eval tvlib {
     }
   }
 
+
+  # Generate example data for the table with a specified number of entries and columns
+  proc generateLargeList {numEntries numColumns} {
+    set largeList {}
+    for {set i 1} {$i <= $numEntries} {incr i} {
+      set entry [list]
+      for {set j 1} {$j <= $numColumns} {incr j} {
+        lappend entry "Item_${i}_${j}"
+      }
+      lappend largeList $entry
+    }
+    return $largeList
+  }
+
+}
+
+
+namespace eval tvlib {
   # Collects and returns Tcl/Tk environment information in a dictionary
   proc infotcltk {} {
     lappend infodata hostname [info hostname]
@@ -409,20 +427,6 @@ namespace eval tvlib {
 
     return $data
   }
-
-  # Generate example data for the table with a specified number of entries and columns
-  proc generateLargeList {numEntries numColumns} {
-    set largeList {}
-    for {set i 1} {$i <= $numEntries} {incr i} {
-      set entry [list]
-      for {set j 1} {$j <= $numColumns} {incr j} {
-        lappend entry "Item_${i}_${j}"
-      }
-      lappend largeList $entry
-    }
-    return $largeList
-  }
-
 
 
   # Recursively lists namespaces, commands, functions, and variables
