@@ -16,8 +16,9 @@ source tbl-lib.tcl
 
 
 ttk::frame .fr
-pack .fr -expand 1 -fill both
-set cols {0 "Col1" right 0 "Col2" left 0 "Col3" center 0}
+
+set cols {0 "Col1" right 0 "Col2" left 0 "Col3" center}
 set tbl [ tbllib::newTable .fr $cols]
 
 $tbl insertlist end  [tbllib::generateLargeList 10 3]
+pack .fr -expand 1 -fill both
