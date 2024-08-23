@@ -71,7 +71,7 @@ namespace eval tbl {
       }
    }
    
-   proc dict2tbltree {widget parent dict} {
+   proc dict2tbltreeold {widget parent dict} {
     foreach {key value} [dict get $dict] {
       if {[dict exists $dict $key]} {
         set keyValue [dict get $dict $key]

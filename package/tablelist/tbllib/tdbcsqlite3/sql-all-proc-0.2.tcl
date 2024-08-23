@@ -15,7 +15,6 @@ proc initDatabase {dbconn} {
         )
     }
     set result [sqlcmdDDL $dbconn $sqlCreate]
-puts "create: result: $result"
     # Beispieldaten einfügen
     set insertSql "INSERT INTO users (ID, Name, Email) VALUES (:id, :name, :email)"
     set usersData {
@@ -31,6 +30,39 @@ puts "create: result: $result"
         }
     }
 }
+
+proc initDatabase {dbconn} {
+    # Tabelle erstellen
+    set sqlCreate {
+        CREATE TABLE IF NOT EXISTS users (
+            ID INTEGER PRIMARY KEY,
+            Name TEXT NOT NULL,
+            Email TEXT NOT NULL
+        )
+    }
+    set result [sqlcmdDDL $dbconn $sqlCreate]
+    # Beispieldaten einfügen oder aktualisieren
+    set upsertSql {
+        INSERT INTO users (ID, Name, Email)
+        VALUES (:id, :name, :email)
+        ON CONFLICT(ID) DO UPDATE SET
+        Name = excluded.Name,
+        Email = excluded.Email
+    }
+    set usersData {
+        {id 1 name "Alice" email "alice@example.com"}
+        {id 2 name "Bob" email "bob@example.com"}
+        {id 3 name "Carol" email "carol@example.com"}
+    }
+
+    foreach userData $usersData {
+        set upsertResult [sqlcmdDML $dbconn $upsertSql $userData]
+        if {[dict get $upsertResult status] eq "error"} {
+            error "Fehler beim Einfügen oder Aktualisieren von Daten: [dict get $upsertResult message]"
+        }
+    }
+}
+
 
 # Funktion zur Ausführung von SQL-Befehlen
 proc executeSQL {dbconn entryWidget outputWidget} {

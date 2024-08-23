@@ -156,7 +156,7 @@ proc fetchTableStructure {db} {
     }
 
     # Output the complete structure
-    puts $tableStruct
+    #puts $tableStruct
     return $tableStruct
 }
 proc displayTableStructure {dbconn outputWidget tbl} {
@@ -172,10 +172,10 @@ proc displayTableStructure {dbconn outputWidget tbl} {
     }
 
     # Prepare a formatted string for output
-    set formattedResult [formatTableStructureForDisplay $result]
+    #set formattedResult [formatTableStructureForDisplay $result]
 
     # Insert the formatted result into the widget
-    $outputWidget insert end $formattedResult
+    #$outputWidget insert end $formattedResult
     tbl::dict2tbltree $tbl root $result
 }
 
@@ -201,12 +201,13 @@ proc formatTableStructureForDisplay {tableStruct} {
 
             if {![string is list $columns]} {
                 append displayText "    No valid column data available.\n"
+
                 continue
             }
 
             foreach col $columns {
-                if {[dict exists $col name type notnull pk]} {
-                    append displayText "    Column: [dict get $col name] - Type: [dict get $col type], Not Null: [dict get $col notnull], PK: [dict get $col pk]\n"
+                if {[dict exists $col name]} {
+                    append displayText "    Column: [dict get $col name] - Type: , Not Null: [dict get $col notnull], PK: [dict get $col pk]\n"
                 } else {
                     append displayText "    Incomplete column data.\n"
                 }
