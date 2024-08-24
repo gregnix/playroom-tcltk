@@ -171,9 +171,11 @@ proc displayTableStructure {dbconn outputWidget tbl} {
   }
 
   # Insert the formatted result into the widget
-  $outputWidget insert end $result
-  $outputWidget insert end [dict2tblputs $result]
-  $outputWidget insert end [dict2tbltext $outputWidget $result]
+  set output ""
+  dictToreportstring $result "" output
+  puts $output
+  
+  $outputWidget insert end [dictToreportwidget $outputWidget $result]
   dict2tbltree $tbl root $result
 }
 

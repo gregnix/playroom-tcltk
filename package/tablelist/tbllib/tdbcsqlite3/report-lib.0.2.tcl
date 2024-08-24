@@ -2,35 +2,51 @@ package require struct::matrix
 package require report
 package require textutil
 
-puts report
 
-proc dictToListOfLists {dataDict} {
-    set rows [dict get $dataDict rows]
-    set columns [dict get $dataDict columns]
-    set result [list $columns]  
+# Rekursive Funktion zur Darstellung eines verschachtelten Dictionarys in einer String-Variable
+proc dictToreportstring {dict {indent ""} {resultVarName "output"}} {
+    # Variable zur Speicherung der Ausgabe initialisieren oder erweitern
+    upvar $resultVarName result
 
-    foreach row $rows {
-        lappend result $row
-    }
-    
-    return $result
-}
-
-proc dictToTableList {dict} {
-    set result [list]
-    lappend result [list "Table" "Column" "Type" "Not Null" "Primary Key"]
-
-    foreach tableName [dict keys $dict] {
-        foreach columnName [dict keys [dict get $dict $tableName]] {
-            set colData [dict get $dict $tableName $columnName]
-            set type [dict get $colData type]
-            set notnull [dict get $colData notnull]
-            set pk [dict get $colData pk]
-            lappend result [list $tableName $columnName $type $notnull $pk]
+    if {[dict is_dict $dict]} {
+        # Durchlaufen aller Schlüssel-Wert-Paare im Dictionary
+        foreach key [dict keys $dict] {
+            # Hinzufügen des Schlüssels und Vorbereiten der Einrückung für untergeordnete Elemente
+            append result "${indent}${key}:\n"
+            dictToreportstring [dict get $dict $key] "${indent}  " result
         }
+    } else {
+        # Entfernen des letzten Zeilenumbruchs, wenn vorhanden, bevor der Wert hinzugefügt wird
+        if {[string length $result] > 0} {
+            set result [string range $result 0 end-1]
+        }
+        append result "${indent}$dict\n"
     }
-    return $result
 }
+
+# Beispiel zur Verwendung der Funktion
+#set myOutput ""
+#dict2tblstring {name "John Doe" age 30} "" myOutput
+#puts $myOutput
+
+
+
+# Rekursive Funktion zur Darstellung eines verschachtelten Dictionarys in einem Text-Widget
+proc dictToreportwidget {widget dict {indent ""}} {
+    # Überprüfung, ob der Wert ein Dictionary ist
+    if {[dict is_dict $dict]} {
+        # Durchlaufen aller Schlüssel-Wert-Paare im Dictionary
+        foreach key [dict keys $dict] {
+            $widget insert end "${indent}${key}:\n"
+            # Rekursiver Aufruf zur Darstellung des untergeordneten Dictionarys, mit erhöhter Einrückung
+            dictToreportwidget $widget [dict get $dict $key] "${indent}  "
+        }
+    } else {
+        # Ausgabe des Werts, wenn es sich nicht um ein Dictionary handelt
+        $widget insert "end -1l -1c" "${indent}$dict"
+    }
+}
+ 
 
 proc listToreport {list {tw .frtext.text}} {
 		if {[llength $list] > 1 } {

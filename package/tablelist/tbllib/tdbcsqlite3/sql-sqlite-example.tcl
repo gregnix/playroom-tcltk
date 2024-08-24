@@ -29,37 +29,7 @@ source sql-all-proc-0.2.tcl
   }
  }
 
- # Rekursive Funktion zur textuellen Darstellung eines verschachtelten Dictionarys auf der Konsole
-proc dict2tblputs {dict {indent ""}} {
-    # Überprüfung, ob der Wert ein Dictionary ist
-    if {[dict is_dict $dict]} {
-        # Durchlaufen aller Schlüssel-Wert-Paare im Dictionary
-        foreach key [dict keys $dict] {
-            puts "${indent}${key}:"
-            # Rekursiver Aufruf zur Darstellung des untergeordneten Dictionarys, mit erhöhter Einrückung
-            dict2tblputs [dict get $dict $key] "${indent}  "
-        }
-    } else {
-        # Ausgabe des Werts, wenn es sich nicht um ein Dictionary handelt
-        puts "${indent}Value: $dict"
-    }
-}
-# Rekursive Funktion zur Darstellung eines verschachtelten Dictionarys in einem Text-Widget
-proc dict2tbltext {widget dict {indent ""}} {
-    # Überprüfung, ob der Wert ein Dictionary ist
-    if {[dict is_dict $dict]} {
-        # Durchlaufen aller Schlüssel-Wert-Paare im Dictionary
-        foreach key [dict keys $dict] {
-            $widget insert end "${indent}${key}:\n"
-            # Rekursiver Aufruf zur Darstellung des untergeordneten Dictionarys, mit erhöhter Einrückung
-            dict2tbltext $widget [dict get $dict $key] "${indent}  "
-        }
-    } else {
-        # Ausgabe des Werts, wenn es sich nicht um ein Dictionary handelt
-        $widget insert end "${indent}Value: $dict\n"
-    }
-}
- 
+
 
 # Create the Tablelist widget with tree configuration
 proc createTbl {w} {
