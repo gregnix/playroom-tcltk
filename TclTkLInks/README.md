@@ -20,14 +20,14 @@
 - [Tcl-Tk Documentation](https://chiselapp.com/user/stevel/repository/Tcl-Tk-Documentation/index)
 - [Tcl Improvement Proposals (TIP)](https://core.tcl-lang.org/tips/doc/trunk/index.md)
   - [TIP 700](https://core.tcl-lang.org/tips/doc/trunk/tip/700.md)
-- [Tcl Developer Xchange](https://www.tcl.tk/community/) - Community page with links to mailing lists, forums, and other resources.
-
+- [Tcl Developer Xchange](https://www.tcl.tk/community/)
+  
 ## Current Information
 - [Tcl Wiki (Recent Changes)](https://wiki.tcl-lang.org/recent)
 - [comp.lang.tcl Forum](https://www.rocksolidbbs.com/devel/thread.php?group=comp.lang.tcl)
 - [Tcl Core Mailing List](https://sourceforge.net/p/tcl/mailman/tcl-core/)
-- [Tcl/Tk Reddit](https://www.reddit.com/r/Tcl/) - A subreddit dedicated to Tcl/Tk where you can ask questions and share knowledge.
-- [Stack Overflow Tcl/Tk](https://stackoverflow.com/questions/tagged/tcl) - A collection of questions and answers related to Tcl/Tk on Stack Overflow.
+- [Tcl/Tk Reddit](https://www.reddit.com/r/Tcl/) 
+- [Stack Overflow Tcl/Tk](https://stackoverflow.com/questions/tagged/tcl)
 - [Tcl Repository Timeline](https://core.tcl-lang.org/tcl/timeline)
 - [Tk Repository Timeline](https://core.tcl-lang.org/tk/timeline)
 - [Tcllib Timeline](https://core.tcl-lang.org/tcllib/timeline)
@@ -50,6 +50,37 @@
   - [Tablelist Widget Documentation](https://www.nemethi.de/tablelist/tablelistWidget.html)
 - [Tablelist on the Tcl Wiki](https://wiki.tcl-lang.org/page/tablelist)
 - [Listbox Documentation](https://www.tcl.tk/man/tcl/TkCmd/listbox.htm)
+
+### Tablelist Treeview Functions
+- [Tablelist as Treeview: A speed-up](https://wiki.tcl-lang.org/page/Tablelist+as+treeview%3A+A+speed-up)
+- [Tree Widget Documentation](https://www.nemethi.de/tablelist/tablelistWidget.html#tree_widget)
+- [Collapse Command](https://www.nemethi.de/tablelist/tablelistWidget.html#collapsecommand)
+- [Expand Command](https://www.nemethi.de/tablelist/tablelistWidget.html#expandcommand)
+- [Populate Command](https://www.nemethi.de/tablelist/tablelistWidget.html#populatecommand)
+- [Tree Column](https://www.nemethi.de/tablelist/tablelistWidget.html#treecolumn)
+- [Tree Style](https://www.nemethi.de/tablelist/tablelistWidget.html#treestyle)
+- [Node Indices](https://www.nemethi.de/tablelist/tablelistWidget.html#node_indices)
+- [Child Count](https://www.nemethi.de/tablelist/tablelistWidget.html#childcount)
+- [Child Index](https://www.nemethi.de/tablelist/tablelistWidget.html#childindex)
+- [Child Keys](https://www.nemethi.de/tablelist/tablelistWidget.html#childkeys)
+- [Collapse](https://www.nemethi.de/tablelist/tablelistWidget.html#collapse)
+- [Collapse All](https://www.nemethi.de/tablelist/tablelistWidget.html#collapseall)
+- [Descendant Count](https://www.nemethi.de/tablelist/tablelistWidget.html#descendantcount)
+- [Depth](https://www.nemethi.de/tablelist/tablelistWidget.html#depth)
+- [Expand](https://www.nemethi.de/tablelist/tablelistWidget.html#expand)
+- [Expand All](https://www.nemethi.de/tablelist/tablelistWidget.html#expandall)
+- [Expanded Keys](https://www.nemethi.de/tablelist/tablelistWidget.html#expandedkeys)
+- [Insert Child List](https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildlist)
+- [Insert Children](https://www.nemethi.de/tablelist/tablelistWidget.html#insertchildren)
+- [Node Row](https://www.nemethi.de/tablelist/tablelistWidget.html#noderow)
+- [Parent Key](https://www.nemethi.de/tablelist/tablelistWidget.html#parentkey)
+- [Dict to Item](https://www.nemethi.de/tablelist/tablelistWidget.html#dicttoitem)
+- [Item to Dict](https://www.nemethi.de/tablelist/tablelistWidget.html#itemtodict)
+- [Dump to File](https://www.nemethi.de/tablelist/tablelistWidget.html#dumptofile)
+- [Load from File](https://www.nemethi.de/tablelist/tablelistWidget.html#loadfromfile)
+- [Dump to String](https://www.nemethi.de/tablelist/tablelistWidget.html#dumptostring)
+- [Load from String](https://www.nemethi.de/tablelist/tablelistWidget.html#loadfromstring)
+
 
 ## Treeview
 - [ttk::treeview Documentation](https://github.com/gregnix/playroom-tcltk/tree/main/Tk/treeview)
