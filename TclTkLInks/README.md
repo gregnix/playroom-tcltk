@@ -21,6 +21,7 @@ Contents
 * [Tablelist](#tablelist)
 * [treeview](#treeview)
 * [Wrapper](#wrapper)
+* [Tools](#tools)
 
 ## Actual
 * https://wiki.tcl-lang.org/recent
@@ -53,4 +54,8 @@ Contents
 ## Wrapper
 * https://wiki.tcl-lang.org/page/tclexecomp
 * https://wiki.tcl-lang.org/page/tpack
+## Tools
+* Editor
+  * [alited](https://wiki.tcl-lang.org/page/alited%2C+a+lite+editor)
+  * [Geany](https://wiki.tcl-lang.org/page/Geany)
 
