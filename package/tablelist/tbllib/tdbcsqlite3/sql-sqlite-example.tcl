@@ -38,6 +38,7 @@ proc createTbl {w} {
     -stretch all -treecolumn 0 -selectmode single]
   $tbl columnconfigure 0 -name key
   $tbl columnconfigure 1 -name value
+  $tbl columnconfigure 1 -wrap true
   set vsb [scrollbar $frt.vsb -orient vertical -command [list $tbl yview]]
   set hsb [scrollbar $frt.hsb -orient horizontal -command [list $tbl xview]]
   $tbl configure -yscroll [list $vsb set] -xscroll [list $hsb set]
