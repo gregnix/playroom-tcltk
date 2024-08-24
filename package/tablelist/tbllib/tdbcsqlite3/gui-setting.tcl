@@ -7,12 +7,16 @@ proc createTbl {w columns} {
   set frt [ttk::frame $w.frt]
   set frbtn [ttk::frame $w.frbtn]
   set tbl [tablelist::tablelist $frt.tbl -columns $columns -height 20 -width 0 \
+    -stripebackground #f0f0f0 \
     -stretch all -treecolumn 0 -selectmode single]
-  $tbl columnconfigure 0 -name key
-  $tbl columnconfigure 1 -name value
+  
   set vsb [scrollbar $frt.vsb -orient vertical -command [list $tbl yview]]
   set hsb [scrollbar $frt.hsb -orient horizontal -command [list $tbl xview]]
   $tbl configure -yscroll [list $vsb set] -xscroll [list $hsb set]
+
+  $tbl columnconfigure 0 -name key
+  $tbl columnconfigure 1  -showlinenumbers 1 
+
 
   set btnSave [ttk::button $frbtn.btnSave -text "Speichern" -command [list saveData $tbl]]
 
@@ -47,12 +51,14 @@ proc saveData {tbl} {
 wm title . "Tablelist Konfigurationsmanager"
 pack [ttk::frame .frame -padding "10 10 10 10"] -expand 1 -fill both
 
-set columns {0 Tabellenname 0 Spalten 0 Typen 0 Primärschlüssel 0 Fremdschlüssel 0 Anzeigeoptionen}
+set columns {0 Key 0 rowid 0 Tabellenname 0 Spalten 0 Typen 0 primarykey 0 foreignkey 0 displayoption}
 set tbl [createTbl .frame  $columns]
 
 # Beispiel Daten in die Tablelist einfügen
-$tbl insert end {users "ID Name Email" "INTEGER TEXT TEXT" "ID" "" "Full row select"}
-$tbl insert end {products "ID Name Price" "INTEGER TEXT REAL" "ID" "" "Editable cells"}
+set root [$tbl insertchildlist root end tree]
+#$tbl insertchildlist $root end $childlist1
+$tbl insertchild $root end {users "" users "ID Name Email" "INTEGER TEXT TEXT" "ID" "" "Full row select"}
+$tbl insertchild $root end {products "" products "ID Name Price" "INTEGER TEXT REAL" "ID" "" "Editable cells"}
 
 
 

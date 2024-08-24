@@ -16,6 +16,22 @@ proc dictToListOfLists {dataDict} {
     return $result
 }
 
+proc dictToTableList {dict} {
+    set result [list]
+    lappend result [list "Table" "Column" "Type" "Not Null" "Primary Key"]
+
+    foreach tableName [dict keys $dict] {
+        foreach columnName [dict keys [dict get $dict $tableName]] {
+            set colData [dict get $dict $tableName $columnName]
+            set type [dict get $colData type]
+            set notnull [dict get $colData notnull]
+            set pk [dict get $colData pk]
+            lappend result [list $tableName $columnName $type $notnull $pk]
+        }
+    }
+    return $result
+}
+
 proc listToreport {list {tw .frtext.text}} {
 		if {[llength $list] > 1 } {
 				::report::defstyle resultlist {{n 1}} {
