@@ -265,7 +265,7 @@ proc createButton {w tbl1 tbl2 data t} {
    set frt [ttk::frame $w.frt]
    # combobox
    set cbselection [ttk::combobox $frt.cbselection -values $dataList -exportselection 0 -width 15]
-   $cbselection current 5
+   $cbselection current 1
 
    bind $cbselection <<ComboboxSelected>> [namespace code [list cbComboSelected %W $tbl1 $tbl2 $data $t]]
    cbComboSelected $cbselection $tbl1 $tbl2 $data $t

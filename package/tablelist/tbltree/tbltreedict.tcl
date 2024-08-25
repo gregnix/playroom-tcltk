@@ -31,6 +31,7 @@ namespace eval tbl {
    # Function to recursively convert a tree into a dictionary
    proc tbltree2dict {tbl node} {
       set result {}
+      puts okre2
       # Get the children of the current node
       set children [$tbl childkeys $node]
       foreach child $children {
@@ -41,13 +42,33 @@ namespace eval tbl {
          # Check if the child itself has children
          if {[$tbl childcount $child] > 0} {
             set childDict [tbltree2dict $tbl $child]
+
+            puts "okre3 [dict is_dict $childDict]"
             dict set result $key $childDict
          } else {
-            dict set result $key $value
+            puts "okre4 [dict is_dict $result]"
+            if {[dict is_dict $result] } {
+               if {[dict exists $result $key]} {
+                  set dicttmp [list $key [dict get $result $key]]
+                  lappend dicttmp  $key $value
+
+                  puts "$dicttmp :: $result"
+                  lappend result $dicttmp
+                  puts okd
+               } else {
+                  dict set result $key $value
+               }
+            } else {
+            puts "dd $result   "
+            }
+            puts okre1
          }
       }
+      puts okre
       return $result
    }
+
+
 
    # Function to recursively display a dictionary in the tree
    proc dict2tbltree {widget parent dict} {
@@ -67,6 +88,37 @@ namespace eval tbl {
             } else {
                $widget insertchild $parent end [list $key $value]
             }
+         }
+      }
+   }
+   proc dict2tbltree {widget parent dict} {
+      if {[dict is_dict $dict]} {
+         set keys [dict keys $dict]
+         foreach key $keys  {
+            set child [$widget insertchild $parent end $key]
+            set childdict [dict get $dict $key]
+            if {[llength $childdict] eq "1"} {
+               dict2tbltree $widget $child $childdict
+            } elseif {[checkFirstElementsEqual $childdict]}  {
+               foreach {k v } [concat {*}$childdict] {
+                  $widget insertchild $child end [list $k $v]
+               }
+            } elseif {[llength $childdict] eq "2" && ![dict is_dict [lindex $childdict 1]]} {
+
+               $widget cellconfigure $child,value -text $childdict
+               puts "else $childdict  ::: [llength $childdict]"
+
+            } else {
+               dict2tbltree $widget $child $childdict
+            }
+         }
+      } else {
+         $widget cellconfigure $parent,value -text $dict
+         set ll [llength [concat {*}$dict]]
+         if {$ll eq "1"} {
+            puts "einzel if: $dict"
+         } else {
+            puts "einzel else: $dict"
          }
       }
    }
