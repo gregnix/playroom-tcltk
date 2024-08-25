@@ -21,7 +21,7 @@ source sql-all-proc-0.2.tcl
 proc createTbl {w} {
  set frt [ttk::frame $w.frt]
  set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 0 "Value"} -height 20 -width 0 \
-    -stretch all -treecolumn 0 -selectmode single]
+    -stretch all -treecolumn 0 -selectmode single -stripebackground #f0f0f0 ]
   $tbl columnconfigure 0 -name key
   $tbl columnconfigure 1 -name value
   $tbl columnconfigure 1 -wrap true
