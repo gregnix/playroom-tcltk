@@ -176,7 +176,7 @@ proc displayTableStructure {dbconn outputWidget tbl} {
   puts $output
   
   $outputWidget insert end [dictToreportwidget $outputWidget $result]
-  dict2tbltree $tbl root $result
+  tbl::dict2tbltree $tbl root $result
 }
 
 

@@ -15,21 +15,7 @@ source sql-all-proc-0.2.tcl
 
 
 
- proc dict2tbltree {widget parent dict} {
-  if {[dict is_dict $dict]} {
-   set keys [dict keys $dict]
-   foreach key $keys  {
-    set child [$widget insertchild $parent end $key]
-    set childdict [dict get $dict $key]
-    dict2tbltree $widget $child $childdict
-   }
-  } else {
-   $widget cellconfigure $parent,value -text $dict
-
-  }
- }
-
-
+ 
 
 # Create the Tablelist widget with tree configuration
 proc createTbl {w} {
