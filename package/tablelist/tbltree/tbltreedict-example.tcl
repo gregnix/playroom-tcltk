@@ -140,7 +140,7 @@ proc acceptDropCmd {tbl targetRow sourceRow} {
 proc createTreelDD {w t args} {
  set frt [ttk::labelframe $w.frt -text $args]
  set tbl [tablelist::tablelist $frt.tbl -columns {0 "Key" 40 "Value"} -height 20 -width 0 \
-    -stretch all -treecolumn 0 -treestyle classic \
+    -stretch all -treecolumn 0 -treestyle classic  -stripebackground #f0f0f0 \
     -movablerows true -acceptchildcommand "acceptChildCmd" -acceptdropcommand "acceptDropCmd" -selectmode single]
  $tbl columnconfigure 0 -name key
  $tbl columnconfigure 1 -name value

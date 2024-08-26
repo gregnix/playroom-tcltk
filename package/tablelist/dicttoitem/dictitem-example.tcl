@@ -1,12 +1,42 @@
 package require Tcl 8.6
 package require tablelist_tile
 
-# Create the Tablelist widget
-set tbl [tablelist::tablelist .tbl -columns {
-    10 "First Name" left
-    10 "Last Name" left
-    5 "Age" center
-} -height 15 -width 50 -labelcommand tablelist::sortByColumn ]
+
+proc createTbl {} {
+    set w  ""
+    set frt [ttk::labelframe $w.frt ]
+    # Create the Tablelist widget
+    set tbl [tablelist::tablelist $frt.tbl -columns {
+        0 "First Name" left
+        0 "Last Name" left
+        0 "Age" center
+    } -height 15 -width 50 -stripebackground #f0f0f0 ]
+
+    # scrollbar
+    set vsb [scrollbar $frt.vsb -orient vertical -command [list $tbl yview]]
+    set hsb [scrollbar $frt.hsb -orient horizontal -command [list $tbl xview]]
+    $tbl configure -yscroll [list $vsb set] -xscroll [list $hsb set]
+    
+    $tbl configure -stretch all
+    # sort tbl
+    $tbl configure -labelcommand tablelist::sortByColumn
+
+    # Configure column names for dictionary mapping
+    $tbl columnconfigure 0 -name forename
+    $tbl columnconfigure 1 -name surname
+    $tbl columnconfigure 2 -name age
+    
+
+    # Display the Tablelist widget
+    pack $vsb -side right -fill y
+    pack $hsb -side bottom -fill x
+    pack $tbl -expand yes -fill both
+    pack $frt -side top -expand 1 -fill both
+    return $tbl
+
+}
+
+set tbl [createTbl]
 
 # Example data as a dictionary
 set data {
@@ -17,10 +47,7 @@ set data {
 puts " data:"
 puts $data
 
-# Configure column names for dictionary mapping
-$tbl columnconfigure 0 -name forename
-$tbl columnconfigure 1 -name surname
-$tbl columnconfigure 2 -name age
+
 
 # Insert data into the Tablelist
 foreach {key personData} $data {
@@ -28,8 +55,7 @@ foreach {key personData} $data {
     $tbl insert end $item
 }
 
-# Display the Tablelist widget
-pack $tbl -expand yes -fill both
+
 
 # Get full keys (k0, k1, ...) and IDs (0, 1, ...) of the rows
 set KeyList [$tbl getfullkeys 0 end]
@@ -54,7 +80,7 @@ foreach key $KeyList {
 }
 puts $data1
 
-unset data1 
+unset data1
 puts " foreach rowcget"
 # Iterate over the IDs using rowcget
 foreach key $IdList {
@@ -154,8 +180,8 @@ forename Alice surname Johnson age 40
 0 {forename Jane surname Smith age 25} 1 {forename John surname Doe age 30} 2 {forename Alice surname Johnson age 40}
   for 
 forename Jane surname Smith age 25"
-forename John surname Doe age 30"
+    forename John surname Doe age 30"
 forename Alice surname Johnson age 40"
-0 {forename Jane surname Smith age 25} 1 {forename John surname Doe age 30} 2 {forename Alice surname Johnson age 40}
-    
+    0 {forename Jane surname Smith age 25} 1 {forename John surname Doe age 30} 2 {forename Alice surname Johnson age 40}
+
 }
