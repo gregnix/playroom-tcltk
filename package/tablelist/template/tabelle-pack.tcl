@@ -13,7 +13,7 @@ proc tblCreate {w} {
     # Create table
     set tbl [tablelist::tablelist $frt.tbl -columns {0 "ID" right 0 "Name" left 0 "Class" center} \
     -stretch all  -xscroll [list $frt.h set] -yscroll [list $frt.v set] -labelcommand tablelist::sortByColumn \
-    -selectmode multiple -exportselection false]
+    -stripebackground #f0f0f0 -selectmode multiple -exportselection false]
 
     $tbl columnconfigure 0 -sortmode dictionary
 
