@@ -286,6 +286,41 @@ set employeeInfo {
 }
 dict set data employeeInfo $employeeInfo
 
+# Erstelle ein komplexeren Beispielbaum
+set root [dict create value 20 left {} right {}]
+set left [dict create value 10 left {} right {}]
+set right [dict create value 30 left {} right {}]
+dict set root left $left
+dict set root right $right
+
+# Füge weitere Knoten hinzu
+set leftLeft [dict create value 5 left {} right {}]
+set leftRight [dict create value 15 left {} right {}]
+dict set left left $leftLeft
+dict set left right $leftRight
+dict set root left $left
+
+set rightLeft [dict create value 25 left {} right {}]
+set rightRight [dict create value 35 left {} right {}]
+dict set right left $rightLeft
+dict set right right $rightRight
+dict set root right $right
+
+# Noch tiefere Knoten hinzufügen
+set leftLeftLeft [dict create value 3 left {} right {}]
+set leftLeftRight [dict create value 7 left {} right {}]
+dict set leftLeft left $leftLeftLeft
+dict set leftLeft right $leftLeftRight
+dict set left left $leftLeft
+
+set rightRightLeft [dict create value 33 left {} right {}]
+set rightRightRight [dict create value 37 left {} right {}]
+dict set rightRight left $rightRightLeft
+dict set rightRight right $rightRightRight
+dict set right right $rightRight
+dict set root right $right
+dict set data root $root
+
 #####
 #main
 #####

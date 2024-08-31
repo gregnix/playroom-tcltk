@@ -7,7 +7,7 @@ package require struct::set
 package require struct::list
 
 # dict - nested
-source [file join [file dirname [info script]] lib  dict-tree-tablelist-load.tcl]
+source [file join [file dirname [info script]]  dict-tree-tablelist-load.tcl]
 
 # help procs
 # This function generates flat hierarchical test data

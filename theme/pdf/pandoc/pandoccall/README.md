@@ -1,1 +1,0 @@
-TinyTex and pandoc
