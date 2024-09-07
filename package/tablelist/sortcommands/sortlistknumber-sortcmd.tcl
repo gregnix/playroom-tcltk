@@ -98,6 +98,7 @@ if {[info script] eq $argv0} {
     foreach v [list 0 1 2] {
         $tbl header cellconfigure 0,$v -text [$tbl columncget $v -sortcommand ]
         $tbl header cellconfigure 1,$v -text [$tbl columncget $v -sortmode ]
+        puts header
     }
 
     pack $tbl -fill both -expand true

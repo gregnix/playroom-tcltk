@@ -2,27 +2,32 @@
 
 #20240819
 
-# treeview-lib-example.tcl
+# tblib-example.tcl
 
 package require Tk
 package require tablelist_tile
-package require ctext
-package require scrollutil_tile
-package require tooltip
 
+tcl::tm::path add [file join [file dirname [info script]] lib tcltk tm] 
+package require table::tbllib
+package require table::tbltreedict
+package require table::tbltreehelpers
+package require table::tbltreemove
+package require table::tbltestdata
+##
 
-# procs with namespace tvlib:: and example datas
-source tbl-lib.tcl
-source db-lib.tcl
+namespace eval NewProg {
+ ttk::frame .fr
 
+ set cols {0 "Col1" right 0 "Col2" left 0 "Col3" center}
+ set tbl [ tbllib::newTable .fr $cols]
 
-ttk::frame .fr
+ $tbl insertlist end  [tbllib::testdata::generateLargeList 10 3]
+ $tbl configure -width 40
+ pack .fr -expand 1 -fill both
 
-set cols {0 "Col1" right 0 "Col2" left 0 "Col3" center}
-set tbl [ tbllib::newTable .fr $cols]
+ puts [$tbl getcolumn 1]
+ puts [$tbl configure -columns]
 
-$tbl insertlist end  [tbllib::generateLargeList 10 3]
-$tbl configure -width 40
-pack .fr -expand 1 -fill both
+}
 
-createTableFromTablelist db11 $tbl "generate"
+$NewProg::tbl configure

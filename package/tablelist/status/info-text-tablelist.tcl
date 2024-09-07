@@ -6,8 +6,13 @@
 package require Tk
 package require tablelist
 
-source [file join [file dirname [info script]] tloglib.tcl]
-source [file join [file dirname [info script]] info-text-tablelist.tcl]
+set addtmlib ~/lib/tcltk/tm
+tcl::tm::path add $addtmlib
+#package require report::tloglib
+
+
+##source [file join [file dirname [info script]] tloglib.tcl]
+#source [file join [file dirname [info script]] info-text-tablelist.tcl]
 source [file join [file dirname [info script]] tablelist-statuslib.tcl]
 # Central dictionary for saving the status
 variable datenDict

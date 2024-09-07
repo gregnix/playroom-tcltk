@@ -2,9 +2,16 @@ package require tablelist_tile
 
 
 # procs with namespace tvlib:: and example datas
-source tbl-lib.tcl
+#source tbl-lib.tcl
 source db-lib.tcl
-source report-lib.tcl
+#source report-lib.tcl
+
+# tm libs
+set addtmlib ~/lib/tcltk/tm
+tcl::tm::path add $addtmlib
+package require database::sqlstdproc
+package require report::reportlib  
+
 
 proc cbtblbtn {db table type args} {
     switch $type {

@@ -56,11 +56,14 @@ set tbl [createTbl .frame  $columns]
 
 # Beispiel Daten in die Tablelist einfügen
 set root [$tbl insertchildlist root end tree]
+$tbl cellconfigure $root,7 -text d
+puts [$tbl rowconfigure $root -text]
 #$tbl insertchildlist $root end $childlist1
-$tbl insertchild $root end {users "" users "ID Name Email" "INTEGER TEXT TEXT" "ID" "" "Full row select"}
+set cid [$tbl insertchild $root end {users "" users "ID Name Email" "INTEGER TEXT TEXT" "ID" "" "Full row select"}]
+puts $cid
 $tbl insertchild $root end {products "" products "ID Name Price" "INTEGER TEXT REAL" "ID" "" "Editable cells"}
-
-
+puts [$tbl rowconfigure $root -text {tree {} a b c d e f}]
+puts [$tbl rowconfigure k1 -text]
 
 
 

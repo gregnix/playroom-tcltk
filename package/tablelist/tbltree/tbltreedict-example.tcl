@@ -14,10 +14,17 @@ package require md5
 catch {source [file join $tablelist::library demos option_tile.tcl]}
 
 set dirname [file dirname [info script]]
-source [file join $dirname tbltreedict.tcl]
-source [file join $dirname tbltreemove.tcl]
+# tm libs
+set addtmlib ~/lib/tcltk/tm
+tcl::tm::path add $addtmlib
+package require tbl::tbltreedict
+package require tbl::tbltreemove
+package require tbl::tbltreehelpers
+
+#source [file join $dirname tbltreedict.tcl]
+#source [file join $dirname tbltreemove.tcl]
 #source [file join $dirname tbltreexml.tcl]
-source [file join $dirname tbltreehelpers.tcl]
+#source [file join $dirname tbltreehelpers.tcl]
 
 
 namespace eval tbl {

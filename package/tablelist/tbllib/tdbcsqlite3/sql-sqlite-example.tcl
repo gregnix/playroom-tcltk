@@ -10,9 +10,16 @@ source [file join $dirname tbltreemove.tcl]
 # Datei 1 und Datei 2 einbinden
 package require Tk
 package require dicttool
+
+
 source report-lib.0.2.tcl
 source sql-all-proc-0.2.tcl
 
+# tm libs
+set addtmlib ~/lib/tcltk/tm
+tcl::tm::path add $addtmlib
+#package require database::sqlstdproc
+#package require report::reportlib
 
 
  

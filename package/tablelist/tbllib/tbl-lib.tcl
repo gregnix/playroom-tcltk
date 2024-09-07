@@ -122,6 +122,27 @@ namespace eval tbllib {
 }
 
 
+
+namespace eval tbllib {
+ proc getFilteredRows {tbl columnIndex value} {
+    set rowCount [$tbl index end]
+    set filteredRows {}
+
+    for {set i 0} {$i < $rowCount} {incr i} {
+        if {[$tbl cellcget $i,$columnIndex -text] eq $value} {
+            lappend filteredRows [$tbl get $i]
+        }
+    }
+
+    return $filteredRows
+}
+
+}
+
+
+
+
+
 if {[info script] eq $argv0} {
 
  ttk::frame .fr
