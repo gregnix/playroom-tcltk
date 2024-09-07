@@ -147,7 +147,38 @@ proc testDataOne {count {intmax 100} {timepoint now} {timeadd seconds} {format {
     }
     return $data
 }
-
+proc testDataTwo {count {intmax 100} {timepoint now} {timeadd seconds} {format {%Y-%m-%dT%T}} } {
+    set data {}
+    set time [clock scan $timepoint]
+    for {set i 0} {$i < $count} {incr i} {
+        set temp [list]
+        lappend temp $i ;# id integer
+        #lappend temp [numberToAlphabeticString $i alnum] ;# id string
+        #lappend temp [numberToAlphabeticString $i alpha] ;# id string
+        lappend temp [numberToAlphabeticString $i upper] ;# id string
+        #lappend temp [numberToAlphabeticString $i lower] ;# id string        
+        #lappend temp [numberToAlphabeticString $i number] ;# id string
+        #lappend temp [numberToAlphabeticString $i uxnumber] ;# id string
+        #lappend temp [numberToAlphabeticString $i bnumber] ;# id string
+        lappend temp [clock format [expr {$time + $i}] -format $format] ;# id time
+        #lappend temp [clock format [clock add $time $i $timeadd] -format $format] ;# id time
+        # random time intervals: [clock add $time [incr j [expr {$i + int(rand() * $intmax) }]] $timeadd]
+        #lappend temp [clock format [clock add $time [incr j [expr {$i + int(rand() * $intmax) }]] $timeadd] -format $format] ;# id time
+        #lappend temp [expr {rand() * $intmax}]
+        lappend temp [expr {[format "%.2f" [expr {rand() * $intmax}]]}]
+        lappend temp [expr {int(rand() * $intmax)}]
+        lappend temp [testDataalnum 1 alnum 3 10] 
+        #lappend temp [testDataalnum 3 alnum 3 5] 
+        #lappend temp [testDataalnum 1 alpha 3 10] 
+        #lappend temp [testDataalnum 1 upper 3 10] 
+        #lappend temp [testDataalnum 1 lower 3 10] 
+        lappend temp [testDataalnum 1 number 1 3] 
+        lappend temp [testDataalnum 1 zeronumber 1 3] 
+        #lappend temp [clock format [expr {int(rand() * $time)}] -format $format]
+        lappend data $temp
+    }
+    return $data
+}
 }
 
 

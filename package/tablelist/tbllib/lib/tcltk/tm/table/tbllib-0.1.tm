@@ -297,7 +297,7 @@ if {[info script] eq $argv0} {
 
 
  ttk::frame .fr
- set data [tbllib::testdata::testDataOne 100 100 2001-02-28T12:01:01 seconds]
+ set data [tbllib::testdata::testDataTwo 100 100 2001-02-28T12:01:01 seconds]
  #set data [tbllib::testdata::generateReferenceList 10 8]
 
  set cols [tbllib::generateColumns $data]
