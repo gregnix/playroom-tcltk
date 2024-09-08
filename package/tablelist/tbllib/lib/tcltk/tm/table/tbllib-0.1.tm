@@ -15,10 +15,10 @@ namespace eval tbllib {
   # header für summen der column falls zahl
   $tbl header insert 0 [list]
   $tbl header insert 1 [list]
-#  foreach v [list 0 1 2] {
-#   $tbl header cellconfigure 0,3 -text "Summe column 1"
-#   $tbl header cellconfigure 1,3 -text "summe sel column 1"
-#  }
+  #  foreach v [list 0 1 2] {
+  #   $tbl header cellconfigure 0,3 -text "Summe column 1"
+  #   $tbl header cellconfigure 1,3 -text "summe sel column 1"
+  #  }
 
   dict set tblVarDict $tbl cols $cols
   dict set tblVarDict $tbl editVars {}
@@ -26,9 +26,9 @@ namespace eval tbllib {
 
   $tbl columnconfigure 0 -sortmode dictionary
   set col 1
-  dict set tblVarDict $tbl editVars $col 1
-  $tbl columnconfigure 1 -editable $col
-  set "[namespace current]::editVar$col" 1
+  #dict set tblVarDict $tbl editVars $col 1
+  #$tbl columnconfigure 1 -editable $col
+  #set "[namespace current]::editVar$col" 1
 
   #add scrollbar
   set vsb [scrollbar $frt.v -orient vertical -command [list $tbl yview]]
@@ -98,6 +98,21 @@ namespace eval tbllib {
   bind [$tbl bodytag] <Key-d> [list [namespace current]::moveRowDown $tbl]
   bind $tbl <<TablelistSelect>> [list [namespace current]::onTableChanged $tbl]
 
+  # Bind <<TablelistSelect>> to update sums when selection changes
+
+  bind [$tbl bodytag] <<TablelistSelect>> [list [namespace current]::onTableChanged $tbl]
+
+  # Bind <<TablelistCellUpdated>> to update sums when a cell is edited
+  #bind $tbl <<TablelistCellUpdated>> [list [namespace current]::onTableChanged $tbl]
+
+  # Optionally, bind <<TablelistActivate>> to handle when a row or cell is activated
+  #bind [$tbl bodytag] <<TablelistActivate>> [list [namespace current]::onTableChanged $tbl]
+
+  # If using row reordering, bind <<TablelistRowMoved>> to recalculate sums
+  #bind [$tbl bodytag] <<TablelistRowMoved>> [list [namespace current]::onTableChanged $tbl]
+
+
+
  }
 
  proc tblcallback {tbl type args} {
@@ -125,12 +140,23 @@ namespace eval tbllib {
    }
   }
  }
- proc ladd {l} {::tcl::mathop::+ {*}$l}
+ proc ladd {l} {
+  set cleanList {}
+  foreach num $l {
+   # Entferne führende Nullen und konvertiere die Zahl in eine Ganzzahl
+   if {[regexp {^0*(\d+)$} $num -> cleanNum]} {
+    lappend cleanList $cleanNum
+   }
+  }
+  return [::tcl::mathop::+ {*}$cleanList]
+ }
+
 
  proc sumColumn {tbl hrow cols} {
   foreach col $cols {
    set sum 0
-   set sum  [ladd [$tbl columncget $col -text ]]
+   #set sum  [ladd [$tbl columncget $col -text ]]
+   set sum  [ladd [$tbl getcolumn $col  ]]
    $tbl header cellconfigure $hrow,$col -text $sum
   }
  }
@@ -139,7 +165,10 @@ namespace eval tbllib {
   # Liste der ausgewählten Zeilen
   set selectedRows [$tbl curselection]
   if {[llength $selectedRows] == 0} {
-   $tbl header cellconfigure $hrow,$col -text  0
+   foreach col $cols {
+    puts "c $col"
+    $tbl header cellconfigure $hrow,$col -text  0
+   }
   }
   foreach col $cols {
    set values {}
@@ -151,7 +180,7 @@ namespace eval tbllib {
    $tbl header cellconfigure $hrow,$col -text  $sum
   }
  }
- 
+
  proc countColumn {tbl hrow cols} {
   foreach col $cols {
    set sum 0
@@ -164,7 +193,9 @@ namespace eval tbllib {
   # Liste der ausgewählten Zeilen
   set selectedRows [$tbl curselection]
   if {[llength $selectedRows] == 0} {
-   $tbl header cellconfigure $hrow,$col -text  0
+   foreach col $cols {
+    $tbl header cellconfigure $hrow,$col -text  0
+   }
   }
   foreach col $cols {
    set values {}
@@ -176,8 +207,8 @@ namespace eval tbllib {
    $tbl header cellconfigure $hrow,$col -text  $count
   }
  }
- 
-   
+
+
  proc onTableChanged {tbl} {
   # Summe der Spalte berechnen
   set cols [list 3 4 6 7]
@@ -459,10 +490,11 @@ namespace eval tbllib {
 
 if {[info script] eq $argv0} {
 
-
+package require dicttool
 
  tcl::tm::path add [file join [file dirname [info script]] ./]
  package require tbltestdata
+ package require tbltreedict
 
 
  ttk::frame .fr1
@@ -473,6 +505,8 @@ if {[info script] eq $argv0} {
  set tbl [ tbllib::newTable .fr1 $cols]
 
  $tbl insertlist end  $data
+
+ tbllib::onTableChanged $tbl
  $tbl configure -width 80
  pack .fr1 -expand 1 -fill both
 
@@ -481,15 +515,17 @@ if {[info script] eq $argv0} {
 
 
  set treeData [tbllib::testdata::generateTreeData 2 2]
-
+#set treeData [tbllib::testdata::infotcltk]
  ttk::frame .fr2
- set data [tbllib::testdata::testDataTwo 100 100 2001-02-28T12:01:01 seconds]
+ #set data [tbllib::testdata::testDataTwo 100 100 2001-02-28T12:01:01 seconds]
  #set data [tbllib::testdata::generateReferenceList 10 8]
 
  set cols [tbllib::generateColumnsTree $treeData]
  set tbl2 [ tbllib::newTable .fr2 $cols]
  $tbl2 configure -treecolumn 0
  tbllib::treetotbl $tbl2 $treeData
+ #tbllib::dict2tbltree $tbl2 root $treeData
+ 
 
  # $tbl2 insertlist  end  $treeData
  $tbl2 configure -width 80

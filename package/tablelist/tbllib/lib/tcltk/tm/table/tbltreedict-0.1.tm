@@ -9,7 +9,7 @@
 
 # needs dict isdict from dicttool
 
-namespace eval tbl {
+namespace eval tbllib {
    # Function to check whether the first elements of the lists are equal
    # use in proc dict2tbltree
    proc checkFirstElementsEqual {listOfLists} {

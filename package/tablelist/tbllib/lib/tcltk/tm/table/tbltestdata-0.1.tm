@@ -391,6 +391,123 @@ namespace eval tbllib::testdata {
     }
 }
 
+namespace eval tbllib::testdata {
+  # Collects and returns Tcl/Tk environment information in a dictionary
+  proc infotcltk {} {
+    lappend infodata hostname [info hostname]
+    lappend infodata library [info library]
+    lappend infodata nameofexecutable [info nameofexecutable]
+    lappend infodata patchlevel [info patchlevel]
+    lappend infodata sharedlibextension [info sharedlibextension]
+    lappend infodata tclversion [info tclversion]
+    dict set data info $infodata
+
+    dict set data tm [tcl::tm::path list]
+
+    foreach i [lsort [package names]] {
+      if {[string length [package provide $i]]} {
+        lappend loaded  $i [package present $i]
+      }
+    }
+    dict set data package loaded $loaded
+
+    foreach p [lsort [package names]] {
+      lappend allp $p [package versions $p]
+    }
+    dict set data package all $allp
+
+    # Add namespace information to the data dictionary
+    dict set data namespace [listns]
+
+    set ns ::
+    set pat [set ns]::*
+
+    foreach proc [lsort [info procs $pat]] {
+      dict lappend data procs [list : $proc]
+    }
+
+    foreach command [lsort [info commands $pat]] {
+      dict lappend data commands [list : $command]
+    }
+
+    foreach function [lsort [info functions $pat]] {
+      dict lappend data functions [list : $function]
+    }
+
+    foreach var [info vars $pat] {
+      if {[array exists $var]} {
+        dict lappend date array $var [list {*}[array get $var]]
+      } else {
+        dict lappend date variable $var [list [set $var]]
+      }
+    }
+    dict set data vars $date
+
+    return $data
+  }
+
+
+  # Recursively lists namespaces, commands, functions, and variables
+  proc listns {{parentns ::}} {
+    set result [dict create]
+    dict set result commands [listnscommands $parentns]
+    dict set result functions [listnsfunctions $parentns]
+    dict set result procs [listnsprocs $parentns]
+    dict set result vars [listnsvars $parentns]
+
+    foreach ns [namespace children $parentns] {
+      dict set result $ns [listns $ns]
+    }
+    return $result
+  }
+
+  # List procedures in the specified namespace
+  proc listnsprocs {ns} {
+    set result ""
+    foreach proc [lsort [info procs ${ns}::*]] {
+      lappend result [list ":" $proc]
+    }
+    return $result
+  }
+
+  # List commands in the specified namespace
+  proc listnscommands {ns} {
+    set result ""
+    foreach command [lsort [info commands ${ns}::*]] {
+      lappend result [list ":" $command]
+    }
+    return $result
+  }
+
+  # List functions in the specified namespace
+  proc listnsfunctions {ns} {
+    set result ""
+    foreach function [lsort [info functions ${ns}::*]] {
+      lappend result [list ":" $function]
+    }
+    return $result
+  }
+
+  # List variables in the specified namespace, including arrays
+  proc listnsvars {ns} {
+    set date ""
+    foreach var [lsort [info vars ${ns}::*]] {
+      if {[array exists $var]} {
+        dict set date array $var [list {*}[array get $var]]
+      } else {
+        if {[catch {set $var} msg]} {
+          puts "catch error: proc listnsvar :: $var"
+          dict set date variable $var [list catch_error]
+        } else {
+          dict set date variable $var [list ":" [list [set $var]]]
+        }
+      }
+    }
+    dict set data variablen $date
+    return $data
+  }
+}
+
 if {[info script] eq $argv0} {
 
     puts "Generating data: [time {set data [tbllib::testdata::testDataOne 1000 100 2001-02-28T12:01:01 seconds]}]"
