@@ -56,10 +56,15 @@ namespace eval tbllib {
   set btnhide [ttk::button $fro.hide -text "HideShow" -command [list [namespace current]::toggleColumns $tbl]]
   set btneditable [ttk::button $fro.edit -text "Editable" -command [list [namespace current]::toggleEditableColumns $tbl]]
 
+  set btnmoveUp [ttk::button $frb.moveUp -text "Move Up" -command [list [namespace current]::moveRowUp $tbl]]
+  set btnmoveDown [ttk::button $frb.moveDown -text "Move Down" -command [list [namespace current]::moveRowDown $tbl]]
+
   grid $btnone -row 0 -column 0 -sticky w
   grid $btntwo -row 0 -column 1 -sticky e
   grid $btndelete -row 0 -column 2 -sticky e
   grid $btncopy -row 0 -column 3 -sticky e
+  grid $btnmoveUp -row 0 -column 4 -sticky e
+  grid $btnmoveDown -row 0 -column 5 -sticky e
   grid $btnhide -row 1 -column 1 -sticky e
   grid $btneditable -row 1 -column 2 -sticky e
   grid $cbselection -row 1 -column 0 -sticky ew
@@ -74,10 +79,20 @@ namespace eval tbllib {
   bind [$tbl bodytag] <Key-a> [list tk_messageBox -message \
     "Tbl: $tbl\nW %W\nx: %x y:%y\nX:%X Y:%Y\n [join "%k %i %s %A %K %M %N %R %S %T" \n]" -type ok]
   bind [$tbl bodytag] <Key-F4> [list $btntwo invoke]
-
+  bindKeys $tbl
   return $tbl
  }
 
+
+ # Binding the 'u' key for moving up and 'd' key for moving down
+ proc bindKeys {tbl} {
+  bind [$tbl bodytag] <Double-1> [list tk_messageBox -message "Tbl: $tbl\nW %W" -type ok]
+  bind [$tbl bodytag] <Key-a> [list tk_messageBox -message \
+    "Tbl: $tbl\nW %W\nx: %x y:%y\nX:%X Y:%Y\n [join "%k %i %s %A %K %M %N %R %S %T" \n]" -type ok]
+
+  bind [$tbl bodytag] <Key-u> [list [namespace current]::moveRowUp $tbl]
+  bind [$tbl bodytag] <Key-d> [list [namespace current]::moveRowDown $tbl]
+ }
 
  proc tblcallback {tbl type args} {
   variable tblVarDict
@@ -283,6 +298,88 @@ namespace eval tbllib {
   return $cols
  }
 
+ # Funktion, um Spalten basierend auf den Baumdaten zu generieren
+ proc generateColumnsTree {data} {
+  set cols {}
+
+  # Anzahl der Spalten basierend auf der Anzahl der Elemente in der Beschreibung
+  set numColumns [llength [lindex [lindex $data 0] 1]]
+  lappend cols 0 key left   ;# Die erste Spalte als Baumspalte und linksbündig
+
+  for {set i 0} {$i < $numColumns} {incr i} {
+   set title "Col$i"
+   set value [lindex [lindex [lindex $data 0] 1] $i]
+
+   if {[string is integer -strict $value]} {
+    set align right
+   } else {
+    set align left
+   }
+   lappend cols 0 $title $align
+  }
+
+  return $cols
+ }
+
+ # Rekursive Funktion zum Einfügen von Knoten in das Tablelist
+ proc insertTreeNode {tbl parent nodeData} {
+  set nodeName [lindex $nodeData 0]
+  set description [lindex $nodeData 1]
+  set row [$tbl insertchild $parent end [list $nodeName {*}$description]]
+
+  for {set i 2} {$i < [llength $nodeData]} {incr i} {
+   insertTreeNode $tbl $row [lindex $nodeData $i]
+  }
+ }
+
+ # Funktion, um die Baumdaten in das Tablelist einzufügen
+ proc treetotbl {tbl treeData} {
+  foreach node $treeData {
+   [namespace current]::insertTreeNode $tbl root $node
+  }
+ }
+ # Function to move the selected row up
+ proc moveRowUp {tbl} {
+  set selected [$tbl curselection]
+  if {[llength $selected] == 0} {
+   tk_messageBox -message "No row selected" -type ok
+   return
+  }
+
+  set selectedRow [lindex $selected 0]
+
+  # Make sure the row is not the first one
+  if {$selectedRow > 0} {
+   set prevRow [expr {$selectedRow - 1}]
+   set rowData [$tbl get $selectedRow]
+   $tbl delete $selectedRow
+   $tbl insert $prevRow $rowData
+   $tbl selection set $prevRow
+  }
+ }
+
+ # Function to move the selected row down
+ proc moveRowDown {tbl} {
+  set selected [$tbl curselection]
+  if {[llength $selected] == 0} {
+   tk_messageBox -message "No row selected" -type ok
+   return
+  }
+
+  set selectedRow [lindex $selected 0]
+  set lastRow [expr {[$tbl index end] - 1}]
+
+  # Make sure the row is not the last one
+  if {$selectedRow < $lastRow} {
+   set nextRow [expr {$selectedRow + 1}]
+   set rowData [$tbl get $selectedRow]
+   $tbl delete $selectedRow
+   $tbl insert $nextRow $rowData
+   $tbl selection set $nextRow
+  }
+ }
+
+
 
 }
 
@@ -292,23 +389,42 @@ namespace eval tbllib {
 
 if {[info script] eq $argv0} {
 
+
+
  tcl::tm::path add [file join [file dirname [info script]] ./]
  package require tbltestdata
 
 
- ttk::frame .fr
+ ttk::frame .fr1
  set data [tbllib::testdata::testDataTwo 100 100 2001-02-28T12:01:01 seconds]
  #set data [tbllib::testdata::generateReferenceList 10 8]
 
  set cols [tbllib::generateColumns $data]
- set tbl [ tbllib::newTable .fr $cols]
+ set tbl [ tbllib::newTable .fr1 $cols]
 
  $tbl insertlist end  $data
  $tbl configure -width 80
- pack .fr -expand 1 -fill both
+ pack .fr1 -expand 1 -fill both
 
  puts [$tbl getcolumn 1]
  puts [$tbl configure -columns]
+
+
+ set treeData [tbllib::testdata::generateTreeData 2 2]
+
+ ttk::frame .fr2
+ set data [tbllib::testdata::testDataTwo 100 100 2001-02-28T12:01:01 seconds]
+ #set data [tbllib::testdata::generateReferenceList 10 8]
+
+ set cols [tbllib::generateColumnsTree $treeData]
+ set tbl2 [ tbllib::newTable .fr2 $cols]
+ $tbl2 configure -treecolumn 0
+ tbllib::treetotbl $tbl2 $treeData
+
+ # $tbl2 insertlist  end  $treeData
+ $tbl2 configure -width 80
+ pack .fr2 -expand 1 -fill both
+
 
  if {0} {
   output:
