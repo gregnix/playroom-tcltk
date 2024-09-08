@@ -12,19 +12,23 @@ namespace eval tbllib {
     -stretch all  -xscroll [list $frt.h set] -yscroll [list $frt.v set] -labelcommand tablelist::sortByColumn \
     -selectmode multiple -exportselection false]
 
+  # header für summen der column falls zahl
+  $tbl header insert 0 [list]
+  $tbl header insert 1 [list]
+#  foreach v [list 0 1 2] {
+#   $tbl header cellconfigure 0,3 -text "Summe column 1"
+#   $tbl header cellconfigure 1,3 -text "summe sel column 1"
+#  }
+
   dict set tblVarDict $tbl cols $cols
   dict set tblVarDict $tbl editVars {}
   dict set tblVarDict $tbl colVars {}
 
   $tbl columnconfigure 0 -sortmode dictionary
-  $tbl columnconfigure 1 -editable 1
-
-  # Speichere den Bearbeitbarkeitszustand in editVars
-  for {set col 0} {$col < [llength $cols]} {incr col} {
-   dict set tblVarDict $tbl editVars $col 1 ; # Spalte bearbeitbar
-   dict set tblVarDict $tbl colVars $col 1 ;  # Spalte sichtbar
-  }
-
+  set col 1
+  dict set tblVarDict $tbl editVars $col 1
+  $tbl columnconfigure 1 -editable $col
+  set "[namespace current]::editVar$col" 1
 
   #add scrollbar
   set vsb [scrollbar $frt.v -orient vertical -command [list $tbl yview]]
@@ -53,7 +57,7 @@ namespace eval tbllib {
   set btndelete [ttk::button $frb.delete -text "Delete" -command [list [namespace current]::tblcallback $tbl delete]]
   set btncopy [ttk::button $frb.copy -text "Copy" -command [list [namespace current]::tblcallback $tbl copy]]
 
-  set btnhide [ttk::button $fro.hide -text "HideShow" -command [list [namespace current]::toggleColumns $tbl]]
+  set btnhide [ttk::button $fro.hide -text "HideShow" -command [list [namespace current]::toggleVisibilityColumns $tbl]]
   set btneditable [ttk::button $fro.edit -text "Editable" -command [list [namespace current]::toggleEditableColumns $tbl]]
 
   set btnmoveUp [ttk::button $frb.moveUp -text "Move Up" -command [list [namespace current]::moveRowUp $tbl]]
@@ -92,6 +96,8 @@ namespace eval tbllib {
 
   bind [$tbl bodytag] <Key-u> [list [namespace current]::moveRowUp $tbl]
   bind [$tbl bodytag] <Key-d> [list [namespace current]::moveRowDown $tbl]
+  bind $tbl <<TablelistSelect>> [list [namespace current]::onTableChanged $tbl]
+
  }
 
  proc tblcallback {tbl type args} {
@@ -114,22 +120,72 @@ namespace eval tbllib {
     $tbl insert $sel [$tbl get $sel]
    }
    test {
-    set columncount [expr {[$tbl columncount] - 1}]
-    for {set col 0} {$col <= $columncount} {incr col} {
-     dict set  cols $col title [$tbl columncget $col -title]
-     dict set  cols $col width [$tbl columncget $col -width]
-     dict set  cols $col align [$tbl columncget $col -align]
-     dict set  cols $col sortmode [$tbl columncget $col -sortmode]
-     dict set  cols $col hide [$tbl columncget $col -hide]
-    }
-    dict set tblVarDict $tbl cols $cols
-    puts $tblVarDict
-    puts  [dict get $tblVarDict $tbl cols 0]
-    #puts [dict get $tblVarDict $tbl cols]
-    #puts [dict get $tblVarDict $tbl]
-
+    sumColumn $tbl 0 3
+    sumSelectedColumn $tbl 1 3
    }
   }
+ }
+ proc ladd {l} {::tcl::mathop::+ {*}$l}
+
+ proc sumColumn {tbl hrow cols} {
+  foreach col $cols {
+   set sum 0
+   set sum  [ladd [$tbl columncget $col -text ]]
+   $tbl header cellconfigure $hrow,$col -text $sum
+  }
+ }
+
+ proc sumSelectedColumn {tbl hrow cols} {
+  # Liste der ausgewählten Zeilen
+  set selectedRows [$tbl curselection]
+  if {[llength $selectedRows] == 0} {
+   $tbl header cellconfigure $hrow,$col -text  0
+  }
+  foreach col $cols {
+   set values {}
+   set sum 0
+   foreach row $selectedRows {
+    lappend values [$tbl cellcget $row,$col -text]
+   }
+   set sum [ladd $values]
+   $tbl header cellconfigure $hrow,$col -text  $sum
+  }
+ }
+ 
+ proc countColumn {tbl hrow cols} {
+  foreach col $cols {
+   set sum 0
+   set count  [llength [$tbl columncget $col -text ]]
+   $tbl header cellconfigure $hrow,$col -text $count
+  }
+ }
+
+ proc countSelectedColumn {tbl hrow cols} {
+  # Liste der ausgewählten Zeilen
+  set selectedRows [$tbl curselection]
+  if {[llength $selectedRows] == 0} {
+   $tbl header cellconfigure $hrow,$col -text  0
+  }
+  foreach col $cols {
+   set values {}
+   set sum 0
+   foreach row $selectedRows {
+    lappend values [$tbl cellcget $row,$col -text]
+   }
+   set count [llength $values]
+   $tbl header cellconfigure $hrow,$col -text  $count
+  }
+ }
+ 
+   
+ proc onTableChanged {tbl} {
+  # Summe der Spalte berechnen
+  set cols [list 3 4 6 7]
+  sumColumn $tbl 0 $cols
+  sumSelectedColumn  $tbl 1 $cols
+  set cols [list 0 1 2 5]
+  countColumn $tbl 0 $cols
+  countSelectedColumn  $tbl 1 $cols
  }
 
  proc OnComboSelected {w tbl type} {
@@ -164,12 +220,16 @@ namespace eval tbllib {
 
   # Hole die Anzahl der Spalten aus dem Dict
   set columncount [expr {[llength [dict get $tblVarDict $tbl cols]] / 3 - 1}]
-
   for {set col 0} {$col <= $columncount} {incr col} {
+   set varName "[namespace current]::editVar$col"
+   # Wenn die Sichtbarkeit für diese Spalte noch nicht gesetzt ist, initialisiere sie auf sichtbar (1 oder 0)
+   if {[dict exists $tblVarDict $tbl editVars $col] == 0} {
+    dict set tblVarDict $tbl editVars $col 0 ;  # Spalte sichtbar
+    $tbl columnconfigure $col -hide 0  ;# Standard: sichtbar
+    set $varName 0
+   }
    # Bearbeitbarkeitsstatus aus dem Dict holen
    set editable [dict get $tblVarDict $tbl editVars $col]
-   set varName "[namespace current]::editVar$col"
-
    # Checkbutton für jede Spalte erstellen
    .popupEditable add checkbutton -label [$tbl columncget $col -title] \
                 -variable $varName -onvalue 1 -offvalue 0 \
@@ -184,6 +244,7 @@ namespace eval tbllib {
  }
 
  # Prozedur zum Umschalten der Bearbeitbarkeit
+
  proc toggleColumnEditable {tbl col varName} {
   variable tblVarDict
 
@@ -197,7 +258,7 @@ namespace eval tbllib {
  }
 
  # Prozedur für das Umschalten der Spaltensichtbarkeit
- proc toggleColumns {tbl} {
+ proc toggleVisibilityColumns {tbl} {
   variable tblVarDict
 
   # Existierendes Menü löschen, falls vorhanden
@@ -206,20 +267,29 @@ namespace eval tbllib {
   # Kontextmenü erstellen
   set popup [menu .popupColumns -tearoff 0]
 
-  # Hole die Anzahl der Spalten aus dem Dict
+  # Anzahl der Spalten aus dem Dict holen
   set columncount [expr {[llength [dict get $tblVarDict $tbl cols]] / 3 - 1}]
 
+  # Initialisiere den Sichtbarkeitsstatus für jede Spalte, falls nicht vorhanden
   for {set col 0} {$col <= $columncount} {incr col} {
+
+   set varName "[namespace current]::colVar$col"
+   # Wenn die Sichtbarkeit für diese Spalte noch nicht gesetzt ist, initialisiere sie auf sichtbar (1 oder 0)
+   if {[dict exists $tblVarDict $tbl colVars $col] == 0} {
+    dict set tblVarDict $tbl colVars $col 0 ;  # Spalte sichtbar
+    $tbl columnconfigure $col -hide 0  ;# Standard: sichtbar
+    set $varName 1
+   }
    # Sichtbarkeitsstatus aus dem Dict holen
    set visible [dict get $tblVarDict $tbl colVars $col]
-   set varName "[namespace current]::colVar$col"
+
 
    # Checkbutton für jede Spalte erstellen
    .popupColumns add checkbutton -label [$tbl columncget $col -title] \
-                -variable $varName -onvalue 1 -offvalue 0 \
-                -command [list tbllib::toggleColumnVisibility $tbl $col $varName]
+                 -variable $varName -onvalue 1 -offvalue 0 \
+                 -command [list tbllib::toggleColumnVisibility $tbl $col $varName]
 
-   # Aktualisiere den Sichtbarkeitsstatus im dict
+   # Aktualisiere den Sichtbarkeitsstatus im Dict
    dict set tblVarDict $tbl colVars $col $visible
   }
 
