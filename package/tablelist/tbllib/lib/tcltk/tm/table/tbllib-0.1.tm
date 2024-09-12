@@ -2,6 +2,7 @@ package require Tk
 package require tablelist_tile
 
 namespace eval tbllib {
+ 
  proc newTable {w cols} {
   variable tblVarDict
   set frt  $w.frt
@@ -10,7 +11,7 @@ namespace eval tbllib {
   # Create table
   set tbl [tablelist::tablelist $frt.tbl -columns $cols \
     -stretch all  -xscroll [list $frt.h set] -yscroll [list $frt.v set] -labelcommand tablelist::sortByColumn \
-    -selectmode multiple -exportselection false]
+    -selectmode multiple -exportselection false -stripebackground #f0f0f0]
 
   # header für summen der column falls zahl
   $tbl header insert 0 [list]
@@ -51,24 +52,41 @@ namespace eval tbllib {
   $cbselection current 0
   event generate $cbselection <<ComboboxSelected>>
 
-  # Add buttons
-  set btnone [ttk::button $frb.one -text "Button One" -command [list tk_messageBox -message "Tbl: $tbl" -type ok]]
-  set btntwo [ttk::button $frb.two -text "Button Two" -command [list [namespace current]::tblcallback $tbl test]]
-  set btndelete [ttk::button $frb.delete -text "Delete" -command [list [namespace current]::tblcallback $tbl delete]]
-  set btncopy [ttk::button $frb.copy -text "Copy" -command [list [namespace current]::tblcallback $tbl copy]]
-
   set btnhide [ttk::button $fro.hide -text "HideShow" -command [list [namespace current]::toggleVisibilityColumns $tbl]]
   set btneditable [ttk::button $fro.edit -text "Editable" -command [list [namespace current]::toggleEditableColumns $tbl]]
 
+  # combobox
+  set cbdaten [ttk::combobox $frb.cbdaten -values [list ] -exportselection 0 -width 15]
+  bind $cbdaten <<ComboboxSelected>> [namespace code [list [namespace current]::OnComboSelected %W $tbl cbdaten]]
+  #$cbdaten current 0
+  #event generate $cbdaten <<ComboboxSelected>>
+
+
+
+  # Add buttons
+  set btnauswahl [ttk::button $frb.auswahl -text "Auswahl" -command [list [namespace current]::tblcallback $tbl btnauswahl]]
+  set btndaten [ttk::button $frb.daten -text "Daten holen" -command [list [namespace current]::tblcallback $tbl btndaten]]
+  set btnone [ttk::button $frb.one -text "One" -command [list [namespace current]::tblcallback $tbl btnone]]
+  set btntwo [ttk::button $frb.two -text "Two" -command [list [namespace current]::tblcallback $tbl btntwo]]
+  set btnload [ttk::button $frb.load -text "Load" -command [list [namespace current]::tblcallback $tbl btnload]]
+  set btnsave [ttk::button $frb.save -text "Save" -command [list [namespace current]::tblcallback $tbl btnsave]]
+  set btndelete [ttk::button $frb.delete -text "Delete" -command [list [namespace current]::tblcallback $tbl delete]]
+  set btncopy [ttk::button $frb.copy -text "Copy" -command [list [namespace current]::tblcallback $tbl copy]]
   set btnmoveUp [ttk::button $frb.moveUp -text "Move Up" -command [list [namespace current]::moveRowUp $tbl]]
   set btnmoveDown [ttk::button $frb.moveDown -text "Move Down" -command [list [namespace current]::moveRowDown $tbl]]
 
-  grid $btnone -row 0 -column 0 -sticky w
-  grid $btntwo -row 0 -column 1 -sticky e
-  grid $btndelete -row 0 -column 2 -sticky e
-  grid $btncopy -row 0 -column 3 -sticky e
-  grid $btnmoveUp -row 0 -column 4 -sticky e
-  grid $btnmoveDown -row 0 -column 5 -sticky e
+  grid $cbdaten -row 0 -column 0  -columnspan 2 -sticky we
+  grid $btnauswahl -row 0 -column 2 -sticky w
+  grid $btndaten -row 0 -column 3 -sticky w
+  grid $btnone -row 0 -column 4 -sticky e
+  grid $btntwo -row 0 -column 5 -sticky e
+  grid $btnload -row 0 -column 6 -sticky e
+  grid $btnsave -row 0 -column 7 -sticky e
+  grid $btndelete -row 0 -column 8 -sticky e
+  grid $btncopy -row 0 -column 9 -sticky e
+  grid $btnmoveUp -row 0 -column 10 -sticky e
+  grid $btnmoveDown -row 0 -column 11 -sticky e
+
   grid $btnhide -row 1 -column 1 -sticky e
   grid $btneditable -row 1 -column 2 -sticky e
   grid $cbselection -row 1 -column 0 -sticky ew
@@ -114,7 +132,9 @@ namespace eval tbllib {
 
 
  }
-
+ proc callbacktbl {tbl type args} {
+  puts "callback1 $tbl $type $args [namespace current]"
+ }
  proc tblcallback {tbl type args} {
   variable tblVarDict
   variable dbconnS
@@ -122,6 +142,24 @@ namespace eval tbllib {
    aktual {
     set cb  [lindex $args 0]
     $cb configure -values [[namespace current]::sqlauwahl $dbconnS]
+   }
+   btnauswahl {
+    callbacktbl $tbl $type $args
+   }
+   btndaten {
+    callbacktbl $tbl $type $args
+   }
+   btnone {
+    callbacktbl $tbl $type $args
+   }
+   btntwo {
+    callbacktbl $tbl $type $args
+   }
+   btnload {
+    callbacktbl $tbl $type $args
+   }
+      btnload {
+    callbacktbl $tbl $type $args
    }
    delete {
     set sel [lindex [$tbl curselection] 0]
@@ -166,8 +204,7 @@ namespace eval tbllib {
   set selectedRows [$tbl curselection]
   if {[llength $selectedRows] == 0} {
    foreach col $cols {
-    puts "c $col"
-    $tbl header cellconfigure $hrow,$col -text  0
+     $tbl header cellconfigure $hrow,$col -text  0
    }
   }
   foreach col $cols {
@@ -490,7 +527,7 @@ namespace eval tbllib {
 
 if {[info script] eq $argv0} {
 
-package require dicttool
+ package require dicttool
 
  tcl::tm::path add [file join [file dirname [info script]] ./]
  package require tbltestdata
@@ -510,12 +547,10 @@ package require dicttool
  $tbl configure -width 80
  pack .fr1 -expand 1 -fill both
 
- puts [$tbl getcolumn 1]
- puts [$tbl configure -columns]
-
-
+ 
+if {0} {
  set treeData [tbllib::testdata::generateTreeData 2 2]
-#set treeData [tbllib::testdata::infotcltk]
+ #set treeData [tbllib::testdata::infotcltk]
  ttk::frame .fr2
  #set data [tbllib::testdata::testDataTwo 100 100 2001-02-28T12:01:01 seconds]
  #set data [tbllib::testdata::generateReferenceList 10 8]
@@ -525,17 +560,13 @@ package require dicttool
  $tbl2 configure -treecolumn 0
  tbllib::treetotbl $tbl2 $treeData
  #tbllib::dict2tbltree $tbl2 root $treeData
- 
+
 
  # $tbl2 insertlist  end  $treeData
  $tbl2 configure -width 80
  pack .fr2 -expand 1 -fill both
 
 
- if {0} {
-  output:
-  Item_1_2 Item_2_2 Item_3_2 Item_4_2 Item_5_2 Item_6_2 Item_7_2 Item_8_2 Item_9_2 Item_10_2
-  -columns columns Columns {} {0 Col1 right 0 Col2 left 0 Col3 center}
- }
+}
 
 }
