@@ -5,10 +5,8 @@ This project provides utility procedures to interact with SQL databases using Tc
 ## Resources
 
 - [Tcl DataBase Connectivity (TDBC) Documentation](https://www.tcl.tk/man/tcl/TdbcCmd/tdbc.htm)
-- [Tcl SQLite Driver Documentation](https://www.tcl.tk/man/tcl/TdbcSqlite3Cmd/tdbc_sqlite3.htm)
-- [Tcl MySQL Driver Documentation](https://core.tcl-lang.org/tdbc/doc/trunk/embedded/www/mysql.html)
-- [Tcl ODBC Driver Documentation](https://core.tcl-lang.org/tdbc/doc/trunk/embedded/www/odbc.html)
-- [Tcl PostgreSQL Driver Documentation](https://core.tcl-lang.org/tdbc/doc/trunk/embedded/www/postgres.html)
+- [Tcl SQLite Driver Documentation](https://www.tcl.tk/man/tcl/TdbcsqliteCmd/tdbc_sqlite3.htm)
+
 - [SQL Syntax and Basics](https://www.w3schools.com/sql/)
 - [SQL Tutorial](https://www.sqltutorial.org/)
 - [SQLite Official Documentation](https://sqlite.org/docs.html)
