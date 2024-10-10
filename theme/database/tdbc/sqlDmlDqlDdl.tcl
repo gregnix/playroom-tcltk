@@ -1,6 +1,10 @@
+proc sqltrim sqltext {
+return [string trim [string map {"\n" ""} $sqltext]]
+} 
+
 # Executes a DQL (Data Query Language) query, typically a SELECT statement
 # Returns a list containing the status ("OK" or "ERROR"), column names, rows, and an error message (if any)
-proc sqlcmdDQL {dbconn sqlvar {query_values {}}} {
+proc sqlcmdDQL {dbconn sqlvar {query_values {}} {return_status 0}} {
   set rows {}
   set cols [list]
   set status "OK"
@@ -15,51 +19,59 @@ proc sqlcmdDQL {dbconn sqlvar {query_values {}}} {
         lappend rows $row
       }
     } finally {
-      $res close  ;# Ensure result set is closed after processing
+      $res close
     }
   } on ok {result options} {
-    # On success: No special handling needed, status remains "OK"
   } on error {result options} {
-    # On error: Set status to "ERROR" and store the error message
     set status "ERROR"
     set errormsg $result
   } finally {
-    $stmt close  ;# Ensure statement is closed
+    $stmt close
   }
 
-  # Return status, columns, rows, and any error message
-  return [list $status $cols $rows $errormsg]
+  # Return either extended or basic format based on return_status flag
+  if {$return_status} {
+    return [list $status $cols $rows $errormsg]
+  } else {
+    return [list $cols $rows]
+  }
 }
+
 
 # Executes a DML (Data Manipulation Language) operation (INSERT, UPDATE, DELETE) within a transaction
 # Returns a list containing the status ("OK" or "ERROR"), result (if any), and an error message (if any)
-proc sqlcmdDML {dbconn sqlvar {query_values {}}} {
+proc sqlcmdDML {dbconn sqlvar {query_values {}} {return_status 0}} {
   set status "OK"
   set rueckgabe ""
   set errormsg ""
 
-  $dbconn begintransaction  ;# Begin transaction
+  $dbconn begintransaction
   set stmt [$dbconn prepare $sqlvar]
   try {
     set res [$stmt execute $query_values]
   } on ok {result options} {
-    $dbconn commit  ;# Commit transaction on success
+    $dbconn commit
     set rueckgabe $result
   } on error {result options} {
-    $dbconn rollback  ;# Rollback transaction on error
+    $dbconn rollback
     set status "ERROR"
     set errormsg $result
   } finally {
-    $stmt close  ;# Ensure statement is closed
+    $stmt close
   }
 
-  # Return status, result, and any error message
-  return [list $status $rueckgabe $errormsg]
+  # Return either extended or basic format based on return_status flag
+  if {$return_status} {
+    return [list $status $rueckgabe $errormsg]
+  } else {
+    return [list $rueckgabe $options]
+  }
 }
+
 
 # Executes a DML (Data Manipulation Language) operation (INSERT, UPDATE, DELETE) without a transaction
 # Returns a list containing the status ("OK" or "ERROR"), result (if any), and an error message (if any)
-proc sqlcmdDMLwo {dbconn sqlvar {query_values {}}} {
+proc sqlcmdDMLwo {dbconn sqlvar {query_values {}} {return_status 0}} {
   set status "OK"
   set rueckgabe ""
   set errormsg ""
@@ -68,17 +80,22 @@ proc sqlcmdDMLwo {dbconn sqlvar {query_values {}}} {
   try {
     set res [$stmt execute $query_values]
   } on ok {result options} {
-    set rueckgabe $result  ;# Store result on success
+    set rueckgabe $result
   } on error {result options} {
     set status "ERROR"
-    set errormsg $result  ;# Store error message on failure
+    set errormsg $result
   } finally {
-    $stmt close  ;# Ensure statement is closed
+    $stmt close
   }
 
-  # Return status, result, and any error message
-  return [list $status $rueckgabe $errormsg]
+  # Return either extended or basic format based on return_status flag
+  if {$return_status} {
+    return [list $status $rueckgabe $errormsg]
+  } else {
+    return [list $rueckgabe $options]
+  }
 }
+
 
 # Executes a DDL (Data Definition Language) operation (CREATE, DROP, ALTER)
 # Returns a list containing the status ("OK" or "ERROR") and result (if any)
@@ -96,3 +113,4 @@ proc sqlcmdDDL {dbconn sqlvar} {
     $stmt close  ;# Ensure statement is closed
   }
 }
+
