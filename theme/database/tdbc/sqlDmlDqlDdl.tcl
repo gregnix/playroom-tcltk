@@ -1,3 +1,5 @@
+# 202410140613
+
 # Trim SQL query
 proc sqltrim sqltext {
   return [string trim [string map {"\n" ""} $sqltext]]
@@ -98,101 +100,101 @@ proc sqlcmdDDL {dbconn sqlvar {debug 0}} {
 ######
 # Example Usage
 if {[info script] eq $argv0} {
-
   package require tdbc::sqlite3
 
   # Create an in-memory SQLite database for testing
   set dbconn [tdbc::sqlite3::connection new :memory:]
 
-  # Create the Books table
-  set create_table_sql "
-    CREATE TABLE Books (
-        Title TEXT,
-        Author TEXT,
-        Year INTEGER
+  # Create the Authors table
+  set create_authors_table_sql "
+    CREATE TABLE Authors (
+        AuthorID INTEGER PRIMARY KEY,
+        AuthorName TEXT
     )
   "
-  set create_table_result [sqlcmdDDL $dbconn $create_table_sql 0]
-  puts "Create Table Result: $create_table_result"
+  set create_authors_table_result [sqlcmdDDL $dbconn $create_authors_table_sql 0]
+  puts "Create Authors Table Result: $create_authors_table_result"
+
+  # Insert authors into the Authors table
+  set insert_authors_sql "INSERT INTO Authors (AuthorName) VALUES (:author_name)"
+  set authors_list [list \
+      [dict create author_name "J.D. Salinger"] \
+      [dict create author_name "George Orwell"] \
+      [dict create author_name "Harper Lee"]
+  ]
+  set insert_authors_result [sqlcmdDMLMultiple $dbconn $insert_authors_sql $authors_list]
+  puts "Insert Authors: $insert_authors_result"
+
+  # Create the Books table
+  set create_books_table_sql "
+    CREATE TABLE Books (
+        Title TEXT,
+        AuthorID INTEGER,
+        Year INTEGER,
+        FOREIGN KEY(AuthorID) REFERENCES Authors(AuthorID)
+    )
+  "
+  set create_books_table_result [sqlcmdDDL $dbconn $create_books_table_sql 0]
+  puts "Create Books Table Result: $create_books_table_result"
 
   # Insert multiple books into the Books table
-  set insert_sql "INSERT INTO Books (Title, Author, Year) VALUES (:title, :author, :year)"
+  set insert_books_sql "INSERT INTO Books (Title, AuthorID, Year)
+                      VALUES (:title, 
+                      (SELECT AuthorID FROM Authors WHERE AuthorName = :author_name), 
+                      :year)"
   set book_list [list \
-      [dict create title "The Catcher in the Rye" author "J.D. Salinger" year 1951] \
-      [dict create title "1984" author "George Orwell" year 1949] \
-      [dict create title "To Kill a Mockingbird" author "Harper Lee" year 1960]
+    [dict create title "The Catcher in the Rye" author_name "J.D. Salinger" year 1951] \
+    [dict create title "1984" author_name "George Orwell" year 1949] \
+    [dict create title "To Kill a Mockingbird" author_name "Harper Lee" year 1960]
   ]
-  puts "book_list: \n[join $book_list "\n"]\n"
-  set insert_result [sqlcmdDMLMultiple $dbconn $insert_sql $book_list]
-  puts "Insert Multiple Books: $insert_result"
 
-  # Select and display all books from the Books table
-  set select_sql "SELECT Title, Author, Year FROM Books"
-  set select_result [sqlcmdDQL $dbconn $select_sql {}]
-  puts "\nSelect Books:\n[lindex $select_result 0]"
-  puts "[join  [lindex $select_result 1] "\n"]\n"
+  set insert_result [sqlcmdDMLMultiple $dbconn $insert_books_sql $book_list]
+  puts "\nbook_list: \n[join $book_list "\n"]\n"
+  puts "Insert Multiple Books with Subquery: $insert_result"
 
-  # Update a book's year
-  set update_sql "UPDATE Books SET Year = :year WHERE Title = :title"
-  set update_values [dict create title "1984" year 1950]
-  set update_result [sqlcmdDML $dbconn $update_sql $update_values]
-  puts "Update 1984's Year: $update_result\n"
 
-  # Select and display updated books
-  set select_result [sqlcmdDQL $dbconn $select_sql {}]
-  puts "Select Updated Books: \n[lindex $select_result 0]"
-  puts "[join [lindex $select_result 1] "\n"]\n"
-  
-  
-  # Delete a book from the table
-  set delete_sql "DELETE FROM Books WHERE Title = :title"
-  set delete_values [dict create title "The Catcher in the Rye"]
-  set delete_result [sqlcmdDML $dbconn $delete_sql $delete_values]
-  puts "Delete The Catcher in the Rye: $delete_result"
-
-  # Select and display books after deletion
-  set select_result [sqlcmdDQL $dbconn $select_sql {}]
-  puts "Select Books After Deletion: \n[lindex $select_result 0]"
-  puts "\n[join [lindex $select_result 1] "\n"]"
+  # Use JOIN to select books along with their corresponding authors
+  set select_join_sql "
+    SELECT Books.Title, Authors.AuthorName, Books.Year
+    FROM Books
+    JOIN Authors ON Books.AuthorID = Authors.AuthorID
+  "
+  set select_join_result [sqlcmdDQL $dbconn $select_join_sql {}]
+  puts "\nSelect Books with Authors:"
+  puts "[lindex $select_join_result 0]"
+  puts "[join [lindex $select_join_result 1] \"\n\"]\n"
 
   # Close the database connection
   $dbconn close
+
 }
 
 # output
 if {0} {
- Create Table Result: OK
+/usr/bin/tclsh /home/greg/Project/tcl/2024/thema/database/chinook/lib/sqlDmlDqlDdl.tcl 
+
+
+Create Authors Table Result: OK
+Insert Authors: OK
+Create Books Table Result: OK
+
 book_list: 
-title {The Catcher in the Rye} author {J.D. Salinger} year 1951
-title 1984 author {George Orwell} year 1949
-title {To Kill a Mockingbird} author {Harper Lee} year 1960
+title {The Catcher in the Rye} author_name {J.D. Salinger} year 1951
+title 1984 author_name {George Orwell} year 1949
+title {To Kill a Mockingbird} author_name {Harper Lee} year 1960
 
-Insert Multiple Books: OK
+Insert Multiple Books with Subquery: OK
 
-Select Books:
-Title Author Year
-{The Catcher in the Rye} {J.D. Salinger} 1951
-1984 {George Orwell} 1949
-{To Kill a Mockingbird} {Harper Lee} 1960
+Select Books with Authors:
+Title AuthorName Year
+{The Catcher in the Rye} {J.D. Salinger} 1951"
+"1984 {George Orwell} 1949"
+"{To Kill a Mockingbird} {Harper Lee} 1960
 
-Update 1984's Year: OK
-
-Select Updated Books: 
-Title Author Year
-{The Catcher in the Rye} {J.D. Salinger} 1951
-1984 {George Orwell} 1950
-{To Kill a Mockingbird} {Harper Lee} 1960
-
-Delete The Catcher in the Rye: OK
-Select Books After Deletion: 
-Title Author Year
-
-1984 {George Orwell} 1950
-{To Kill a Mockingbird} {Harper Lee} 1960
 
 Press return to continue
- 
-}
 
+
+}
 
 
