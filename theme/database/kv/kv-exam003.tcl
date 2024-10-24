@@ -23,8 +23,6 @@ $dbconn close
 
 
 if {0} {
-  /usr/bin/tclsh /home/greg/Project/tcl/2024/thema/database/sqlite/kv-exam003.tcl 
-
 
 Key-Value pair with expiration and metadata set
 Batch Key-Value pairs set

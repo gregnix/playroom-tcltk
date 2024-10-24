@@ -8,7 +8,7 @@ set dbconn [tdbc::sqlite3::connection create db11 :memory:]
 kvstore::setupDatabase $dbconn
 
 # Setze Key-Value-Paare
-puts [kvstore::setKeyValue $dbconn "author" "Brandon Rozek"]
+puts [kvstore::setKeyValue $dbconn "author" "Max Mustermann"]
 puts [kvstore::setKeyValueWithExpire $dbconn "project" "Key-Value Store" [clock scan now]]
 
 # Key-Value-Paare abfragen
@@ -34,20 +34,16 @@ $dbconn close
 
 
 if {0} {
-/usr/bin/tclsh /home/greg/Project/tcl/2024/thema/database/sqlite/kv-exam001.tcl 
-
 
 Key-Value pair set
 Key-Value pair with expiration, metadata, and type set
-key "value_type" not known in dictionary
-    while executing
-"dict get $row value_type"
-    (procedure "kvstore::getKeyValue" line 8)
-    invoked from within
-"kvstore::getKeyValue $dbconn "author""
-    invoked from within
-"puts [kvstore::getKeyValue $dbconn "author"]"
-    (file "/home/greg/Project/tcl/2024/thema/database/sqlite/kv-exam001.tcl" line 15)
+Max Mustermann
+Key-Value Store
+All keys: author project
+Keys with prefix 'proj': project {Key-Value Store}
+Key deleted
+All keys after deletion: project
+Expired keys removed
 
 Press return to continue
 

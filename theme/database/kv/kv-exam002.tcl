@@ -2,7 +2,7 @@ package require tdbc::sqlite3
 source kvstore.tcl
 
 # Verbindung erstellen
-set dbconn [tdbc::sqlite3::connection create db11 "my-database.db"]
+set dbconn [tdbc::sqlite3::connection create db11 :memory:]
 
 # Setup der Datenbank
 kvstore::setupDatabase $dbconn
@@ -35,8 +35,6 @@ $dbconn close
 
 
 if {0} {
- /usr/bin/tclsh /home/greg/Project/tcl/2024/thema/database/sqlite/kv-exam002.tcl 
-
 
 Key-Value pair with version 3 set
 Key-Value pair with version 4 set
