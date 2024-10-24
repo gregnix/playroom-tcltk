@@ -231,3 +231,132 @@ namespace eval kvstore {
     return $keys
   }
 }
+
+# Testumbegung
+if {[info script] eq $argv0} {
+
+  package require tdbc::sqlite3
+
+  # Helper-Funktion für Tests
+  proc assert_equal {expected actual} {
+    if {$expected eq $actual} {
+      puts "Test passed!"
+    } else {
+      puts "Test failed! Expected: $expected, but got: $actual"
+    }
+  }
+
+  # Verbindung erstellen für Tests
+  set dbconn [tdbc::sqlite3::connection create test_db :memory:]
+
+  # Test: Datenbank-Setup
+  puts "Testing database setup..."
+  kvstore::setupDatabase $dbconn
+
+  # Überprüfen, ob die Tabelle "config" existiert
+  set check_stmt_config [$dbconn prepare {SELECT name FROM sqlite_master WHERE type='table' AND name=:table_name}]
+  set tables_exist 0
+  try {
+    set res [$check_stmt_config execute [dict create table_name "config"]]
+    if {[$res nextdict row]} {
+      set tables_exist 1
+    }
+  } finally {
+    catch {$check_stmt_config destroy}
+  }
+  assert_equal 1 $tables_exist
+
+  # Überprüfen, ob die Tabelle "config_versioned" existiert
+  set check_stmt_versioned [$dbconn prepare {SELECT name FROM sqlite_master WHERE type='table' AND name=:table_name}]
+  set versioned_tables_exist 0
+  try {
+    set res [$check_stmt_versioned execute [dict create table_name "config_versioned"]]
+    if {[$res nextdict row]} {
+      set versioned_tables_exist 1
+    }
+  } finally {
+    catch {$check_stmt_versioned destroy}
+  }
+  assert_equal 1 $versioned_tables_exist
+
+  # Test: Key-Value-Setzen und Abfragen
+  puts "Testing set and get key-value..."
+  kvstore::setKeyValue $dbconn "author" "Brandon Rozek"
+  assert_equal "Brandon Rozek" [kvstore::getKeyValue $dbconn "author"]
+
+  # Test: Update eines bestehenden Schlüssels
+  puts "Testing key update..."
+  kvstore::setKeyValue $dbconn "author" "New Author"
+  assert_equal "New Author" [kvstore::getKeyValue $dbconn "author"]
+
+  # Test: Key-Value mit TTL und Metadaten
+  puts "Testing set key-value with TTL and metadata..."
+  kvstore::setKeyValueWithExpire $dbconn "project" "Key-Value Store" [clock scan now] "Sample metadata"
+  set result [kvstore::getKeyValue $dbconn "project"]
+  assert_equal "Key-Value Store" $result
+
+  # Test: Abfrage von Keys mit Präfix
+  puts "Testing get keys with prefix..."
+  set prefix_results [kvstore::getKeyWithPrefix $dbconn "pro"]
+  assert_equal "Key-Value Store" [dict get $prefix_results project]
+
+  # Test: Batch-Insert von Key-Value-Paaren
+  puts "Testing batch insert..."
+  kvstore::setBatchKeyValue $dbconn {"batch1" "value1" "TEXT" "batch2" "value2" "TEXT"}
+  assert_equal "value1" [kvstore::getKeyValue $dbconn "batch1"]
+  assert_equal "value2" [kvstore::getKeyValue $dbconn "batch2"]
+
+  # Test: Löschung eines Schlüssels
+  puts "Testing delete key..."
+  kvstore::deleteKey $dbconn "batch1"
+  assert_equal "Key not found" [kvstore::getKeyValue $dbconn "batch1"]
+
+  # Test: Versionierte Key-Value-Paare
+  puts "Testing versioned key-value..."
+  kvstore::setKeyValueVersioned $dbconn "versioned_key" "v1"
+  kvstore::setKeyValueVersioned $dbconn "versioned_key" "v2"
+  assert_equal "v1" [kvstore::getKeyVersion $dbconn "versioned_key" 1]
+  assert_equal "v2" [kvstore::getKeyVersion $dbconn "versioned_key" 2]
+  assert_equal 2 [kvstore::getLatestVersion $dbconn "versioned_key"]
+
+  # Test: Entfernen von abgelaufenen Schlüsseln
+  puts "Testing expired key removal..."
+  kvstore::setKeyValueWithExpire $dbconn "expiring_key" "temporaryValue" [expr {[clock seconds] - 10}]
+  kvstore::removeExpiredKeys $dbconn
+  assert_equal "Key not found" [kvstore::getKeyValue $dbconn "expiring_key"]
+
+  # Verbindung schließen
+  $dbconn close
+
+
+
+}
+
+if {0} {
+
+  Testing database setup...
+  Test passed!
+  Test passed!
+  Testing set and get key-value...
+  Test passed!
+  Testing key update...
+  Test passed!
+  Testing set key-value with TTL and metadata...
+  Test passed!
+  Testing get keys with prefix...
+  Test passed!
+  Testing batch insert...
+  Test passed!
+  Test passed!
+  Testing delete key...
+  Test passed!
+  Testing versioned key-value...
+  Test passed!
+  Test passed!
+  Test passed!
+  Testing expired key removal...
+  Test passed!
+
+  Press return to continue
+
+}
