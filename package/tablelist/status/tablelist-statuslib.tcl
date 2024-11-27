@@ -169,7 +169,6 @@ proc sortListByIndex {values sortIndex {sortID 0}} {
     foreach val $values {
         lappend existingIDs [lindex $val $sortID]
     }
-
     set existingIDs [concat {*}$existingIDs]
     set tmpsortIndex [list]
     foreach id $sortIndex {
@@ -178,18 +177,27 @@ proc sortListByIndex {values sortIndex {sortID 0}} {
         }
     }
     set tmpnewsortIndex [list]
+    array unset valarr
     foreach id $existingIDs {
         if {$id ni $tmpsortIndex} {
             lappend tmpnewsortIndex $id
+        } else {
+            incr valarr($id)
+            if {$valarr($id) > [llength [lsearch -all $tmpsortIndex $id]] } {
+               lappend tmpnewsortIndex $id 
+            }
         }
     }
     if {[llength $tmpnewsortIndex] > 0} {
         set tmpnewsortIndex [lsort $tmpnewsortIndex]
         lappend tmpsortIndex {*}$tmpnewsortIndex
-    }
+     }
     set sortIndex $tmpsortIndex
     set indexCount [llength $sortIndex]
-
+    if { $valueCount != $indexCount} {
+        puts "Fehler : valueCount : $valueCount : $values :: sortIndex : $indexCount : $sortIndex"
+    }
+    array unset  valarr
     for {set i 0} {$i < $valueCount} {incr i} {
         set idx [lindex $sortIndex $i]
         set sval [lsearch -index $sortID -all $values $idx]
@@ -201,10 +209,8 @@ proc sortListByIndex {values sortIndex {sortID 0}} {
             lappend pairs [list $i [lindex $sval $isval]]
         }
     }
-
     # Sort the pairs based on the index
     set sortedPairs [lsort -index 0 $pairs]
-
     # Extract the sorted values
     set sortedValues [list]
     foreach pair $sortedPairs {

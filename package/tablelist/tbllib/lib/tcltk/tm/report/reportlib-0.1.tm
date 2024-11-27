@@ -1,7 +1,7 @@
 package require struct::matrix
 package require report
 package require textutil
-
+package require dicttool
 
 # Rekursive Funktion zur Darstellung eines verschachtelten Dictionarys in einer String-Variable
 proc dictToreportstring {dict {indent ""} {resultVarName "output"}} {

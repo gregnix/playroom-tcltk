@@ -7,8 +7,7 @@ source db-lib.tcl
 #source report-lib.tcl
 
 # tm libs
-set addtmlib ~/lib/tcltk/tm
-tcl::tm::path add $addtmlib
+tcl::tm::path add [file join [file dirname [info script]] lib tcltk tm]
 package require database::sqlstdproc
 package require report::reportlib  
 

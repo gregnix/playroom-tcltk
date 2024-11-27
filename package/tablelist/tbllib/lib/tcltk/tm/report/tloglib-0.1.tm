@@ -8,41 +8,8 @@ proc tlogwcallback {cmd w args } {
     tlog $result
 }
 
-#pretty result
-proc prettyResult {result} {
-  set longest 0
-  foreach key [dict keys $result] {
-    set l [string length $key]
-    if {$l > $longest} {set longest $l}
-  }
-  lmap {k v} $result {append prettyresult [format "%-*s = %s" $longest $k  [prettyResultHelp $v] ] "\n"}
-  return $prettyresult
-}
 
-proc prettyResultHelp {v} {
-    puts [llength $v]
-    for {set i 12 }  {$i < [llength $v]}  { incr i 10} {
-        
-        set v [linsert $v $i  \n]
-        
-    }
-    return $v
-}
-
-proc prettyresult {result {indent 0} } {
- #pretty result
- set longest 0
- foreach key [dict keys $result] {
-  set l [string length $key]
-  if {$l > $longest} {set longest $l}
- }
- set prettyresult ""
- set spaces [string repeat " " $indent]
- lmap {k v} $result {append prettyresult $spaces [format "%-*s = %s" $longest $k  $v] "\n"}
-return  [lappend result prettyresult $prettyresult]
-}
-
-proc tlog {message {ts 2} args} {
+proc tlog {message {ts 0} args} {
     set timestamp "[clock format [clock seconds]  -format "%T"]"
     set top .toptlog
     set f $top.ft

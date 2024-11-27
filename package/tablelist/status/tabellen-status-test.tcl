@@ -5,7 +5,7 @@
 # tablellen-status-test.tcl
 
 package require Tk
-package require tablelist
+package require tablelist_tile
 
 source [file join [file dirname [info script]] tloglib.tcl]
 source [file join [file dirname [info script]] info-text-tablelist.tcl]
@@ -37,6 +37,7 @@ proc tblInsertList {tbl list} {
 
 proc tblInsertSingle {tbl} {
     if {[lindex $::list [$tbl index end]] == ""} {
+        tlog "ie active [$tbl index active]  last:  [$tbl index last] end: [$tbl index end] size :  [$tbl size] list "
         return
     }
     $tbl selection clear 0 end
@@ -62,8 +63,10 @@ proc tblInsertSingle {tbl} {
 
 proc tblDeleteSingle {tbl args} {
     if {[lindex $::list [$tbl index end]] == ""} {
-        return
+       tlog "de active [$tbl index active]  last:  [$tbl index last] end: [$tbl index end] size :  [$tbl size] list "
+   #     return
     }
+    tlog "de active [$tbl index active]  last:  [$tbl index last] end: [$tbl index end] size :  [$tbl size] list "
     set res [$tbl delete active]
     return $res
 }
@@ -76,7 +79,6 @@ proc tblDeleteSingle {tbl args} {
 # Possibly critical access to list with knumber with info frame
 # Speed problem with larger lists and may not work in later versions
 proc createSortCommand {tbl col a b} {
-    #puts "tbl: $tbl col: $col a: $a b: $b   [lindex [info frame -1] 5 6 ]"
     set ak [searchKpos $a [lindex [info frame -1] 5 6] $col]
     set bk [searchKpos $b [lindex [info frame -1] 5 6] $col]
     return [sortCmd $ak $bk]
@@ -125,7 +127,13 @@ proc OnComboSelected {w tbl type} {
 
 proc printClickedCell {w x y} {
     foreach {tbl x y} [tablelist::convEventFields $w $x $y] {}
-    puts "clicked on cell [$tbl containingcell $x $y] active [$tbl index active] header [$tbl header get 0 end] "
+    set row [$tbl containing  $y]
+    set knr [$tbl getfullkeys $row $row]
+    set cell  [$tbl containingcell $x $y]
+    $tbl activate $row
+    set active  [$tbl index active]
+  
+    puts "clicked on cell: $cell active: $active knr: $knr:  size: [$tbl size] "
 }
 
 proc tblCreate {w} {
@@ -133,8 +141,8 @@ proc tblCreate {w} {
     set frt [frame .frt]
     set sortIDList [list 0 1 2 3]
     # Create table
-    set tbl [tablelist::tablelist $frt.tbl -columns {0 "ID" right 0 "Name" left 0 "Class" center 0 kNr right}  \
-    -stretch all -xscroll [list $frt.h set] -yscroll [list $frt.v set] -labelcommand tablelist::sortByColumn \
+    set tbl [tablelist::tablelist $frt.tbl -columns {2 "ID" right 0 "Name" left 0 "Class" center 2 kNr right}  \
+     -stretch all -xscroll [list $frt.h set] -yscroll [list $frt.v set] -labelcommand tablelist::sortByColumn \
     -selectmode multiple -exportselection false]
 
     # Configure header cells
@@ -171,7 +179,7 @@ proc tblCreate {w} {
     pack $cbselection -side left
 
     set cbsortID [ttk::combobox $frcb.cbsortID -values $sortIDList -exportselection 0 -width 4]
-    $cbsortID current 1
+    $cbsortID current 0
     bind $cbsortID <<ComboboxSelected>> [namespace code [list OnComboSelected %W $tbl sortID]]
     event generate $cbsortID <<ComboboxSelected>>
     pack $cbsortID -side left
@@ -185,28 +193,28 @@ proc tblCreate {w} {
 
     # button
     dict set tblDict tbloptions sortID [$cbsortID get]
-    set btnsave [button $frb.save -text "Save Status" -command {
+    set btnsave [button $frb.save -text "Save" -command {
         variable tblDict
         dict set tblDict tblStatus [save_tablelist_status  .frt.tbl [dict get $tblDict tbloptions sortModus] [dict get $tblDict tbloptions sortID]]
-        puts "tblStatus saved:\n[dict get $tblDict tblStatus]\n"
+        tlog "tblStatus saved:\n[dict get $tblDict tblStatus]\n"
     }]
     pack $btnsave -side left
 
-    set btnrestore [button $frb.restore -text "Restore Status" -command {
+    set btnrestore [ttk::button $frb.restore -text "Restore" -command {
         variable tblDict
         set sortModus 1
         restore_tablelist_status .frt.tbl [dict get $tblDict tblStatus]
-        puts "tblStatus restored:\n[dict get $tblDict tblStatus]\n"
+        tlog "tblStatus restored:\n[dict get $tblDict tblStatus]\n"
     }]
     pack $btnrestore -side left
 
-    set btninsert [button $frb.insert -text "Insert Data" -command [list tblInsertSingle $tbl]]
+    set btninsert [ttk::button $frb.insert -text "Insert" -command [list tblInsertSingle $tbl]]
     pack $btninsert -side left
 
-    set btndelete [button $frb.delete -text "Delete Data" -command [list tblDeleteSingle $tbl %W %x %y]]
+    set btndelete [ttk::button $frb.delete -text "Delete" -command [list tblDeleteSingle $tbl %W %x %y]]
     pack $btndelete -side left
 
-    set btntest [button $frb.test -text "TStatus" -command [list tlogwcallback infoTbl $tbl %s]]
+    set btntest [ttk::button $frb.test -text "TStatus" -command [list tlogwcallback infoTbl $tbl %s]]
     pack $btntest -side left
 
     # bind
@@ -220,14 +228,16 @@ proc tblCreate {w} {
 
 # Data list
 set list {{a Herbert 3a} {d Anna 7c} {c Anna 7d} {b "" 9t} {e Birgit 10b} \
-{f Werner 10w} {g Tom 10t} {h Suzi 10s} {i Monika 11m} {j "" 12I} \
-{k Holger 13H} {l Thomas 67LT} {d Tim 9t}}
+{a Werner 10w} {f Tom 10t} {h Suzi 10s} {i Monika 11m} {j "" 12I} \
+{k Holger 13H} {l Thomas 67LT} {d Tom 9t}}
 set ::countList 4
 
 # Create GUI
 wm title . "Tablelist Status Example"
+wm geometry . 400x800+1200+0
 set tbl [tblCreate .]
 
-puts "tblInsertList  [tblInsertList $tbl [lrange $list 0 $::countList]]"
-puts $tblDict
+tlog  "tblInsertList  [tblInsertList $tbl [lrange $list 0 $::countList]]"
+#tlog  [prettyresult $tblDict ]
+tlog  [prettyResult $tblDict ]
 puts "\n"
