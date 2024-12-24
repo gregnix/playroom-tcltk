@@ -43,8 +43,6 @@ oowidgets::widget ::comp::LabEntry {
 
 puts [info commands ::comp::*]
 
-puts [info commands ::comp::*]
-
 puts original
 set lent [::comp::labentry .lentry -relief solid]
 pack $lent -side top -padx 10 -pady 20

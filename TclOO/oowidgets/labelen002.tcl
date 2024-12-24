@@ -25,13 +25,14 @@ oowidgets::widget ::comp::LabEntry {
         my configure {*}$args
     }
     # expose the internal widgets using subcommands
+    #
     method widgetall {argstmp} {
         set args ""
         if {[dict exists $argstmp frame]} {
             set args [dict get $argstmp frame]
             set argstmp [dict remove $argstmp frame]
         } else {
-            set args $argstmp
+            set args ""
         }
         if {[dict exists $argstmp label]} {
             set largs [dict get $argstmp label]
@@ -45,7 +46,10 @@ oowidgets::widget ::comp::LabEntry {
         } else {
             set eargs ""
         }
-        lappend args {*}$argstmp
+       
+        #lappend args {*}$argstmp
+        # or
+        set args [linsert $args 0 {*}$argstmp]
         return [list $args $largs $eargs]
     }
     method label {args} {
@@ -80,7 +84,7 @@ bind $lent <Destroy> { puts "destroyed labentry" }
 #destroy $lent
 
 puts "Version 2"
-set lent2 [::comp::labentry  .lentry2 frame {-relief sunken} label {-text "Label:"} entry {-justify right}]
+set lent2 [::comp::labentry  .lentry2 -relief solid frame {-relief sunken} label {-text "Label:"} entry {-justify right} -width 55]
 pack $lent2 -side top -padx 10 -pady 20
 $lent2 label configure -background red
 $lent2 entry insert 0 "Some text 2"
