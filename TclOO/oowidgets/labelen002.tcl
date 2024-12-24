@@ -28,6 +28,15 @@ oowidgets::widget ::comp::LabEntry {
     #
     method widgetall {argstmp} {
         set args ""
+        puts "[dict keys $argstmp]"
+        if {[dict exists $argstmp \-*]} {
+            puts std
+            set stdtargs [dict get $argstmp "-*"]
+            #set argstmp [dict remove $argstmp frame]
+        } else {
+            set stdargs ""
+        }
+        puts "stdtargs $stdargs"
         if {[dict exists $argstmp frame]} {
             set args [dict get $argstmp frame]
             set argstmp [dict remove $argstmp frame]
