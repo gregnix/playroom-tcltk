@@ -1,5 +1,8 @@
-set addlib  [file join [file dirname [info script]] lib]
-set auto_path [linsert $auto_path 0 [file normalize  $addlib]]
+#! /usr/bin/env tclsh
+
+#20241224
+#set addlib  [file join [file dirname [info script]] lib]
+#set auto_path [linsert $auto_path 0 [file normalize  $addlib]]
 package require oowidgets
 package require tablelist_tile
 

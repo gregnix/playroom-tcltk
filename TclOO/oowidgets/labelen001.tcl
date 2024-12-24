@@ -1,3 +1,11 @@
+#! /usr/bin/env tclsh
+
+#20241224
+#
+#https://htmlpreview.github.io/?https://raw.githubusercontent.com/mittelmark/oowidgets/master/tutorial.html
+#example Composition
+# with changes with method widgetall for args
+# frame
 package require oowidgets
 package require dicttool
 namespace eval ::comp { }
@@ -8,8 +16,12 @@ oowidgets::widget ::comp::LabEntry {
         # the main widget is the frame
         # add an additional label
         my install ttk::frame $path
-  
-        lassign [my widget $args] args largs eargs
+        if {[dict is_dict $args]} {
+            puts "if $args"
+        } else {
+            puts "else $args"
+        }
+        lassign [my widgetall $args] args largs eargs
         set lab [ttk::label $path.lab {*}$largs]
         set ent [ttk::entry $path.ent {*}$eargs]
         pack $lab -side left -padx 5 -pady 5
@@ -17,24 +29,27 @@ oowidgets::widget ::comp::LabEntry {
         my configure {*}$args
     }
     # expose the internal widgets using subcommands
-    method widget {argstmp} {
+    method widgetall {argstmp} {
         set args ""
         if {[dict exists $argstmp frame]} {
             set args [dict get $argstmp frame]
+            set argstmp [dict remove $argstmp frame]
         } else {
-            set args ""
+            set args $argstmp
         }
         if {[dict exists $argstmp label]} {
             set largs [dict get $argstmp label]
+            set argstmp [dict remove $argstmp label]
         } else {
             set largs ""
         }
         if {[dict exists $argstmp entry]} {
             set eargs [dict get $argstmp entry]
+            set argstmp [dict remove $argstmp entry]
         } else {
             set eargs ""
         }
-        
+        lappend args {*}$argstmp
         return [list $args $largs $eargs]
     }
     method label {args} {
@@ -58,16 +73,26 @@ oowidgets::widget ::comp::LabEntry {
 
 puts [info commands ::comp::*]
 
-set lent [::comp::labentry  .lentry frame {-relief sunken} label {-text "Label:"} entry 2{-background yellow -justify right}]
+puts original
+set lent [::comp::labentry .lentry -relief solid]
 pack $lent -side top -padx 10 -pady 20
-$lent label configure -background red 
+$lent label configure -text "Label: "
 $lent entry insert 0 "Some text"
-$lent entry configure -background red
 puts [$lent entry]
 bind [$lent entry] <Destroy> { puts "destroyed entry" }
 bind $lent <Destroy> { puts "destroyed labentry" }
-puts [$lent configure]
+#destroy $lent
+
+puts "Version 2"
+set lent2 [::comp::labentry  .lentry2 frame {-relief sunken} label {-text "Label:"} entry {-justify right}]
+pack $lent2 -side top -padx 10 -pady 20
+$lent2 label configure -background red
+$lent2 entry insert 0 "Some text 2"
+puts [$lent2 entry]
+bind [$lent2 entry] <Destroy> { puts "destroyed entry" }
+bind $lent2 <Destroy> { puts "destroyed labentry" }
+puts [$lent2 configure]
 puts \n
-puts [$lent label configure]
+puts [$lent2 label configure]
 puts \n
-puts [$lent entry configure]
+puts [$lent2 entry configure]
