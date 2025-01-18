@@ -28,15 +28,13 @@ oowidgets::widget ::comp::LabEntry {
     #
     method widgetall {argstmp} {
         set args ""
-        puts "[dict keys $argstmp]"
-        if {[dict exists $argstmp \-*]} {
+         if {[dict exists $argstmp \-*]} {
             puts std
             set stdtargs [dict get $argstmp "-*"]
             #set argstmp [dict remove $argstmp frame]
         } else {
             set stdargs ""
         }
-        puts "stdtargs $stdargs"
         if {[dict exists $argstmp frame]} {
             set args [dict get $argstmp frame]
             set argstmp [dict remove $argstmp frame]
@@ -55,9 +53,10 @@ oowidgets::widget ::comp::LabEntry {
         } else {
             set eargs ""
         }
-       
+        # sequence frame  -keys
         #lappend args {*}$argstmp
         # or
+        # sequence -keys frame
         set args [linsert $args 0 {*}$argstmp]
         return [list $args $largs $eargs]
     }
@@ -91,6 +90,7 @@ puts [$lent entry]
 bind [$lent entry] <Destroy> { puts "destroyed entry" }
 bind $lent <Destroy> { puts "destroyed labentry" }
 #destroy $lent
+puts [$lent configure]
 
 puts "Version 2"
 set lent2 [::comp::labentry  .lentry2 -relief solid frame {-relief sunken} label {-text "Label:"} entry {-justify right} -width 55]
@@ -100,8 +100,9 @@ $lent2 entry insert 0 "Some text 2"
 puts [$lent2 entry]
 bind [$lent2 entry] <Destroy> { puts "destroyed entry" }
 bind $lent2 <Destroy> { puts "destroyed labentry" }
+#destroy $lent2
 puts [$lent2 configure]
 puts \n
-puts [$lent2 label configure]
+#puts [$lent2 label configure]
 puts \n
-puts [$lent2 entry configure]
+#puts [$lent2 entry configure]
