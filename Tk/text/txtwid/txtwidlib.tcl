@@ -8,7 +8,7 @@
 # 20240118
 
 package require Tk
-package require scrollutil
+package require scrollutil_tile
 package require msgcat
 
 namespace eval textwid {
@@ -36,36 +36,49 @@ namespace eval textwid {
     set filename  ""
     if {$top eq ".top"} {
       set top [toplevel $top]
-      set tf [ttk::frame $top.tf]
+      set tfmain [ttk::frame $top.tfmain]
       wm title  $top [file rootname $filename]
       set wtype 1
     } else {
       set wtype 0
-      set tf [ttk::frame $top]
+      set tfmain [ttk::frame $top.frmain]
     }
-    pack $tf -expand 1 -fill both -side bottom
-    ttk::frame $tf.fstatus
-    pack $tf.fstatus -side bottom -fill x
+    pack $tfmain -expand 1 -fill both -side bottom
+    
+    set tfmenu [ttk::frame $tfmain.tfmenu]
+    pack $tfmenu -expand 0 -fill x -side top
+    set tfstatus [ttk::frame $tfmain.tfstatus]
+    pack $tfstatus -side bottom -fill x
+    set tftext [ttk::frame $tfmain.frtext]
+    pack $tftext -expand 1 -fill both -side bottom
+   
+    # Ein scrollednotebook erstellen
+    #set snb [scrollutil::scrollednotebook $tftext.snb -width 300]
+    #pack $snb -expand yes -fill both
+    #set frame [ttk::frame $snb.one]
+    #$snb add $frame -text one
+    # Beispielinhalt hinzufügen
+    #set tf [ttk::frame $frame.tf ]
+    set tf [ttk::frame $tftext.tf ]
+    pack $tf -expand 1 -fill both
 
     set sa [scrollutil::scrollarea $tf.sa]
     # Look up individual namespace for the text widget
     set txt [text $sa.t -wrap none]
     $sa setwidget $sa.t
     pack $sa -expand 1 -fill both
-    #grid $sa -row 0 -column 0 -sticky nesw
-    #grid columnconfigure $tf 0 -weight 1
-    #grid rowconfigure $tf 0 -weight 1
-
+ 
     # Namespace for individual text widget
     set ns [widgettoname $txt]
+    bind $txt <Destroy> [list namespace delete [namespace current]::${ns}]
     namespace eval $ns {}
     variable ${ns}::status
-    set ${ns}::status Status
+    set ${ns}::status(Status) "Start"
 
-    ttk::label $tf.fstatus.lb -textvariable [namespace current]::${ns}::status
-    pack $tf.fstatus.lb -side left -expand 1 -fill x
+    ttk::label $tfstatus.lb -textvariable [namespace current]::${ns}::status(Status)
+    pack $tfstatus.lb -side left -expand 1 -fill x
 
-    set popupE [menuText $txt $wtype $top $filename]
+    set popupE [menuText $txt $wtype $top $tfmenu $filename]
       
     bindwid 
     puts [winfo children $tf.sa.t]
@@ -80,7 +93,7 @@ namespace eval textwid {
     bind $txt <Control-s> [list [namespace current]::saveText $txt ""]
    }
   }
-  proc menuText {txt wtype top filename} {
+  proc menuText {txt wtype top mfr filename} {
     if {$wtype} {
       set mfr $txt.menu
       set m $mfr
@@ -93,8 +106,8 @@ namespace eval textwid {
       set mem $mfr.edit
       set mhm $mfr.help
     } else {
-      set mfr [ttk::frame  [winfo parent $top ].frm]
-      pack $mfr -expand 1 -fill x -side top
+      #set mfr [ttk::frame  [winfo parent $top ].frm]
+      #pack $mfr -expand 1 -fill x -side top
       ttk::menubutton $mfr.file -text [mc File] -menu $mfr.file.m -style Toolbutton
       ttk::menubutton $mfr.edit -text [mc Edit] -menu $mfr.edit.m -style Toolbutton
       ttk::menubutton $mfr.help -text [mc Help] -menu $mfr.help.m -style Toolbutton
@@ -142,10 +155,10 @@ namespace eval textwid {
     return $res
   }
   proc updateStatus {msg w} {
-    set nsstatus [widgettoname $w]::status
-    variable $nsstatus
-    set $nsstatus  $msg
-    after 3000 [list set [namespace current]::$nsstatus "Ready"] ;# Reset after 3 seconds
+    set ns [widgettoname $w]
+    variable ${ns}::status
+    set ${ns}::status(Status)  $msg
+    after 3000 [list set [namespace current]::${ns}::status(Status) "Ready"] ;# Reset after 3 seconds
   }
 
   proc saveText {w filename} {
@@ -188,15 +201,14 @@ if {[info exists argv0] && [info script] eq $argv0} {
   set data [join $auto_path "\n"]
   ttk::frame .fr
   pack .fr -expand 1 -fill both
-  set txt  [textwid::textwid .fr.t ]
-  pack $txt -expand 1 -fill both
+  set txt  [textwid::textwid .fr ]
   $txt  insert end $txt
   $txt  insert end "\n"
   $txt  insert end $data
   wm geometry [winfo toplevel $txt] +10+100
 }
 #2  
-  if {0} {
+  if {1} {
   # toplevel
   #wm withdraw .
   set txttop [textwid::textwid]
@@ -205,20 +217,4 @@ if {[info exists argv0] && [info script] eq $argv0} {
   $txttop  insert end $data
   wm geometry [winfo toplevel $txttop] +700+100
 }
-}
-#1
-# error, open a file
-
-if {0} {
-cannot use geometry manager grid inside .fr.t.sa which already has slaves managed by pack
-cannot use geometry manager grid inside .fr.t.sa which already has slaves managed by pack
-    while executing
-"grid $win.vsb		   -row 0 -rowspan 2 -column 2 -sticky ns"
-    (procedure "showVScrollbar" line 24)
-    invoked from within
-"showVScrollbar $win"
-    (procedure "scrollutil::sa::setVScrollbar" line 13)
-    invoked from within
-"scrollutil::sa::setVScrollbar .fr.t.sa 0.0 0.11538461538461539"
-    (vertical scrolling command executed by text)  
 }
