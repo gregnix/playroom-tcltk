@@ -136,35 +136,9 @@ pack [button .btn -text "Get Input" -command showInputDialog]
 
 ### **Advanced Example with CSV File Picker**
 ```tcl
-package require tclcsv
-package require widget::dialog
+
 #https://tclcsv.magicsplat.com/#_widgets
-proc openCSVDialog {} {
-    # Create dialog
-    widget::dialog .dlg -type okcancel -title "CSV Import" -modal local
 
-    # Add CSV picker widget
-    tclcsv::dialectpicker .dlg.csv myfile.csv
-    .dlg setwidget .dlg.csv
-
-    # Display dialog and handle user response
-    set response [.dlg display]
-    if {$response eq "ok"} {
-        set fd [open myfile.csv]
-        chan configure $fd -encoding [.dlg.csv encoding]
-        set opts [.dlg.csv dialect]
-        set rows [tclcsv::csv_read {*}$opts $fd]
-        close $fd
-        puts "Imported rows: $rows"
-    } else {
-        puts "User canceled the CSV import."
-    }
-
-    destroy .dlg
-}
-
-# Trigger the CSV dialog
-pack [button .btn -text "Import CSV" -command openCSVDialog]
 ```
 
 ---
