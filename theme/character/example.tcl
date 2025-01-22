@@ -28,7 +28,7 @@ puts [decode_unicode "Normal"]   ;# Gibt "Normal" aus
 
 puts \u00f6
 puts \xf6
-puts [encoding convertfrom cp437 \x246]
+puts [encoding convertfrom cp437 \xcd Pr246]
 puts [ encoding system]
 
 puts \u0031
