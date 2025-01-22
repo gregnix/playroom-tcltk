@@ -138,7 +138,7 @@ pack [button .btn -text "Get Input" -command showInputDialog]
 ```tcl
 package require tclcsv
 package require widget::dialog
-
+#https://tclcsv.magicsplat.com/#_widgets
 proc openCSVDialog {} {
     # Create dialog
     widget::dialog .dlg -type okcancel -title "CSV Import" -modal local
