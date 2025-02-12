@@ -1,13 +1,13 @@
 # TclFPDF Examples
 
-This repository contains test scripts and helper functions to work with the **tclfpdf** package for generating PDF documents using Tcl.
+This repository contains a small test scripts and helper functions to work with the **tclfpdf** package for generating PDF documents using Tcl.
 
 ##  Description
 These scripts:
 - Set up package paths dynamically
-- Load the `tclfpdf` package
+- Load a local  `tclfpdf` package
 - Generate various PDF examples
-- Ensure proper UTF-8 encoding support across different platforms (Windows, Linux, macOS)
+- Ensure proper UTF-8 encoding support across different platforms (Windows, Linux )
 
 ##  Directory Structure
 ```
@@ -37,6 +37,7 @@ switch $::tcl_platform(platform) {
         set encoding cp1252
     }
 }
+# or
 source -encoding [encoding system] [file join $exampledir $example]
 ```
 This ensures proper character rendering on different platforms.
@@ -54,7 +55,5 @@ proc pdfViewer {pdffile} {
 
 ##  Troubleshooting
 - If non-Latin characters appear as `?` or are missing, check if your system supports **UTF-8**.
-- Make sure the required fonts (e.g., **DejaVu Sans**, **SimHei**) are available in the `font` directory.
-
 
 
