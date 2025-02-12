@@ -18,6 +18,13 @@ FPDF
 + http://fpdf.de
 + http://www.fpdf.org
 
+Other
+
++ https://github.com/mpdf/mpdf
++ https://github.com/tecnickcom/tcpdf
++ https://github.com/tecnickcom/tc-lib-pdf
+
+
 Tcl/Tk
 
 + [Tcl/Tk wiki: Where to store application configuration files](https://wiki.tcl-lang.org/page/Where+to+store+application+configuration+files)
