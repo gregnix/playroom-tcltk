@@ -75,6 +75,44 @@ proc populateTree {tbl} {
 
 ```
 
+### Path:
+```
+    set active [$tbl index active]
+    set line [$tbl getfullkeys $active $active]
+    set tmpline $line 
+    while {$tmpline ne "root"} {
+      lappend pathText [$tbl cellcget $tmpline,0 -text]
+      lappend pathIndex $tmpline
+      set tmpline [$tbl parentkey $tmpline]
+    }
+    unset tmpline
+    puts [lreverse $pathText]
+    puts [lreverse $pathIndex]
 
+```
+### index
+```
+   foreach {tbl x y} [tablelist::convEventFields $W $x $y] {}
+    set row [$tbl containing  $y]
+  
+    set parentkey [$tbl parentkey $row]
+    set pkey $parentkey
+    if {$pkey eq "root"} {
+      set pkey "top"
+    }
 
+    set depthpk [$tbl depth $parentkey]
+    set celltext [$tbl cellcget $row,0 -text]
+    set curselection [$tbl curselection]
+    
+    set active [$tbl index active]
+    set line [$tbl getfullkeys $active $active]
+    
+    set p0 [$tbl parentkey $line]
+    set p1 [$tbl parentkey $p0]
+    set p2 [$tbl parentkey $p1]
+    set p3 [$tbl parentkey $p2]
+    puts "$line $p0 $p1 $p2 $p3"
+
+```
 

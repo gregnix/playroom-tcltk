@@ -34,7 +34,7 @@ set number [$tbl getkeys k0]
 ```
 set knumber [$tbl getfullkeys $row $row]
 set knumber k[$tbl getkeys $row $row]
-set knumbers set knr [$tbl getfullkeys 0 end]
+set knumbers [$tbl getfullkeys 0 end]
 
 proc sortKnumber {tbl} {
   set KeyList [$tbl getfullkeys 0 end]
