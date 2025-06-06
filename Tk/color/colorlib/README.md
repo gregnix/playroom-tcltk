@@ -1,47 +1,42 @@
 # colordb – Unified Tcl/Tk Color Name Utility
 
-The `colordb` module is a Tcl/Tk utility for loading, merging, comparing, and displaying symbolic color names from multiple standard sources.
+The `colordb` module provides a unified interface for loading, merging, comparing, and displaying symbolic color definitions from multiple standard sources in Tcl/Tk.
 
-## Sources Supported
+## Supported Sources
 
-- `/usr/share/X11/rgb.txt` — the traditional X11 color database
-- `colors.tcl` — used in the Tk demo directory (`$tk_library/demos/colors.tcl`)
-- `colors.n` — the Tcl/Tk man page describing symbolic color names (e.g., `/usr/local/share/man/mann/colors.n`)
+The module supports reading and merging color definitions from:
+
+- `/usr/share/X11/rgb.txt` – X11 color list (default system path)
+- `colors.n` – Tk manual page describing symbolic color names
+- `merged.txt` – optional custom merged dataset
+
+> The file `colors.tcl` has been removed in favor of more canonical and complete sources.
 
 ## Features
 
-- Parses and normalizes color definitions:  
-  name → `{r g b hex winfo}`
+- Parses `rgb.txt` and `colors.n` into Tcl `dict` structures
+- Normalizes and merges multiple sources into one dictionary
+- Checks if a color name is valid in the current `Tk` environment (`winfo rgb`)
+- Supports:
+  - Comparison between color dictionaries (missing, mismatched values)
+  - Export to:
+    - X11 `rgb.txt`-style format
+    - CSV format (including `winfo` data)
+    - Table with live color previews (`tablelist_tile`)
+  - Filtering, sorting, and interactive browsing
+  - Export of filtered/selected table data
 
-- Merges color definitions from different sources into a unified dictionary
+## GUI Table Viewer
 
-- Compares source files by:
-  - Keys (i.e. available color names)
-  - Hex values (for conflicting RGB definitions)
+The GUI includes a `tablelist_tile`-based widget with:
 
-- Validates whether a color is known to the current Tk environment via `winfo rgb`
-
-## Output Formats
-
-- `rgb.txt` format: for compatibility or re-import
-- Tabular format with `hex`, `winfo`, and 8-bit RGB values
-- CSV for external tools or spreadsheets
-- GUI table using `tablelist_tile`, with live color preview
+- Color previews
+- Multiple sort and selection modes
+- Filtering by `winfo` availability
+- Export/import options (CSV and X11 format)
 
 ## Requirements
 
-- Tcl/Tk 8.6 or newer
-- [tablelist_tile](https://www.nemethi.de/) for GUI display (optional)
-
-## Example
-
-```tcl
-set rgb   [colordb::readRgbTxt /usr/share/X11/rgb.txt]
-set manpg [colordb::readColorsN /usr/local/share/man/mann/colors.n]
-set demo  [colordb::readColorsTcl $tk_library/demos/colors.tcl]
-
-set merged [colordb::mergeDicts $rgb $manpg]
-
-colordb::printTableColors $merged
-colordb::saveMergedAsCsv $merged
-colordb::showInTablelist $merged
+- Tcl 8.6+
+- Tk
+- tablelist_tile (for GUI)
