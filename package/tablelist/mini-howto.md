@@ -72,6 +72,7 @@ set cell  [$tbl containingcell $x $y]
 bind [$tbl bodytag] <Button-1> [list [namespace current]::cbtree m row %W %x %y]]
 bind [$tbl bodytag] <KeyRelease> [list [namespace current]::cbtree k row %W %k %K]]
 ```
+```
 <<ThemeChanged>>
 <<TablelistCellUpdated>>
 <<TablelistCellRestored>>
