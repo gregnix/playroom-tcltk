@@ -72,6 +72,30 @@ set cell  [$tbl containingcell $x $y]
 bind [$tbl bodytag] <Button-1> [list [namespace current]::cbtree m row %W %x %y]]
 bind [$tbl bodytag] <KeyRelease> [list [namespace current]::cbtree k row %W %k %K]]
 ```
+<<ThemeChanged>>
+<<TablelistCellUpdated>>
+<<TablelistCellRestored>>
+<<TkWorldChanged>>
+<<TablelistActivate>>
+<<TablelistThemeDefaultsChanged>>
+<<TablelistHeaderHeightChanged>>
+<<TablelistViewUpdated>>
+<<TablelistSelect>>
+<<TablelistColumnMoved>>
+<<TablelistRowMoved>>
+<<TablelistColHiddenStateChanged>>
+<<TablelistRowHiddenStateChanged>>
+<<TablelistColumnResized>>
+<<TablelistSelectionLost>>
+<<TablelistColumnSorted>>
+<<Button3>>
+<<TablelistTitleColsWidthChanged>>
+<<Invoke>>
+```
+# m mouse k keyboard b button
+bind [$tbl bodytag] <Button-1> [list [namespace current]::cbtree m row %W %x %y]]
+bind [$tbl bodytag] <KeyRelease> [list [namespace current]::cbtree k row %W %k %K]]
+```
 
 ### Navigation and Scrolling
 ```
@@ -94,6 +118,11 @@ $tbl activate $pos
 
 ### 
 ```
-
+    set act $row
+    $tbl activate active
+    $tbl selection clear 0 end
+    $tbl selection set $act
+    $tbl selection anchor $act
+    $tbl see $act
 ```
 
